@@ -1,0 +1,44 @@
+name: Get Project Item
+description: Get a GitHub project item
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  item:
+    description: The item to get - may be the global ID for the item, the content ID, or the content URL
+    required: false
+    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+  field:
+    description: Project field to get on the item
+    required: false
+
+outputs:
+  id:
+    description: The global ID of the item
+  title:
+    description: Title of the item
+  body:
+    description: Body of the item
+  project-id:
+    description: The global ID of the project
+  content-id:
+    description: The global ID of the content - issue, pull request, or draft issue
+  url:
+    description: The URL of the issue or pull request - not applicable for draft issues
+  field-id:
+    description: The global ID of the field if the field input was set
+  field-value:
+    description: The project field value for the item if the field input was set
+
+runs:
+  using: node20
+  main: ../dist/get-item.js

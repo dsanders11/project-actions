@@ -1,0 +1,319 @@
+name: Integration Tests
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['CI']
+    branches:
+      - main
+      - 'releases/*'
+    types: 
+      - completed
+
+jobs:
+  integration-tests:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    strategy:
+      matrix:
+        include:
+          - auth: PAT
+            owner: dsanders11
+            project_number: 11
+          - auth: PAT
+            owner: dsanders11-playground-org
+            project_number: 2
+          - auth: GHA
+            owner: dsanders11-playground-org
+            project_number: 2
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+
+      - name: Get Date
+        uses: ./github-script/
+        id: get-date
+        with:
+          result-encoding: string
+          script: |
+            return new Date().toISOString()
+
+      - name: Generate GitHub App Token
+        uses: electron/github-app-auth-action@384fd19694fe7b6dcc9a684746c6976ad78228ae # v1.1.1
+        id: generate-app-token
+        if: ${{ matrix.auth == 'GHA' }}
+        with:
+          creds: ${{ secrets.GH_APP_CREDS }}
+          org: ${{ matrix.owner }}
+
+      - name: Get Auth Token
+        id: get-auth-token
+        run: echo "token=${{ steps.generate-app-token.outputs.token || secrets.PAT }}" >> "$GITHUB_OUTPUT"
+
+      - name: Create Template View
+        uses: ./github-script/
+        id: template-view
+        with:
+          script: |
+            return {
+              "type": "Favorite",
+              "foo": "bar"
+            }
+
+      - name: Copy Project
+        uses: ./copy-project/
+        id: copy-project
+        with:
+          drafts: true
+          owner: ${{ matrix.owner }}
+          project-number: ${{ matrix.project_number }}
+          # public: true
+          target-owner: ${{ matrix.owner }}
+          template-view: ${{ steps.template-view.outputs.result }}
+          title: Integration Test Project
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Draft Issue ID
+        id: get-draft-issue-id
+        run: |
+          set -eo pipefail
+          echo "id=$(gh project item-list ${{ steps.copy-project.outputs.number }} --owner ${{ steps.copy-project.outputs.owner }} --format json | jq -r '.items[0] | .id')" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Draft Issue
+        uses: ./get-item/
+        id: get-draft-issue
+        with:
+          field: Priority
+          item: ${{ steps.get-draft-issue-id.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Draft Issue
+        uses: ./github-script/
+        with:
+          script: |
+            if ("${{ steps.get-draft-issue.outputs.title }}" !== "My Favorite Issue") {
+              throw new Error("Draft issue title is not correct")
+            }
+
+            const body = `${{ steps.get-draft-issue.outputs.body }}`
+
+            if (!body.includes("Here's another bar")) {
+              throw new Error("Draft issue body is not correct")
+            }
+
+            if ("${{ steps.get-draft-issue.outputs.field-value }}" != "Low") {
+              throw new Error("Draft issue field is not correct")
+            }
+
+      - name: Run Completed By
+        uses: ./completed-by/
+        id: completed-by
+        with:
+          field-value: Done
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Draft Issue Is Completed
+        uses: ./github-script/
+        with:
+          script: |
+            const item = await actions.getItem(
+              "${{ steps.copy-project.outputs.owner }}",
+              "${{ steps.copy-project.outputs.number }}",
+              "${{ steps.get-draft-issue-id.outputs.id }}",
+              "Status"
+            )
+
+            if (item.field?.value !== "Done") {
+              throw new Error("Field value is not correct")
+            }
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Add Item
+        uses: ./add-item/
+        id: add-item
+        with:
+          content-url: https://github.com/dsanders11/project-actions/pull/2
+          field: Added
+          field-value: ${{ steps.get-date.outputs.result }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Added Item
+        uses: ./get-item/
+        id: get-added-item
+        with:
+          field: Added
+          item: ${{ steps.add-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Added Item Field Value
+        uses: ./github-script/
+        with:
+          script: |
+            if ("${{ steps.get-added-item.outputs.field-value }}" !== new Date("${{ steps.get-date.outputs.result }}").toISOString().split('T')[0]) {
+              throw new Error("Field value is not correct")
+            }
+
+      - name: Edit Item
+        uses: ./edit-item/
+        id: edit-item
+        with:
+          field: Priority
+          field-value: High
+          item: ${{ steps.get-added-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Item
+        uses: ./get-item/
+        id: get-edited-item
+        with:
+          field: Priority
+          item: ${{ steps.edit-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Edited Item Field Value
+        uses: ./github-script/
+        with:
+          script: |
+            if ("${{ steps.get-edited-item.outputs.field-value }}" !== "High") {
+              throw new Error("Field value is not correct")
+            }
+
+      - name: Test GitHub Script Action
+        uses: ./github-script/
+        with:
+          token: ${{ steps.get-auth-token.outputs.token }}
+          script: |
+            const item = await actions.getItem(
+              "${{ steps.copy-project.outputs.owner }}",
+              "${{ steps.copy-project.outputs.number }}",
+              "${{ steps.edit-item.outputs.id }}",
+              "Priority"
+            )
+
+            if (item.field?.value !== "High") {
+              throw new Error("Field value is not correct")
+            }
+
+      # - name: Archive Item
+      #   uses: ./archive-item/
+      #   id: archive-item
+      #   with:
+      #     item: ${{ steps.add-item.outputs.id }}
+      #     owner: ${{ steps.copy-project.outputs.owner }}
+      #     project-number: ${{ steps.copy-project.outputs.number }}
+      #     token: ${{ steps.get-auth-token.outputs.token }}
+
+      # - name: Unarchive Item
+      #   uses: ./archive-item/
+      #   id: unarchive-item
+      #   with:
+      #     archived: false
+      #     item: ${{ steps.add-item.outputs.id }}
+      #     owner: ${{ steps.copy-project.outputs.owner }}
+      #     project-number: ${{ steps.copy-project.outputs.number }}
+      #     token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Delete Item
+        uses: ./delete-item/
+        id: delete-item
+        with:
+          item: ${{ steps.edit-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Link Project to Repository
+        uses: ./link-project/
+        if: ${{ matrix.owner == 'dsanders11' }}
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          repository: dsanders11/project-actions
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Link Project to Team
+        uses: ./link-project/
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          team: dsanders11-playground-org/maintainers
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Edit Project
+        uses: ./edit-project/
+        id: edit-project
+        with:
+          description: New Description
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          readme: This is the readme
+          title: New Title
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Project
+        uses: ./get-project/
+        id: get-project
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Project Values
+        uses: ./github-script/
+        with:
+          script: |
+            if ("${{ steps.get-project.outputs.title }}" !== "New Title") {
+              throw new Error("Project title is not correct")
+            }
+
+            if ("${{ steps.get-project.outputs.description }}" !== "New Description") {
+              throw new Error("Project description is not correct")
+            }
+
+            if ("${{ steps.get-project.outputs.readme }}" !== "This is the readme") {
+              throw new Error("Project readme is not correct")
+            }
+
+      - name: Close Project
+        uses: ./close-project/
+        id: close-project
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Reopen Project
+        uses: ./close-project/
+        id: reopen-project
+        with:
+          closed: false
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Delete Project
+        uses: ./delete-project/
+        id: delete-project
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}

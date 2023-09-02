@@ -1,0 +1,23 @@
+name: Delete Project Item
+description: Delete a GitHub project item
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  item:
+    description: The item to delete - may be the global ID for the item, the content ID, or the content URL
+    required: false
+    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+
+runs:
+  using: node20
+  main: ../dist/delete-item.js

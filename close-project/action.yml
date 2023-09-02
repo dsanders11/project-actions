@@ -1,0 +1,27 @@
+name: Close Project
+description: Close or reopen a GitHub project
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  closed:
+    description: Closed state of the project - set false to reopen a closed project
+    required: false
+    default: true
+
+outputs:
+  id:
+    description: The global ID for the edited project
+
+runs:
+  using: node20
+  main: ../dist/close-project.js
