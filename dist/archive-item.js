@@ -6783,11 +6783,6 @@ var FieldNotFoundError = class extends Error {
     super("Field not found", { cause });
   }
 };
-var FieldHasNoValueError = class extends Error {
-  constructor(cause) {
-    super("Field has no value set", { cause });
-  }
-};
 var ProjectNotFoundError = class extends Error {
   constructor(cause) {
     super("Project not found", { cause });
@@ -6914,15 +6909,19 @@ async function getItem(owner, projectNumber, item, field) {
             if (projectV2.field === null) {
               throw new FieldNotFoundError();
             }
-            if (node.fieldValueByName === null) {
-              throw new FieldHasNoValueError();
+            if (node.fieldValueByName !== null) {
+              const { date, number, text, singleSelectValue } = node.fieldValueByName;
+              details.field = {
+                id: projectV2.field.id,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                value: date ?? number ?? text ?? singleSelectValue
+              };
+            } else {
+              details.field = {
+                id: projectV2.field.id,
+                value: null
+              };
             }
-            const { date, number, text, singleSelectValue } = node.fieldValueByName;
-            details.field = {
-              id: projectV2.field.id,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              value: date ?? number ?? text ?? singleSelectValue
-            };
           }
           return details;
         }

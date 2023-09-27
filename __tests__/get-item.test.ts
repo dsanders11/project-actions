@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 
 import * as index from '../src/get-item';
-import { ItemDetails, getItem } from '../src/lib';
+import { getItem } from '../src/lib';
 import { mockGetInput } from './utils';
 
 jest.mock('@actions/core');
@@ -115,7 +115,7 @@ describe('getItemAction', () => {
       content: { id: contentId, type: 'PullRequest', url, title, body },
       field: { id: fieldId, value: fieldValue },
       projectId
-    } as ItemDetails);
+    });
 
     await index.getItemAction();
     expect(getItemActionSpy).toHaveReturned();
@@ -129,5 +129,37 @@ describe('getItemAction', () => {
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
     expect(core.setOutput).toHaveBeenCalledWith('field-id', fieldId);
     expect(core.setOutput).toHaveBeenCalledWith('field-value', fieldValue);
+  });
+
+  it('handles field with no value set', async () => {
+    const url = 'https://github.com/dsanders11/project-actions/pull/2';
+    const contentId = 'content-id';
+    const title = 'Pull Request Title';
+    const body = 'Pull Request Description';
+    const fieldId = 'field-id';
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      item,
+      field: 'Status'
+    });
+    jest.mocked(getItem).mockResolvedValue({
+      id: itemId,
+      content: { id: contentId, type: 'PullRequest', url, title, body },
+      field: { id: fieldId, value: null },
+      projectId
+    });
+
+    await index.getItemAction();
+    expect(getItemActionSpy).toHaveReturned();
+
+    expect(core.setOutput).toHaveBeenCalledTimes(7);
+    expect(core.setOutput).toHaveBeenCalledWith('id', itemId);
+    expect(core.setOutput).toHaveBeenCalledWith('body', body);
+    expect(core.setOutput).toHaveBeenCalledWith('title', title);
+    expect(core.setOutput).toHaveBeenCalledWith('url', url);
+    expect(core.setOutput).toHaveBeenCalledWith('content-id', contentId);
+    expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
+    expect(core.setOutput).toHaveBeenCalledWith('field-id', fieldId);
   });
 });

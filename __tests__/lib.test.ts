@@ -1119,9 +1119,22 @@ describe('lib', () => {
         })
       });
 
-      await expect(lib.getItem(owner, projectNumber, itemUrl)).rejects.toThrow(
-        lib.FieldHasNoValueError
-      );
+      const { __typename, ...content } = items[0].content;
+
+      await expect(
+        lib.getItem(owner, projectNumber, itemUrl, 'Name')
+      ).resolves.toEqual({
+        id: itemId,
+        projectId,
+        content: {
+          type: __typename,
+          ...content
+        },
+        field: {
+          id: fieldId,
+          value: null
+        }
+      });
     });
 
     it('throws other graphql errors', async () => {

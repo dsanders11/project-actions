@@ -19332,7 +19332,7 @@ exports.getOctokit = getOctokit;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldHasNoValueError = exports.FieldNotFoundError = void 0;
+exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
 const graphql_1 = __nccwpck_require__(8467);
 const helpers_1 = __nccwpck_require__(3015);
 class FieldNotFoundError extends Error {
@@ -19341,12 +19341,6 @@ class FieldNotFoundError extends Error {
     }
 }
 exports.FieldNotFoundError = FieldNotFoundError;
-class FieldHasNoValueError extends Error {
-    constructor(cause) {
-        super('Field has no value set', { cause });
-    }
-}
-exports.FieldHasNoValueError = FieldHasNoValueError;
 class ItemNotFoundError extends Error {
     constructor(cause) {
         super('Item not found', { cause });
@@ -19500,15 +19494,20 @@ async function getItem(owner, projectNumber, item, field) {
                         if (projectV2.field === null) {
                             throw new FieldNotFoundError();
                         }
-                        if (node.fieldValueByName === null) {
-                            throw new FieldHasNoValueError();
+                        if (node.fieldValueByName !== null) {
+                            const { date, number, text, singleSelectValue } = node.fieldValueByName;
+                            details.field = {
+                                id: projectV2.field.id,
+                                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                value: (date ?? number ?? text ?? singleSelectValue)
+                            };
                         }
-                        const { date, number, text, singleSelectValue } = node.fieldValueByName;
-                        details.field = {
-                            id: projectV2.field.id,
-                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            value: (date ?? number ?? text ?? singleSelectValue)
-                        };
+                        else {
+                            details.field = {
+                                id: projectV2.field.id,
+                                value: null
+                            };
+                        }
                     }
                     return details;
                 }
