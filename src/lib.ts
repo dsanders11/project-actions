@@ -34,7 +34,7 @@ export interface ItemDetails {
   content: ItemContent;
   field?: {
     id: string;
-    value: string | number;
+    value: string | number | null;
   };
 }
 
@@ -76,11 +76,6 @@ export interface ProjectEdit {
 export class FieldNotFoundError extends Error {
   constructor(cause?: Error) {
     super('Field not found', { cause });
-  }
-}
-export class FieldHasNoValueError extends Error {
-  constructor(cause?: Error) {
-    super('Field has no value set', { cause });
   }
 }
 export class ItemNotFoundError extends Error {
@@ -355,18 +350,21 @@ export async function getItem(
               throw new FieldNotFoundError();
             }
 
-            if (node.fieldValueByName === null) {
-              throw new FieldHasNoValueError();
+            if (node.fieldValueByName !== null) {
+              const { date, number, text, singleSelectValue } =
+                node.fieldValueByName;
+
+              details.field = {
+                id: projectV2.field.id,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                value: (date ?? number ?? text ?? singleSelectValue)!
+              };
+            } else {
+              details.field = {
+                id: projectV2.field.id,
+                value: null
+              };
             }
-
-            const { date, number, text, singleSelectValue } =
-              node.fieldValueByName;
-
-            details.field = {
-              id: projectV2.field.id,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              value: (date ?? number ?? text ?? singleSelectValue)!
-            };
           }
 
           return details;

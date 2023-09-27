@@ -32,7 +32,10 @@ export async function getItemAction(): Promise<void> {
 
     if (fullItem.field) {
       core.setOutput('field-id', fullItem.field.id);
-      core.setOutput('field-value', fullItem.field.value);
+
+      if (fullItem.field.value !== null) {
+        core.setOutput('field-value', fullItem.field.value);
+      }
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
