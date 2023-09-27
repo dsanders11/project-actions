@@ -20,21 +20,21 @@ private repositories the PAT must also have the `repo` scope.
 
 ## Actions
 
-| Action                                             | Description                                    |
-|----------------------------------------------------|------------------------------------------------|
-| [`project-actions/add-item`](add-item)             | Add an item (issue or pull request) to project |
-| [`project-actions/archive-item`](archive-item)     | Archive an item on a project                   |
-| [`project-actions/close-project`](close-project)   | Close a project                                |
-| [`project-actions/completed-by`](completed-by)     | Change item field value when PRs are merged    |
-| [`project-actions/copy-project`](copy-project)     | Copy a project                                 |
-| [`project-actions/delete-item`](delete-item)       | Delete an item on a project                    |
-| [`project-actions/delete-project`](delete-project) | Delete a project                               |
-| [`project-actions/edit-item`](edit-item)           | Edit an item on a project                      |
-| [`project-actions/edit-project`](edit-project)     | Edit a project                                 |
-| [`project-actions/get-item`](get-item)             | Get an item on a project                       |
-| [`project-actions/get-project`](get-project)       | Get a project                                  |
-| [`project-actions/github-script`](github-script)   | Modify projects programmatically               |
-| [`project-actions/link-project`](link-project)     | Link a project to a repository                 |
+| Action                                             | Description                                             |
+|----------------------------------------------------|---------------------------------------------------------|
+| [`project-actions/add-item`](add-item)             | Add an item (issue or pull request) to project          |
+| [`project-actions/archive-item`](archive-item)     | Archive an item on a project                            |
+| [`project-actions/close-project`](close-project)   | Close a project                                         |
+| [`project-actions/completed-by`](completed-by)     | Change item field value when PRs are merged             |
+| [`project-actions/copy-project`](copy-project)     | Copy a project, with support for draft issue templating |
+| [`project-actions/delete-item`](delete-item)       | Delete an item on a project                             |
+| [`project-actions/delete-project`](delete-project) | Delete a project                                        |
+| [`project-actions/edit-item`](edit-item)           | Edit an item on a project                               |
+| [`project-actions/edit-project`](edit-project)     | Edit a project                                          |
+| [`project-actions/get-item`](get-item)             | Get an item on a project                                |
+| [`project-actions/get-project`](get-project)       | Get a project                                           |
+| [`project-actions/github-script`](github-script)   | Modify projects programmatically                        |
+| [`project-actions/link-project`](link-project)     | Link a project to a repository or team                  |
 
 ## License
 
