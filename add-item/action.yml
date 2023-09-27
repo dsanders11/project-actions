@@ -1,0 +1,33 @@
+name: Add Item to Project
+description: Add an issue or pull request to a GitHub project
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  content-url:
+    description: The URL for the issue or pull request to add to the project
+    required: false
+    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+  field:
+    description: Project field to set after adding item
+    required: false
+  field-value:
+    description: Value to set project field to
+    required: false
+
+outputs:
+  id:
+    description: The global ID for the added item
+
+runs:
+  using: node20
+  main: ../dist/add-item.js

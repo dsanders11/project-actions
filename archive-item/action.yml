@@ -1,0 +1,31 @@
+name: Archive Project Item
+description: Archive or unarchive a GitHub project item
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  item:
+    description: The item to archive - may be the global ID for the item, the content ID, or the content URL
+    required: false
+    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+  archived:
+    description: Archived state of the item - set false to unarchive an archived item
+    required: false
+    default: true
+  fail-if-item-not-found:
+    description: Should the action fail if the item is not found on the project
+    required: false
+    default: true
+
+runs:
+  using: node20
+  main: ../dist/archive-item.js

@@ -1,24 +1,16 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
+  "name": "project-actions",
+  "description": "A collection of actions for automating GitHub projects",
   "version": "0.0.0",
-  "author": "",
+  "author": "David Sanders <dsanders11@ucsbalum.com>",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/dsanders11/project-actions",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/dsanders11/project-actions.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
-  },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
-  "exports": {
-    ".": "./dist/index.js"
+    "url": "https://github.com/dsanders11/project-actions/issues"
   },
   "engines": {
     "node": ">=20"
@@ -29,7 +21,20 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
-    "package": "ncc build src/index.ts --license licenses.txt",
+    "package:add-item": "esbuild add-item/index.ts --bundle --outfile=dist/add-item.js --platform=node --target=node20.2",
+    "package:archive-item": "esbuild archive-item/index.ts --bundle --outfile=dist/archive-item.js --platform=node --target=node20.2",
+    "package:close-project": "esbuild close-project/index.ts --bundle --outfile=dist/close-project.js --platform=node --target=node20.2",
+    "package:completed-by": "esbuild completed-by/index.ts --bundle --outfile=dist/completed-by.js --platform=node --target=node20.2",
+    "package:copy-project": "esbuild copy-project/index.ts --bundle --outfile=dist/copy-project.js --platform=node --target=node20.2",
+    "package:delete-item": "esbuild delete-item/index.ts --bundle --outfile=dist/delete-item.js --platform=node --target=node20.2",
+    "package:delete-project": "esbuild delete-project/index.ts --bundle --outfile=dist/delete-project.js --platform=node --target=node20.2",
+    "package:edit-item": "esbuild edit-item/index.ts --bundle --outfile=dist/edit-item.js --platform=node --target=node20.2",
+    "package:edit-project": "esbuild edit-project/index.ts --bundle --outfile=dist/edit-project.js --platform=node --target=node20.2",
+    "package:get-item": "esbuild get-item/index.ts --bundle --outfile=dist/get-item.js --platform=node --target=node20.2",
+    "package:get-project": "esbuild get-project/index.ts --bundle --outfile=dist/get-project.js --platform=node --target=node20.2",
+    "package:link-project": "esbuild link-project/index.ts --bundle --outfile=dist/link-project.js --platform=node --target=node20.2",
+    "package:github-script": "ncc build github-script/index.ts --out dist/github-script",
+    "package": "npm-run-all \"package:!(watch)\"",
     "package:watch": "npm run package -- --watch",
     "test": "jest",
     "all": "npm run format:write && npm run lint && npm run test && npm run package",
@@ -67,21 +72,33 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.1",
-    "husky": "^8.0.3"
+    "@actions/github": "^5.1.1",
+    "@actions/glob": "^0.4.0",
+    "@actions/tool-cache": "^2.0.1",
+    "@octokit/core": "^5.0.0",
+    "@octokit/plugin-paginate-graphql": "^4.0.0",
+    "@octokit/plugin-request-log": "^4.0.0",
+    "@octokit/plugin-retry": "^6.0.0",
+    "mustache": "^4.2.0"
   },
   "devDependencies": {
+    "@octokit/types": "^12.0.0",
     "@types/jest": "^29.5.5",
+    "@types/mustache": "^4.2.2",
     "@types/node": "^20.7.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
     "@vercel/ncc": "^0.38.0",
+    "esbuild": "^0.19.2",
     "eslint": "^8.50.0",
-    "eslint-plugin-github": "^4.10.0",
+    "eslint-plugin-github": "^4.10.1",
     "eslint-plugin-jest": "^27.4.0",
     "eslint-plugin-jsonc": "^2.9.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^8.0.3",
     "jest": "^29.7.0",
     "js-yaml": "^4.1.0",
+    "npm-run-all2": "^6.0.6",
     "prettier": "^3.0.3",
     "prettier-eslint": "^15.0.1",
     "ts-jest": "^29.1.1",

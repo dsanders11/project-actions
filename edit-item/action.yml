@@ -1,0 +1,39 @@
+name: Edit Project Item
+description: Edit a GitHub project item
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  item:
+    description: The item to edit - may be the global ID for the item, the content ID, or the content URL
+    required: false
+    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+  title:
+    description: Title for the item - can only be set for draft issues
+    required: false
+  body:
+    description: Body for the item - can only be set for draft issues
+    required: false
+  field:
+    description: Project field to set on the item
+    required: false
+  field-value:
+    description: Value to set project field to
+    required: false
+
+outputs:
+  id:
+    description: The global ID for the edited item
+
+runs:
+  using: node20
+  main: ../dist/edit-item.js

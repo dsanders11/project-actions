@@ -1,0 +1,65 @@
+name: Copy Project
+description: Copy a GitHub project
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  target-owner:
+    description: The owner of the copied project - either an organization or a user, if different from `owner`
+    required: false
+  title:
+    description: Title for the new project
+    required: true
+  drafts:
+    description: Include draft issues when copying
+    required: false
+    default: false
+  link-to-repository:
+    description: Repository to link the project to, in the format `owner/name`
+    required: false
+  link-to-team:
+    description: Team to link the project to, in the format `org/team`
+    required: false
+  template-view:
+    description: A `mustache` template view to be used for template interpolation on draft issues
+    required: false
+  public:
+    description: Set the project to public or private
+    required: false
+
+outputs:
+  id:
+    description: The global ID for the new project
+  closed:
+    description: The closed state of the new project
+  field-count:
+    description: The number of fields on the new project
+  item-count:
+    description: The number of items in the new project
+  number:
+    description: The project number for the new project
+  owner:
+    description: The owner of the new project
+  public:
+    description: The public visibility of the new project
+  readme:
+    description: The readme description of the new project
+  description:
+    description: The short description of the new project
+  title:
+    description: The title of the new project
+  url:
+    description: The URL of the new project
+
+runs:
+  using: node20
+  main: ../dist/copy-project.js

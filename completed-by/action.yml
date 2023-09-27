@@ -1,0 +1,26 @@
+name: Draft Issues Completed By
+description: Change a project field on draft issues when linked pull requests are merged
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  field:
+    description: Project field to set once completed
+    required: false
+    default: Status
+  field-value:
+    description: Value to set project field to
+    required: true
+
+runs:
+  using: node20
+  main: ../dist/completed-by.js

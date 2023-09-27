@@ -1,0 +1,37 @@
+name: Link Project
+description: Link a GitHub project to a repository or team
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  repository:
+    description: Repository to link the project to, in the format `owner/name`
+    required: false
+  team:
+    description: Team to link the project to, in the format `org/team`
+    required: false
+  linked:
+    description: Linked state of the project - set to false to unlink an existing link
+    required: false
+    default: true
+
+outputs:
+  project-id:
+    description: The global ID for the linked project
+  repository-id:
+    description: The global ID for the repository if one was provided
+  team-id:
+    description: The global ID for the team if one was provided
+
+runs:
+  using: node20
+  main: ../dist/link-project.js
