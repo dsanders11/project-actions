@@ -16,7 +16,7 @@ inputs:
   item:
     description: The item to archive - may be the global ID for the item, the content ID, or the content URL
     required: false
-    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+    default: ${{ github.event.pull_request.html_url || github.event.issue.html_url }}
   archived:
     description: Archived state of the item - set false to unarchive an archived item
     required: false
