@@ -16,7 +16,7 @@ inputs:
   content-url:
     description: The URL for the issue or pull request to add to the project
     required: false
-    default: ${{ github.event.pull_request.url || github.event.issue.url }}
+    default: ${{ github.event.pull_request.html_url || github.event.issue.html_url }}
   field:
     description: Project field to set after adding item
     required: false
