@@ -9,10 +9,10 @@ A collection of actions for automating GitHub projects
 
 For organization projects, the recommended way to use these actions is with a
 GitHub app. An authentication token for the app can be easily generated in the
-GitHub actions workflow using `electron/github-app-auth-action`. For public
-repositories the app does not need to be installed on the repository itself,
-only the organization. For private repositories the app must be installed on
-the repository and given proper permissions to view issues and pull requests.
+GitHub actions workflow using [`electron/github-app-auth-action`](https://github.com/electron/github-app-auth-action)
+. For public repositories the app does not need to be installed on the repository
+itself, only the organization. For private repositories the app must be installed
+on the repository and given proper permissions to view issues and pull requests.
 
 For user projects, the recommended way to use these actions is with a classic
 PAT (Personal Access Token). The PAT must have the `project` scope, and for
