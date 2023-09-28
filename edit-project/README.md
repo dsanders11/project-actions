@@ -4,6 +4,11 @@
 
 Edit a GitHub project
 
+## Known Issues
+
+There is a GitHub bug which results in a permissions error if a GitHub app auth token
+is used to change the visibility on a project
+
 ## Inputs
 
 | Name           | Description                                                | Required | Default             |
