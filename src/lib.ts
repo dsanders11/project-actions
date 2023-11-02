@@ -823,6 +823,30 @@ export async function editProject(
   return JSON.parse(output).id;
 }
 
+export async function findProject(
+  owner: string,
+  title: string
+): Promise<ProjectDetails | null> {
+  const { projects } = JSON.parse(
+    await execCliCommand([
+      'project',
+      'list',
+      '--owner',
+      owner,
+      '--format',
+      'json'
+    ])
+  );
+
+  for (const project of projects) {
+    if (project.title === title) {
+      return project;
+    }
+  }
+
+  return null;
+}
+
 /**
  * @throws ProjectNotFoundError
  */

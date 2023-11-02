@@ -30,6 +30,7 @@
     "package:delete-project": "esbuild delete-project/index.ts --bundle --outfile=dist/delete-project.js --platform=node --target=node20.2",
     "package:edit-item": "esbuild edit-item/index.ts --bundle --outfile=dist/edit-item.js --platform=node --target=node20.2",
     "package:edit-project": "esbuild edit-project/index.ts --bundle --outfile=dist/edit-project.js --platform=node --target=node20.2",
+    "package:find-project": "esbuild find-project/index.ts --bundle --outfile=dist/find-project.js --platform=node --target=node20.2",
     "package:get-item": "esbuild get-item/index.ts --bundle --outfile=dist/get-item.js --platform=node --target=node20.2",
     "package:get-project": "esbuild get-project/index.ts --bundle --outfile=dist/get-project.js --platform=node --target=node20.2",
     "package:link-project": "esbuild link-project/index.ts --bundle --outfile=dist/link-project.js --platform=node --target=node20.2",

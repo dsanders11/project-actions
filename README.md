@@ -31,6 +31,7 @@ private repositories the PAT must also have the `repo` scope.
 | [`project-actions/delete-project`](delete-project) | Delete a project                                        |
 | [`project-actions/edit-item`](edit-item)           | Edit an item on a project                               |
 | [`project-actions/edit-project`](edit-project)     | Edit a project                                          |
+| [`project-actions/find-project`](find-project)     | Find a project                                          |
 | [`project-actions/get-item`](get-item)             | Get an item on a project                                |
 | [`project-actions/get-project`](get-project)       | Get a project                                           |
 | [`project-actions/github-script`](github-script)   | Modify projects programmatically                        |

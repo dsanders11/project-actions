@@ -5320,40 +5320,17 @@ async function execCliCommand(args) {
 }
 
 // src/lib.ts
-var ProjectNotFoundError = class extends Error {
-  constructor(cause) {
-    super("Project not found", { cause });
-  }
-};
-var RepositoryNotFoundError = class extends Error {
-  constructor(cause) {
-    super("Repository not found", { cause });
-  }
-};
-function handleCliError(error) {
-  if (error instanceof Error && error.message.includes("Could not resolve to a ProjectV2")) {
-    throw new ProjectNotFoundError(error);
-  } else if (error instanceof Error && error.message.includes("Could not resolve to a Repository")) {
-    throw new RepositoryNotFoundError(error);
-  } else {
-    throw error;
-  }
-}
 async function findProject(owner, title) {
-  let details;
-  try {
-    details = await execCliCommand([
+  const { projects } = JSON.parse(
+    await execCliCommand([
       "project",
       "list",
       "--owner",
       owner,
       "--format",
       "json"
-    ]);
-  } catch (error) {
-    handleCliError(error);
-  }
-  const { projects } = JSON.parse(details);
+    ])
+  );
   for (const project of projects) {
     if (project.title === title) {
       return project;
