@@ -1,0 +1,41 @@
+name: Find Project
+description: Find a GitHub project
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  title:
+    description: The title of the project to find
+    required: true
+
+outputs:
+  id:
+    description: The global ID for the project
+  closed:
+    description: The closed state of the project
+  field-count:
+    description: The number of fields on the project
+  item-count:
+    description: The number of items in the project
+  number:
+    description: The project number of the project
+  public:
+    description: The public visibility of the project
+  readme:
+    description: The readme description of the project
+  description:
+    description: The short description of the project
+  title:
+    description: The title of the project
+  url:
+    description: The URL of the project
+
+runs:
+  using: node20
+  main: ../dist/find-project.js

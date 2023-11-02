@@ -266,7 +266,24 @@ jobs:
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           readme: This is the readme
-          title: New Title
+          title: New Title ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Find Project
+        uses: ./find-project/
+        id: find-project
+        with:
+          owner: ${{ matrix.owner }}
+          title: New Title ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Confirm Project Found
+        uses: ./github-script/
+        with:
+          script: |
+            if ("${{ steps.copy-project.outputs.number }}" !== "${{ steps.find-project.outputs.number }}") {
+              throw new Error("Could not find project by title")
+            }
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Project
@@ -281,7 +298,7 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-project.outputs.title }}" !== "New Title") {
+            if ("${{ steps.get-project.outputs.title }}" !== "New Title ${{ steps.copy-project.outputs.number }}") {
               throw new Error("Project title is not correct")
             }
 

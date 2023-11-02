@@ -19888,21 +19888,14 @@ async function editProject(owner, projectNumber, edit) {
 }
 exports.editProject = editProject;
 async function findProject(owner, title) {
-    let details;
-    try {
-        details = await (0, helpers_1.execCliCommand)([
-            'project',
-            'list',
-            '--owner',
-            owner,
-            '--format',
-            'json'
-        ]);
-    }
-    catch (error) {
-        handleCliError(error);
-    }
-    const { projects } = JSON.parse(details);
+    const { projects } = JSON.parse(await (0, helpers_1.execCliCommand)([
+        'project',
+        'list',
+        '--owner',
+        owner,
+        '--format',
+        'json'
+    ]));
     for (const project of projects) {
         if (project.title === title) {
             return project;

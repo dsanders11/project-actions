@@ -54,6 +54,7 @@ describe('lib', () => {
   const owner = 'dsanders11';
   const projectId = 'project-id';
   const projectNumber = '41';
+  const projectTitle = 'My Cool Project';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -1162,6 +1163,28 @@ describe('lib', () => {
 
       await expect(lib.getItem(owner, projectNumber, itemUrl)).rejects.toBe(
         error
+      );
+    });
+  });
+
+  describe('findProject', () => {
+    const project = { id: projectId, title: projectTitle };
+
+    it('handles project not found', async () => {
+      jest
+        .mocked(execCliCommand)
+        .mockResolvedValue(JSON.stringify({ projects: [project] }));
+      await expect(
+        lib.findProject(owner, 'A Different Title')
+      ).resolves.toEqual(null);
+    });
+
+    it('returns project details', async () => {
+      jest
+        .mocked(execCliCommand)
+        .mockResolvedValue(JSON.stringify({ projects: [project] }));
+      await expect(lib.findProject(owner, projectTitle)).resolves.toEqual(
+        project
       );
     });
   });
