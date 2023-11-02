@@ -19332,7 +19332,7 @@ exports.getOctokit = getOctokit;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
+exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.findProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
 const graphql_1 = __nccwpck_require__(8467);
 const helpers_1 = __nccwpck_require__(3015);
 class FieldNotFoundError extends Error {
@@ -19887,6 +19887,30 @@ async function editProject(owner, projectNumber, edit) {
     return JSON.parse(output).id;
 }
 exports.editProject = editProject;
+async function findProject(owner, title) {
+    let details;
+    try {
+        details = await (0, helpers_1.execCliCommand)([
+            'project',
+            'list',
+            '--owner',
+            owner,
+            '--format',
+            'json'
+        ]);
+    }
+    catch (error) {
+        handleCliError(error);
+    }
+    const { projects } = JSON.parse(details);
+    for (const project of projects) {
+        if (project.title === title) {
+            return project;
+        }
+    }
+    return null;
+}
+exports.findProject = findProject;
 /**
  * @throws ProjectNotFoundError
  */

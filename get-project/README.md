@@ -16,15 +16,15 @@ Get a GitHub project
 
 | Name              | Description                                        |
 |-------------------|----------------------------------------------------|
-| `id`              | The global ID for the new project.                 |
-| `closed`          | The closed state of the new project.               |
-| `field-count`     | The number of fields on the new project.           |
-| `item-count`      | The number of items in the new project.            |
-| `public`          | The public visibility of the new project.          |
-| `readme`          | The readme description of the new project.         |
-| `description` | The short description of the new project.              |
-| `title`           | The title of the new project.                      |
-| `url`             | The URL of the new project.                        |
+| `id`              | The global ID for the project.                     |
+| `closed`          | The closed state of the project.                   |
+| `field-count`     | The number of fields on the project.               |
+| `item-count`      | The number of items in the project.                |
+| `public`          | The public visibility of the project.              |
+| `readme`          | The readme description of the project.             |
+| `description`     | The short description of the project.              |
+| `title`           | The title of the project.                          |
+| `url`             | The URL of the project.                            |
 
 ## License
 
