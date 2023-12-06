@@ -8,7 +8,8 @@ Link a GitHub project to a repository or team
 
 When using a classic PAT, `repo` scope is needed for linking a repository
 and `admin:org` is needed for linking a team. With a GitHub app auth token
-the app must also have the "Members" (read-only or above) permission for
+the app must have the "Contents" (read and write) permission for linking
+a repository, and the "Members" (read-only or above) permission for
 linking a team.
 
 Admin permissions for projects is also required.
