@@ -251,6 +251,15 @@ jobs:
           repository: dsanders11/project-actions
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Link Project to Repository
+        uses: ./link-project/
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
+        with:
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          repository: dsanders11-playground-org/project-actions-integration-test
+          token: ${{ steps.get-auth-token.outputs.token }}
+
       - name: Link Project to Team
         uses: ./link-project/
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
