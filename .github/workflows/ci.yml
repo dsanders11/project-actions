@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - 'releases/*'
+  schedule:
+    - cron: '0 22 * * 2'
 
 jobs:
   test-typescript:
