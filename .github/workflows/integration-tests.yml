@@ -9,6 +9,8 @@ on:
       - 'releases/*'
     types: 
       - completed
+  schedule:
+    - cron: '0 22 * * 3'
 
 jobs:
   integration-tests:
