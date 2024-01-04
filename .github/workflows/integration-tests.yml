@@ -194,7 +194,7 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-edited-item.outputs.field-value }}" !== "High") {
+            if ("${{ steps.get-edited-item.outputs.field-value }}" !== "⛰️ High") {
               throw new Error("Field value is not correct")
             }
 
@@ -210,7 +210,7 @@ jobs:
               "Priority"
             )
 
-            if (item.field?.value !== "High") {
+            if (item.field?.value !== "⛰️ High") {
               throw new Error("Field value is not correct")
             }
 
