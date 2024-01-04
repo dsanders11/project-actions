@@ -174,7 +174,7 @@ jobs:
         id: edit-item
         with:
           field: Priority
-          field-value: High
+          field-value: ⛰️ High
           item: ${{ steps.get-added-item.outputs.id }}
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
