@@ -37484,7 +37484,7 @@ const tc = __importStar(__nccwpck_require__(7784));
 const core_1 = __nccwpck_require__(6762);
 const plugin_paginate_graphql_1 = __nccwpck_require__(5883);
 const GH_CLI_RELEASES = 'https://github.com/cli/cli/releases/';
-const GH_VERSION = '2.34.0';
+const GH_VERSION = '2.40.1';
 const GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 async function installGhCli() {
     if (process.platform !== 'linux') {

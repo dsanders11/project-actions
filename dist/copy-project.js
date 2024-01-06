@@ -23838,7 +23838,7 @@ var tc = __toESM(require_tool_cache());
 var import_core = __toESM(require_dist_node8());
 var import_plugin_paginate_graphql = __toESM(require_dist_node9());
 var GH_CLI_RELEASES = "https://github.com/cli/cli/releases/";
-var GH_VERSION = "2.34.0";
+var GH_VERSION = "2.40.1";
 var GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 async function installGhCli() {
   if (process.platform !== "linux") {
