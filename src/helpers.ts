@@ -38,8 +38,14 @@ export async function execCliCommand(args: string[]): Promise<string> {
   const token = core.getInput('token', { required: true });
   const gh = await installGhCli();
 
+  const env: Record<string, string> = { GH_TOKEN: token };
+
+  if (core.isDebug()) {
+    env.GH_DEBUG = 'api';
+  }
+
   const { exitCode, stdout, stderr } = await exec.getExecOutput(gh, args, {
-    env: { GH_TOKEN: token },
+    env,
     ignoreReturnCode: true,
     silent: !core.isDebug()
   });

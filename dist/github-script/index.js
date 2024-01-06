@@ -37507,8 +37507,12 @@ exports.installGhCli = installGhCli;
 async function execCliCommand(args) {
     const token = core.getInput('token', { required: true });
     const gh = await installGhCli();
+    const env = { GH_TOKEN: token };
+    if (core.isDebug()) {
+        env.GH_DEBUG = 'api';
+    }
     const { exitCode, stdout, stderr } = await exec.getExecOutput(gh, args, {
-        env: { GH_TOKEN: token },
+        env,
         ignoreReturnCode: true,
         silent: !core.isDebug()
     });
