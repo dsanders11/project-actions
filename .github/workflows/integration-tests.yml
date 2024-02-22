@@ -82,7 +82,7 @@ jobs:
           drafts: true
           owner: ${{ matrix.owner }}
           project-number: ${{ matrix.project_number }}
-          # public: true
+          public: true
           target-owner: ${{ matrix.owner }}
           template-view: ${{ steps.template-view.outputs.result }}
           title: Integration Test Project
