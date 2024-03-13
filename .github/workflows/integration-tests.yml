@@ -244,6 +244,7 @@ jobs:
 
       - name: Link Project to Repository
         uses: ./link-project/
+        id: link-project-to-repo
         if: ${{ matrix.owner == 'dsanders11' }}
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -251,14 +252,73 @@ jobs:
           repository: dsanders11/project-actions
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Check Project is Linked to Repository
+        uses: ./github-script/
+        if: ${{ matrix.owner == 'dsanders11' }}
+        with:
+          token: ${{ steps.get-auth-token.outputs.token }}
+          script: |
+            const assert = require('node:assert');
+
+            const { projectV2 } = await github.graphql(
+              `query getProjectLinkedRepos($projectId: ID!) {
+                projectV2: node(id: $projectId) {
+                  ... on ProjectV2 {
+                    id
+                    repositories(first: 10) {
+                      nodes {
+                        id
+                        nameWithOwner
+                      }
+                    }
+                  }
+                }
+              }`,
+              { projectId: '${{ steps.copy-project.outputs.id }}' }
+            );
+
+            assert.strictEqual(projectV2.repositories.nodes.length, 1, 'Expected one linked repository');
+            assert.strictEqual(projectV2.repositories.nodes[0].nameWithOwner, 'dsanders11/project-actions', 'Project not linked to repository');
+            assert.strictEqual(projectV2.repositories.nodes[0].id, '${{ steps.link-project-to-repo.outputs.repository-id }}', `Output 'repository-id' is not as expected`);
+
       - name: Link Project to Team
         uses: ./link-project/
+        id: link-project-to-team
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           team: dsanders11-playground-org/maintainers
           token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Project is Linked to Team
+        uses: ./github-script/
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
+        with:
+          token: ${{ steps.get-auth-token.outputs.token }}
+          script: |
+            const assert = require('node:assert');
+
+            const { projectV2 } = await github.graphql(
+              `query getProjectLinkedRepos($projectId: ID!) {
+                projectV2: node(id: $projectId) {
+                  ... on ProjectV2 {
+                    id
+                    teams(first: 10) {
+                      nodes {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }`,
+              { projectId: '${{ steps.copy-project.outputs.id }}' }
+            );
+
+            assert.strictEqual(projectV2.teams.nodes.length, 1, 'Expected one linked team');
+            assert.strictEqual(projectV2.teams.nodes[0].name, 'maintainers', 'Project not linked to team');
+            assert.strictEqual(projectV2.teams.nodes[0].id, '${{ steps.link-project-to-team.outputs.team-id }}', `Output 'team-id' is not as expected`);
 
       - name: Edit Project
         uses: ./edit-project/
