@@ -134,6 +134,7 @@ describe('completedByAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: 'This is the item body',
           title: 'Item Title'
@@ -164,6 +165,7 @@ describe('completedByAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
           title: 'Item Title'
@@ -199,6 +201,7 @@ describe('completedByAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
           title: 'Item Title'
@@ -232,6 +235,7 @@ describe('completedByAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: `
             Completed by ${itemUrl1}
@@ -272,6 +276,7 @@ describe('completedByAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
           title: 'Item Title'

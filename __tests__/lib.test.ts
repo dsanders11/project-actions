@@ -79,6 +79,116 @@ describe('lib', () => {
     });
   });
 
+  describe('getAllItems', () => {
+    it('handles project not found', async () => {
+      const mockOctokit = mockGetOctokit();
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'NOT_FOUND',
+          message: '',
+          path: ['']
+        }
+      ]);
+      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectItemsResponse;
+          }> {
+            throw error;
+          }
+        })
+      });
+
+      await expect(lib.getAllItems(projectId)).rejects.toThrow(
+        lib.ProjectNotFoundError
+      );
+    });
+
+    it('throws other graphql errors', async () => {
+      const mockOctokit = mockGetOctokit();
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'SOME_ERROR',
+          message: '',
+          path: ['']
+        }
+      ]);
+      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectItemsResponse;
+          }> {
+            throw error;
+          }
+        })
+      });
+
+      await expect(lib.getAllItems(projectId)).rejects.toBe(error);
+    });
+
+    it('returns all items', async () => {
+      const items: lib.ProjectItem[] = [
+        {
+          id: 'DI_one',
+          content: {
+            __typename: 'DraftIssue',
+            id: 'content-id-one',
+            body: 'Body One',
+            title: 'Title One'
+          }
+        },
+        {
+          id: 'PR_two',
+          content: {
+            __typename: 'PullRequest',
+            id: 'content-id-two',
+            body: 'Body Two',
+            title: 'Title Two',
+            url: 'foobar'
+          }
+        },
+        {
+          id: 'I_three',
+          content: {
+            __typename: 'Issue',
+            id: 'content-id-three',
+            body: 'Body three',
+            title: 'Title three',
+            url: 'foobar-two'
+          }
+        }
+      ];
+      const mockOctokit = mockGetOctokit();
+      let iterateCount = 0;
+      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectItemsResponse;
+          }> {
+            return {
+              value: {
+                projectV2: {
+                  items: {
+                    nodes: items,
+                    pageInfo: {
+                      endCursor: 'end-cursor',
+                      hasNextPage: false
+                    }
+                  }
+                }
+              },
+              done: iterateCount++ === 1
+            };
+          }
+        })
+      });
+      await expect(lib.getAllItems(projectId)).resolves.toEqual(items);
+    });
+  });
+
   describe('getDraftIssues', () => {
     it('handles project not found', async () => {
       const mockOctokit = mockGetOctokit();
@@ -93,7 +203,7 @@ describe('lib', () => {
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
-            value: lib.DraftIssuesResponse;
+            value: lib.ProjectItemsResponse;
           }> {
             throw error;
           }
@@ -118,7 +228,7 @@ describe('lib', () => {
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
-            value: lib.DraftIssuesResponse;
+            value: lib.ProjectItemsResponse;
           }> {
             throw error;
           }
@@ -128,11 +238,12 @@ describe('lib', () => {
       await expect(lib.getDraftIssues(projectId)).rejects.toBe(error);
     });
 
-    it('returns draft items', async () => {
-      const items: lib.DraftIssueItem[] = [
+    it('returns only draft items', async () => {
+      const draftItems: lib.DraftIssueItem[] = [
         {
           id: 'DI_one',
           content: {
+            __typename: 'DraftIssue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One'
@@ -141,19 +252,45 @@ describe('lib', () => {
         {
           id: 'DI_two',
           content: {
+            __typename: 'DraftIssue',
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two'
           }
         }
       ];
+
+      const items: lib.ProjectItem[] = [
+        {
+          id: 'PR_two',
+          content: {
+            __typename: 'PullRequest',
+            id: 'content-id-two',
+            body: 'Body Two',
+            title: 'Title Two',
+            url: 'foobar'
+          }
+        },
+        ...draftItems,
+        {
+          id: 'I_three',
+          content: {
+            __typename: 'Issue',
+            id: 'content-id-three',
+            body: 'Body three',
+            title: 'Title three',
+            url: 'foobar-two'
+          }
+        }
+      ];
+
       const mockOctokit = mockGetOctokit();
       let iterateCount = 0;
       jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
-            value: lib.DraftIssuesResponse;
+            value: lib.ProjectItemsResponse;
           }> {
             return {
               value: {
@@ -172,7 +309,7 @@ describe('lib', () => {
           }
         })
       });
-      await expect(lib.getDraftIssues(projectId)).resolves.toEqual(items);
+      await expect(lib.getDraftIssues(projectId)).resolves.toEqual(draftItems);
     });
   });
 

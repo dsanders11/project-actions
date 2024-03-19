@@ -37291,6 +37291,8 @@ async function main() {
             deleteProject: lib_1.deleteProject,
             editItem: lib_1.editItem,
             editProject: lib_1.editProject,
+            getAllItems: lib_1.getAllItems,
+            getDraftIssues: lib_1.getDraftIssues,
             getItem: lib_1.getItem,
             getProject: lib_1.getProject,
             linkProjectToRepository: lib_1.linkProjectToRepository,
@@ -37540,9 +37542,48 @@ exports.getOctokit = getOctokit;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.findProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
+exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.findProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getAllItems = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
 const graphql_1 = __nccwpck_require__(8467);
 const helpers_1 = __nccwpck_require__(3015);
+const PROJECT_ITEM_CONTENT_FRAGMENT = `
+  content {
+    __typename
+    ... on DraftIssue {
+      id
+      body
+      title
+    }
+    ... on Issue {
+      id
+      url
+      body
+      title
+    }
+    ... on PullRequest {
+      id
+      url
+      body
+      title
+    }
+  }`;
+const PROJECT_ITEMS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        items(first: 50, after: $cursor) {
+          nodes {
+            id
+            ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
 class FieldNotFoundError extends Error {
     constructor(cause) {
         super('Field not found', { cause });
@@ -37579,6 +37620,9 @@ class TeamNotFoundError extends Error {
     }
 }
 exports.TeamNotFoundError = TeamNotFoundError;
+function isDraftIssue(item) {
+    return item.content.__typename === 'DraftIssue';
+}
 function handleCliError(error) {
     if (error instanceof Error &&
         error.message.includes('Could not resolve to a ProjectV2')) {
@@ -37601,27 +37645,6 @@ async function getItem(owner, projectNumber, item, field) {
     const octokit = (0, helpers_1.getOctokit)();
     let pageIterator;
     const project = await getProject(owner, projectNumber);
-    const contentFragment = `
-    content {
-      __typename
-      ... on DraftIssue {
-        id
-        body
-        title
-      }
-      ... on Issue {
-        id
-        url
-        body
-        title
-      }
-      ... on PullRequest {
-        id
-        url
-        body
-        title
-      }
-    }`;
     if (field !== undefined) {
         pageIterator =
             octokit.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
@@ -37650,7 +37673,7 @@ async function getItem(owner, projectNumber, item, field) {
                       singleSelectValue: name
                     }
                   }
-                  ${contentFragment}
+                  ${PROJECT_ITEM_CONTENT_FRAGMENT}
                 }
                 pageInfo {
                   hasNextPage
@@ -37665,30 +37688,15 @@ async function getItem(owner, projectNumber, item, field) {
             });
     }
     else {
-        pageIterator = octokit.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!) {
-          projectV2: node(id: $projectId) {
-            ... on ProjectV2 {
-              id
-              items(first: 50, after: $cursor) {
-                nodes {
-                  id
-                  ${contentFragment}
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`, { projectId: project.id });
+        pageIterator = octokit.graphql.paginate.iterator(PROJECT_ITEMS_QUERY, { projectId: project.id });
     }
     try {
         for await (const { projectV2 } of pageIterator) {
             for (const node of projectV2.items.nodes) {
                 if (node.id === item ||
                     node.content.id === item ||
-                    node.content.url === item) {
+                    (node.content.__typename !== 'DraftIssue' &&
+                        node.content.url === item)) {
                     const { __typename, ...content } = node.content;
                     const details = {
                         id: node.id,
@@ -37739,32 +37747,12 @@ async function getItem(owner, projectNumber, item, field) {
     return null;
 }
 exports.getItem = getItem;
-async function getDraftIssues(projectId) {
+/**
+ * @throws ProjectNotFoundError
+ */
+async function getAllItems(projectId) {
     const octokit = (0, helpers_1.getOctokit)();
-    const pageIterator = octokit.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!) {
-      projectV2: node(id: $projectId) {
-        ... on ProjectV2 {
-          items(first: 50, after: $cursor) {
-            nodes {
-              id
-              content {
-                ... on DraftIssue {
-                  id
-                  body
-                  title
-                }
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-          }
-        }
-      }
-    }`, {
-        projectId
-    });
+    const pageIterator = octokit.graphql.paginate.iterator(PROJECT_ITEMS_QUERY, { projectId });
     const items = [];
     try {
         for await (const { projectV2 } of pageIterator) {
@@ -37784,6 +37772,14 @@ async function getDraftIssues(projectId) {
         throw error;
     }
     return items;
+}
+exports.getAllItems = getAllItems;
+/**
+ * @throws ProjectNotFoundError
+ */
+async function getDraftIssues(projectId) {
+    const items = await getAllItems(projectId);
+    return items.filter(isDraftIssue);
 }
 exports.getDraftIssues = getDraftIssues;
 async function addItem(owner, projectNumber, url) {

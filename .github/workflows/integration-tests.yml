@@ -214,6 +214,12 @@ jobs:
               throw new Error("Field value is not correct")
             }
 
+            const items = await actions.getAllItems("${{ steps.copy-project.outputs.id }}")
+
+            if (items.length !== 2) {
+              throw new Error("Expected 2 items")
+            }
+
       # - name: Archive Item
       #   uses: ./archive-item/
       #   id: archive-item

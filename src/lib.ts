@@ -28,6 +28,47 @@ interface PullRequestContent {
 
 type ItemContent = DraftIssueContent | IssueContent | PullRequestContent;
 
+const PROJECT_ITEM_CONTENT_FRAGMENT = `
+  content {
+    __typename
+    ... on DraftIssue {
+      id
+      body
+      title
+    }
+    ... on Issue {
+      id
+      url
+      body
+      title
+    }
+    ... on PullRequest {
+      id
+      url
+      body
+      title
+    }
+  }`;
+
+const PROJECT_ITEMS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        items(first: 50, after: $cursor) {
+          nodes {
+            id
+            ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
+
 export interface ItemDetails {
   id: string;
   projectId: string;
@@ -104,13 +145,22 @@ export class TeamNotFoundError extends Error {
   }
 }
 
-export type ProjectItemContent = {
-  __typename: 'DraftIssue' | 'Issue' | 'PullRequest';
+type DraftIssueItemContent = {
+  __typename: 'DraftIssue';
   id: string;
-  url: string;
   body: string;
   title: string;
 };
+
+export type ProjectItemContent =
+  | DraftIssueItemContent
+  | {
+      __typename: 'Issue' | 'PullRequest';
+      id: string;
+      url: string;
+      body: string;
+      title: string;
+    };
 
 export type ProjectItemWithFieldValue = {
   id: string;
@@ -130,20 +180,7 @@ export type ProjectItem = {
 
 export type DraftIssueItem = {
   id: string;
-  content: {
-    id: string;
-    body: string;
-    title: string;
-  };
-};
-
-export type DraftIssuesResponse = {
-  projectV2: {
-    items: {
-      nodes: DraftIssueItem[];
-      pageInfo: PageInfoForward;
-    };
-  };
+  content: DraftIssueItemContent;
 };
 
 export type FieldTypeResponse = {
@@ -202,6 +239,10 @@ export type SingleSelectOptionIdResponse = {
   };
 };
 
+function isDraftIssue(item: ProjectItem): item is DraftIssueItem {
+  return item.content.__typename === 'DraftIssue';
+}
+
 export function handleCliError(error: unknown): never {
   if (
     error instanceof Error &&
@@ -237,28 +278,6 @@ export async function getItem(
 
   const project = await getProject(owner, projectNumber);
 
-  const contentFragment = `
-    content {
-      __typename
-      ... on DraftIssue {
-        id
-        body
-        title
-      }
-      ... on Issue {
-        id
-        url
-        body
-        title
-      }
-      ... on PullRequest {
-        id
-        url
-        body
-        title
-      }
-    }`;
-
   if (field !== undefined) {
     pageIterator =
       octokit.graphql.paginate.iterator<ProjectItemsWithFieldResponse>(
@@ -288,7 +307,7 @@ export async function getItem(
                       singleSelectValue: name
                     }
                   }
-                  ${contentFragment}
+                  ${PROJECT_ITEM_CONTENT_FRAGMENT}
                 }
                 pageInfo {
                   hasNextPage
@@ -305,23 +324,7 @@ export async function getItem(
       );
   } else {
     pageIterator = octokit.graphql.paginate.iterator<ProjectItemsResponse>(
-      `query paginate($cursor: String, $projectId: ID!) {
-          projectV2: node(id: $projectId) {
-            ... on ProjectV2 {
-              id
-              items(first: 50, after: $cursor) {
-                nodes {
-                  id
-                  ${contentFragment}
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`,
+      PROJECT_ITEMS_QUERY,
       { projectId: project.id }
     );
   }
@@ -332,7 +335,8 @@ export async function getItem(
         if (
           node.id === item ||
           node.content.id === item ||
-          node.content.url === item
+          (node.content.__typename !== 'DraftIssue' &&
+            node.content.url === item)
         ) {
           const { __typename, ...content } = node.content;
 
@@ -342,7 +346,7 @@ export async function getItem(
             content: {
               type: __typename,
               ...content
-            }
+            } as ItemContent
           };
 
           if ('field' in projectV2 && 'fieldValueByName' in node) {
@@ -389,40 +393,18 @@ export async function getItem(
   return null;
 }
 
-export async function getDraftIssues(
-  projectId: string
-): Promise<DraftIssueItem[]> {
+/**
+ * @throws ProjectNotFoundError
+ */
+export async function getAllItems(projectId: string): Promise<ProjectItem[]> {
   const octokit = getOctokit();
 
-  const pageIterator = octokit.graphql.paginate.iterator<DraftIssuesResponse>(
-    `query paginate($cursor: String, $projectId: ID!) {
-      projectV2: node(id: $projectId) {
-        ... on ProjectV2 {
-          items(first: 50, after: $cursor) {
-            nodes {
-              id
-              content {
-                ... on DraftIssue {
-                  id
-                  body
-                  title
-                }
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-          }
-        }
-      }
-    }`,
-    {
-      projectId
-    }
+  const pageIterator = octokit.graphql.paginate.iterator<ProjectItemsResponse>(
+    PROJECT_ITEMS_QUERY,
+    { projectId }
   );
 
-  const items: DraftIssueItem[] = [];
+  const items: ProjectItem[] = [];
 
   try {
     for await (const { projectV2 } of pageIterator) {
@@ -443,6 +425,17 @@ export async function getDraftIssues(
   }
 
   return items;
+}
+
+/**
+ * @throws ProjectNotFoundError
+ */
+export async function getDraftIssues(
+  projectId: string
+): Promise<DraftIssueItem[]> {
+  const items = await getAllItems(projectId);
+
+  return items.filter(isDraftIssue);
 }
 
 export async function addItem(

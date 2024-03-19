@@ -23411,6 +23411,45 @@ function getOctokit() {
 }
 
 // src/lib.ts
+var PROJECT_ITEM_CONTENT_FRAGMENT = `
+  content {
+    __typename
+    ... on DraftIssue {
+      id
+      body
+      title
+    }
+    ... on Issue {
+      id
+      url
+      body
+      title
+    }
+    ... on PullRequest {
+      id
+      url
+      body
+      title
+    }
+  }`;
+var PROJECT_ITEMS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        items(first: 50, after: $cursor) {
+          nodes {
+            id
+            ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
 var FieldNotFoundError = class extends Error {
   constructor(cause) {
     super("Field not found", { cause });
@@ -23449,27 +23488,6 @@ async function getItem(owner, projectNumber, item, field) {
   const octokit = getOctokit();
   let pageIterator;
   const project = await getProject(owner, projectNumber);
-  const contentFragment = `
-    content {
-      __typename
-      ... on DraftIssue {
-        id
-        body
-        title
-      }
-      ... on Issue {
-        id
-        url
-        body
-        title
-      }
-      ... on PullRequest {
-        id
-        url
-        body
-        title
-      }
-    }`;
   if (field !== void 0) {
     pageIterator = octokit.graphql.paginate.iterator(
       `query paginate($cursor: String, $projectId: ID!, $field: String!) {
@@ -23498,7 +23516,7 @@ async function getItem(owner, projectNumber, item, field) {
                       singleSelectValue: name
                     }
                   }
-                  ${contentFragment}
+                  ${PROJECT_ITEM_CONTENT_FRAGMENT}
                 }
                 pageInfo {
                   hasNextPage
@@ -23515,30 +23533,14 @@ async function getItem(owner, projectNumber, item, field) {
     );
   } else {
     pageIterator = octokit.graphql.paginate.iterator(
-      `query paginate($cursor: String, $projectId: ID!) {
-          projectV2: node(id: $projectId) {
-            ... on ProjectV2 {
-              id
-              items(first: 50, after: $cursor) {
-                nodes {
-                  id
-                  ${contentFragment}
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`,
+      PROJECT_ITEMS_QUERY,
       { projectId: project.id }
     );
   }
   try {
     for await (const { projectV2 } of pageIterator) {
       for (const node of projectV2.items.nodes) {
-        if (node.id === item || node.content.id === item || node.content.url === item) {
+        if (node.id === item || node.content.id === item || node.content.__typename !== "DraftIssue" && node.content.url === item) {
           const { __typename, ...content } = node.content;
           const details = {
             id: node.id,

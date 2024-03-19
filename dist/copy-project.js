@@ -23882,6 +23882,45 @@ function getOctokit() {
 }
 
 // src/lib.ts
+var PROJECT_ITEM_CONTENT_FRAGMENT = `
+  content {
+    __typename
+    ... on DraftIssue {
+      id
+      body
+      title
+    }
+    ... on Issue {
+      id
+      url
+      body
+      title
+    }
+    ... on PullRequest {
+      id
+      url
+      body
+      title
+    }
+  }`;
+var PROJECT_ITEMS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        items(first: 50, after: $cursor) {
+          nodes {
+            id
+            ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
 var FieldNotFoundError = class extends Error {
   constructor(cause) {
     super("Field not found", { cause });
@@ -23912,6 +23951,9 @@ var TeamNotFoundError = class extends Error {
     super("Team not found", { cause });
   }
 };
+function isDraftIssue(item) {
+  return item.content.__typename === "DraftIssue";
+}
 function handleCliError(error2) {
   if (error2 instanceof Error && error2.message.includes("Could not resolve to a ProjectV2")) {
     throw new ProjectNotFoundError(error2);
@@ -23921,34 +23963,11 @@ function handleCliError(error2) {
     throw error2;
   }
 }
-async function getDraftIssues(projectId) {
+async function getAllItems(projectId) {
   const octokit = getOctokit();
   const pageIterator = octokit.graphql.paginate.iterator(
-    `query paginate($cursor: String, $projectId: ID!) {
-      projectV2: node(id: $projectId) {
-        ... on ProjectV2 {
-          items(first: 50, after: $cursor) {
-            nodes {
-              id
-              content {
-                ... on DraftIssue {
-                  id
-                  body
-                  title
-                }
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-          }
-        }
-      }
-    }`,
-    {
-      projectId
-    }
+    PROJECT_ITEMS_QUERY,
+    { projectId }
   );
   const items = [];
   try {
@@ -23968,6 +23987,10 @@ async function getDraftIssues(projectId) {
     throw error2;
   }
   return items;
+}
+async function getDraftIssues(projectId) {
+  const items = await getAllItems(projectId);
+  return items.filter(isDraftIssue);
 }
 async function copyProject(owner, projectNumber, targetOwner, title, drafts = false) {
   let details;
