@@ -106,7 +106,7 @@ describe('linkProjectAction', () => {
 
     expect(linkProjectToRepository).toHaveBeenCalledTimes(1);
     expect(linkProjectToRepository).toHaveBeenLastCalledWith(
-      projectId,
+      projectNumber,
       repository,
       true
     );
@@ -131,7 +131,11 @@ describe('linkProjectAction', () => {
     expect(linkProjectActionSpy).toHaveReturned();
 
     expect(linkProjectToTeam).toHaveBeenCalledTimes(1);
-    expect(linkProjectToTeam).toHaveBeenLastCalledWith(projectId, team, true);
+    expect(linkProjectToTeam).toHaveBeenLastCalledWith(
+      projectNumber,
+      team,
+      true
+    );
     expect(core.setOutput).toHaveBeenCalledTimes(2);
     expect(core.setOutput).toHaveBeenCalledWith('team-id', teamId);
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
@@ -149,7 +153,11 @@ describe('linkProjectAction', () => {
     expect(linkProjectActionSpy).toHaveReturned();
 
     expect(linkProjectToTeam).toHaveBeenCalledTimes(1);
-    expect(linkProjectToTeam).toHaveBeenLastCalledWith(projectId, team, false);
+    expect(linkProjectToTeam).toHaveBeenLastCalledWith(
+      projectNumber,
+      team,
+      false
+    );
     expect(core.setOutput).toHaveBeenCalledTimes(2);
     expect(core.setOutput).toHaveBeenCalledWith('team-id', teamId);
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);

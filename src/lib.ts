@@ -878,7 +878,7 @@ export async function getProject(
  * @throws RepositoryNotFoundError
  */
 export async function linkProjectToRepository(
-  projectId: string,
+  projectNumber: string,
   repository: string,
   linked = true
 ): Promise<string> {
@@ -907,40 +907,18 @@ export async function linkProjectToRepository(
     throw error;
   }
 
-  // eslint-disable-next-line no-useless-catch
   try {
-    await octokit.graphql(
-      `mutation ($projectId: ID!, $repositoryId: ID!) {
-        ${
-          linked ? 'linkProjectV2ToRepository' : 'unlinkProjectV2FromRepository'
-        }(
-          input: {projectId: $projectId, repositoryId: $repositoryId}
-        ) {
-          repository {
-            id
-          }
-        }
-      }`,
-      { projectId, repositoryId }
-    );
+    await execCliCommand([
+      'project',
+      linked ? 'link' : 'unlink',
+      projectNumber,
+      '--owner',
+      owner,
+      '--repo',
+      name
+    ]);
   } catch (error) {
-    if (error instanceof GraphqlResponseError) {
-      if (error.errors?.[0].type === 'NOT_FOUND') {
-        if (
-          error.errors[0].message ===
-          `Could not resolve to a node with the global id of '${projectId}'`
-        ) {
-          throw new ProjectNotFoundError(error);
-        } else if (
-          error.errors[0].message ===
-          `Could not resolve to a node with the global id of '${repositoryId}'`
-        ) {
-          throw new RepositoryNotFoundError(error);
-        }
-      }
-    }
-
-    throw error;
+    handleCliError(error);
   }
 
   return repositoryId;
@@ -951,7 +929,7 @@ export async function linkProjectToRepository(
  * @throws TeamNotFoundError
  */
 export async function linkProjectToTeam(
-  projectId: string,
+  projectNumber: string,
   team: string,
   linked = true
 ): Promise<string> {
@@ -983,38 +961,18 @@ export async function linkProjectToTeam(
     throw error;
   }
 
-  // eslint-disable-next-line no-useless-catch
   try {
-    await octokit.graphql(
-      `mutation ($projectId: ID!, $teamId: ID!) {
-        ${linked ? 'linkProjectV2ToTeam' : 'unlinkProjectV2FromTeam'}(
-          input: {projectId: $projectId, teamId: $teamId}
-        ) {
-          team {
-            id
-          }
-        }
-      }`,
-      { projectId, teamId }
-    );
+    await execCliCommand([
+      'project',
+      linked ? 'link' : 'unlink',
+      projectNumber,
+      '--owner',
+      owner,
+      '--team',
+      name
+    ]);
   } catch (error) {
-    if (error instanceof GraphqlResponseError) {
-      if (error.errors?.[0].type === 'NOT_FOUND') {
-        if (
-          error.errors[0].message ===
-          `Could not resolve to a node with the global id of '${projectId}'`
-        ) {
-          throw new ProjectNotFoundError(error);
-        } else if (
-          error.errors[0].message ===
-          `Could not resolve to a node with the global id of '${teamId}'`
-        ) {
-          throw new TeamNotFoundError(error);
-        }
-      }
-    }
-
-    throw error;
+    handleCliError(error);
   }
 
   return teamId;

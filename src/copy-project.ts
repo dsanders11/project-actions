@@ -57,11 +57,14 @@ export async function copyProjectAction(): Promise<void> {
     }
 
     if (linkToRepository) {
-      await linkProjectToRepository(project.id, linkToRepository);
+      await linkProjectToRepository(
+        project.number.toString(),
+        linkToRepository
+      );
     }
 
     if (linkToTeam) {
-      await linkProjectToTeam(project.id, linkToTeam);
+      await linkProjectToTeam(project.number.toString(), linkToTeam);
     }
 
     // Do template interpolation on draft issues
