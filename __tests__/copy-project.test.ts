@@ -232,6 +232,7 @@ describe('copyProjectAction', () => {
       {
         id: 'item-id',
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: 'This is the item body',
           title: 'Item Title'
@@ -264,6 +265,7 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: contentId,
           body: 'This is the item {{ foo }}',
           title: 'Item {{ foo }}'
@@ -301,6 +303,7 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: 'content-id',
           body: `<!-- fields
           {
@@ -342,6 +345,7 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
+          __typename: 'DraftIssue',
           id: contentId,
           body: 'This is the item {{ foo }}',
           title: 'Item {{ foo }}'

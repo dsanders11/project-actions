@@ -21953,6 +21953,45 @@ async function execCliCommand(args) {
 }
 
 // src/lib.ts
+var PROJECT_ITEM_CONTENT_FRAGMENT = `
+  content {
+    __typename
+    ... on DraftIssue {
+      id
+      body
+      title
+    }
+    ... on Issue {
+      id
+      url
+      body
+      title
+    }
+    ... on PullRequest {
+      id
+      url
+      body
+      title
+    }
+  }`;
+var PROJECT_ITEMS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        items(first: 50, after: $cursor) {
+          nodes {
+            id
+            ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
 async function findProject(owner, title) {
   const { projects } = JSON.parse(
     await execCliCommand([

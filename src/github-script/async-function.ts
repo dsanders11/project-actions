@@ -19,6 +19,8 @@ import {
   deleteProject,
   editItem,
   editProject,
+  getAllItems,
+  getDraftIssues,
   getItem,
   getProject,
   linkProjectToRepository,
@@ -36,6 +38,8 @@ type ProjectActions = {
   deleteProject: typeof deleteProject;
   editItem: typeof editItem;
   editProject: typeof editProject;
+  getAllItems: typeof getAllItems;
+  getDraftIssues: typeof getDraftIssues;
   getItem: typeof getItem;
   getProject: typeof getProject;
   linkProjectToRepository: typeof linkProjectToRepository;
