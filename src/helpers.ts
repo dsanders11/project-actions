@@ -8,7 +8,7 @@ import { Octokit } from '@octokit/core';
 import { paginateGraphql } from '@octokit/plugin-paginate-graphql';
 
 const GH_CLI_RELEASES = 'https://github.com/cli/cli/releases/';
-const GH_VERSION = '2.40.1';
+const GH_VERSION = '2.45.0';
 const GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 
 export async function installGhCli(): Promise<string> {

@@ -178,7 +178,7 @@ describe('copyProjectAction', () => {
     expect(copyProjectActionSpy).toHaveReturned();
     expect(linkProjectToRepository).toHaveBeenCalledTimes(1);
     expect(linkProjectToRepository).toHaveBeenCalledWith(
-      newProjectId,
+      newProjectNumber.toString(),
       repository
     );
   });
@@ -198,7 +198,10 @@ describe('copyProjectAction', () => {
     await index.copyProjectAction();
     expect(copyProjectActionSpy).toHaveReturned();
     expect(linkProjectToTeam).toHaveBeenCalledTimes(1);
-    expect(linkProjectToTeam).toHaveBeenCalledWith(newProjectId, team);
+    expect(linkProjectToTeam).toHaveBeenCalledWith(
+      newProjectNumber.toString(),
+      team
+    );
   });
 
   it('does not get draft issues if no template view', async () => {

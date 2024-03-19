@@ -37484,7 +37484,7 @@ const tc = __importStar(__nccwpck_require__(7784));
 const core_1 = __nccwpck_require__(6762);
 const plugin_paginate_graphql_1 = __nccwpck_require__(5883);
 const GH_CLI_RELEASES = 'https://github.com/cli/cli/releases/';
-const GH_VERSION = '2.40.1';
+const GH_VERSION = '2.45.0';
 const GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 async function installGhCli() {
     if (process.platform !== 'linux') {
@@ -38138,7 +38138,7 @@ exports.getProject = getProject;
  * @throws ProjectNotFoundError
  * @throws RepositoryNotFoundError
  */
-async function linkProjectToRepository(projectId, repository, linked = true) {
+async function linkProjectToRepository(projectNumber, repository, linked = true) {
     const octokit = (0, helpers_1.getOctokit)();
     const [owner, name] = repository.split('/');
     let repositoryId;
@@ -38158,32 +38158,19 @@ async function linkProjectToRepository(projectId, repository, linked = true) {
         }
         throw error;
     }
-    // eslint-disable-next-line no-useless-catch
     try {
-        await octokit.graphql(`mutation ($projectId: ID!, $repositoryId: ID!) {
-        ${linked ? 'linkProjectV2ToRepository' : 'unlinkProjectV2FromRepository'}(
-          input: {projectId: $projectId, repositoryId: $repositoryId}
-        ) {
-          repository {
-            id
-          }
-        }
-      }`, { projectId, repositoryId });
+        await (0, helpers_1.execCliCommand)([
+            'project',
+            linked ? 'link' : 'unlink',
+            projectNumber,
+            '--owner',
+            owner,
+            '--repo',
+            name
+        ]);
     }
     catch (error) {
-        if (error instanceof graphql_1.GraphqlResponseError) {
-            if (error.errors?.[0].type === 'NOT_FOUND') {
-                if (error.errors[0].message ===
-                    `Could not resolve to a node with the global id of '${projectId}'`) {
-                    throw new ProjectNotFoundError(error);
-                }
-                else if (error.errors[0].message ===
-                    `Could not resolve to a node with the global id of '${repositoryId}'`) {
-                    throw new RepositoryNotFoundError(error);
-                }
-            }
-        }
-        throw error;
+        handleCliError(error);
     }
     return repositoryId;
 }
@@ -38192,7 +38179,7 @@ exports.linkProjectToRepository = linkProjectToRepository;
  * @throws ProjectNotFoundError
  * @throws TeamNotFoundError
  */
-async function linkProjectToTeam(projectId, team, linked = true) {
+async function linkProjectToTeam(projectNumber, team, linked = true) {
     const octokit = (0, helpers_1.getOctokit)();
     const [owner, name] = team.split('/');
     let teamId;
@@ -38216,32 +38203,19 @@ async function linkProjectToTeam(projectId, team, linked = true) {
         }
         throw error;
     }
-    // eslint-disable-next-line no-useless-catch
     try {
-        await octokit.graphql(`mutation ($projectId: ID!, $teamId: ID!) {
-        ${linked ? 'linkProjectV2ToTeam' : 'unlinkProjectV2FromTeam'}(
-          input: {projectId: $projectId, teamId: $teamId}
-        ) {
-          team {
-            id
-          }
-        }
-      }`, { projectId, teamId });
+        await (0, helpers_1.execCliCommand)([
+            'project',
+            linked ? 'link' : 'unlink',
+            projectNumber,
+            '--owner',
+            owner,
+            '--team',
+            name
+        ]);
     }
     catch (error) {
-        if (error instanceof graphql_1.GraphqlResponseError) {
-            if (error.errors?.[0].type === 'NOT_FOUND') {
-                if (error.errors[0].message ===
-                    `Could not resolve to a node with the global id of '${projectId}'`) {
-                    throw new ProjectNotFoundError(error);
-                }
-                else if (error.errors[0].message ===
-                    `Could not resolve to a node with the global id of '${teamId}'`) {
-                    throw new TeamNotFoundError(error);
-                }
-            }
-        }
-        throw error;
+        handleCliError(error);
     }
     return teamId;
 }

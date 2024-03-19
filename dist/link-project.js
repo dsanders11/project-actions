@@ -23367,7 +23367,7 @@ var tc = __toESM(require_tool_cache());
 var import_core = __toESM(require_dist_node8());
 var import_plugin_paginate_graphql = __toESM(require_dist_node9());
 var GH_CLI_RELEASES = "https://github.com/cli/cli/releases/";
-var GH_VERSION = "2.40.1";
+var GH_VERSION = "2.45.0";
 var GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 async function installGhCli() {
   if (process.platform !== "linux") {
@@ -23452,7 +23452,7 @@ async function getProject(owner, projectNumber) {
   }
   return JSON.parse(details);
 }
-async function linkProjectToRepository(projectId, repository, linked = true) {
+async function linkProjectToRepository(projectNumber, repository, linked = true) {
   const octokit = getOctokit();
   const [owner, name] = repository.split("/");
   let repositoryId;
@@ -23475,33 +23475,21 @@ async function linkProjectToRepository(projectId, repository, linked = true) {
     throw error;
   }
   try {
-    await octokit.graphql(
-      `mutation ($projectId: ID!, $repositoryId: ID!) {
-        ${linked ? "linkProjectV2ToRepository" : "unlinkProjectV2FromRepository"}(
-          input: {projectId: $projectId, repositoryId: $repositoryId}
-        ) {
-          repository {
-            id
-          }
-        }
-      }`,
-      { projectId, repositoryId }
-    );
+    await execCliCommand([
+      "project",
+      linked ? "link" : "unlink",
+      projectNumber,
+      "--owner",
+      owner,
+      "--repo",
+      name
+    ]);
   } catch (error) {
-    if (error instanceof import_graphql.GraphqlResponseError) {
-      if (error.errors?.[0].type === "NOT_FOUND") {
-        if (error.errors[0].message === `Could not resolve to a node with the global id of '${projectId}'`) {
-          throw new ProjectNotFoundError(error);
-        } else if (error.errors[0].message === `Could not resolve to a node with the global id of '${repositoryId}'`) {
-          throw new RepositoryNotFoundError(error);
-        }
-      }
-    }
-    throw error;
+    handleCliError(error);
   }
   return repositoryId;
 }
-async function linkProjectToTeam(projectId, team, linked = true) {
+async function linkProjectToTeam(projectNumber, team, linked = true) {
   const octokit = getOctokit();
   const [owner, name] = team.split("/");
   let teamId;
@@ -23528,29 +23516,17 @@ async function linkProjectToTeam(projectId, team, linked = true) {
     throw error;
   }
   try {
-    await octokit.graphql(
-      `mutation ($projectId: ID!, $teamId: ID!) {
-        ${linked ? "linkProjectV2ToTeam" : "unlinkProjectV2FromTeam"}(
-          input: {projectId: $projectId, teamId: $teamId}
-        ) {
-          team {
-            id
-          }
-        }
-      }`,
-      { projectId, teamId }
-    );
+    await execCliCommand([
+      "project",
+      linked ? "link" : "unlink",
+      projectNumber,
+      "--owner",
+      owner,
+      "--team",
+      name
+    ]);
   } catch (error) {
-    if (error instanceof import_graphql.GraphqlResponseError) {
-      if (error.errors?.[0].type === "NOT_FOUND") {
-        if (error.errors[0].message === `Could not resolve to a node with the global id of '${projectId}'`) {
-          throw new ProjectNotFoundError(error);
-        } else if (error.errors[0].message === `Could not resolve to a node with the global id of '${teamId}'`) {
-          throw new TeamNotFoundError(error);
-        }
-      }
-    }
-    throw error;
+    handleCliError(error);
   }
   return teamId;
 }
@@ -23570,13 +23546,13 @@ async function linkProjectAction() {
     const project = await getProject(owner, projectNumber);
     if (repository) {
       const repositoryId = await linkProjectToRepository(
-        project.id,
+        projectNumber,
         repository,
         linked
       );
       core2.setOutput("repository-id", repositoryId);
     } else {
-      const teamId = await linkProjectToTeam(project.id, team, linked);
+      const teamId = await linkProjectToTeam(projectNumber, team, linked);
       core2.setOutput("team-id", teamId);
     }
     core2.setOutput("project-id", project.id);

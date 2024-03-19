@@ -1211,6 +1211,10 @@ describe('lib', () => {
     const repository = 'dsanders11/project-actions';
     const repositoryId = 'repository-id';
 
+    beforeEach(() => {
+      jest.resetAllMocks();
+    });
+
     it('handles repository not found', async () => {
       const mockOctokit = mockGetOctokit();
       jest.mocked(mockOctokit.graphql).mockRejectedValue(
@@ -1224,7 +1228,7 @@ describe('lib', () => {
       );
 
       await expect(
-        lib.linkProjectToRepository(projectId, repository)
+        lib.linkProjectToRepository(projectNumber, repository)
       ).rejects.toThrow(lib.RepositoryNotFoundError);
     });
 
@@ -1240,67 +1244,24 @@ describe('lib', () => {
       jest.mocked(mockOctokit.graphql).mockRejectedValue(error);
 
       await expect(
-        lib.linkProjectToRepository(projectId, repository)
-      ).rejects.toBe(error);
-
-      jest
-        .mocked(mockOctokit.graphql)
-        .mockResolvedValueOnce({
-          repository: {
-            id: repositoryId
-          }
-        })
-        .mockRejectedValue(error);
-
-      await expect(
-        lib.linkProjectToRepository(projectId, repository)
+        lib.linkProjectToRepository(projectNumber, repository)
       ).rejects.toBe(error);
     });
 
     it('handles project not found', async () => {
       const mockOctokit = mockGetOctokit();
-      const error = createMockGraphqlResponseError([
-        {
-          type: 'NOT_FOUND',
-          message: `Could not resolve to a node with the global id of '${projectId}'`,
-          path: ['']
-        }
-      ]);
       jest
         .mocked(mockOctokit.graphql<lib.RepositoryIdResponse>)
         .mockResolvedValueOnce({
           repository: {
             id: repositoryId
           }
-        })
-        .mockRejectedValue(error);
+        });
+      mockProjectNotFoundError();
 
       await expect(
-        lib.linkProjectToRepository(projectId, repository)
+        lib.linkProjectToRepository(projectNumber, repository)
       ).rejects.toThrow(lib.ProjectNotFoundError);
-    });
-
-    it('handles repository not found by ID', async () => {
-      const mockOctokit = mockGetOctokit();
-      const error = createMockGraphqlResponseError([
-        {
-          type: 'NOT_FOUND',
-          message: `Could not resolve to a node with the global id of '${repositoryId}'`,
-          path: ['']
-        }
-      ]);
-      jest
-        .mocked(mockOctokit.graphql)
-        .mockResolvedValueOnce({
-          repository: {
-            id: repositoryId
-          }
-        })
-        .mockRejectedValue(error);
-
-      await expect(
-        lib.linkProjectToRepository(projectId, repository)
-      ).rejects.toThrow(lib.RepositoryNotFoundError);
     });
 
     it('links repository to project', async () => {
@@ -1313,13 +1274,13 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
+      jest.mocked(execCliCommand);
 
       await expect(
-        lib.linkProjectToRepository(projectId, repository)
+        lib.linkProjectToRepository(projectNumber, repository)
       ).resolves.toEqual(repositoryId);
-      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
-        expect.stringContaining('linkProjectV2ToRepository'),
-        { projectId, repositoryId }
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['link', '--repo'])
       );
     });
 
@@ -1333,13 +1294,13 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
+      jest.mocked(execCliCommand);
 
       await expect(
-        lib.linkProjectToRepository(projectId, repository, false)
+        lib.linkProjectToRepository(projectNumber, repository, false)
       ).resolves.toEqual(repositoryId);
-      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
-        expect.stringContaining('unlinkProjectV2FromRepository'),
-        { projectId, repositoryId }
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['unlink', '--repo'])
       );
     });
   });
@@ -1347,6 +1308,10 @@ describe('lib', () => {
   describe('linkProjectToTeam', () => {
     const team = 'foo/bar';
     const teamId = 'team-id';
+
+    beforeEach(() => {
+      jest.resetAllMocks();
+    });
 
     it('handles team not found', async () => {
       const mockOctokit = mockGetOctokit();
@@ -1360,7 +1325,7 @@ describe('lib', () => {
         ])
       );
 
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toThrow(
+      await expect(lib.linkProjectToTeam(projectNumber, team)).rejects.toThrow(
         lib.TeamNotFoundError
       );
 
@@ -1370,7 +1335,7 @@ describe('lib', () => {
         }
       });
 
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toThrow(
+      await expect(lib.linkProjectToTeam(projectNumber, team)).rejects.toThrow(
         lib.TeamNotFoundError
       );
     });
@@ -1386,69 +1351,24 @@ describe('lib', () => {
       ]);
       jest.mocked(mockOctokit.graphql).mockRejectedValue(error);
 
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toBe(error);
-
-      jest
-        .mocked(mockOctokit.graphql)
-        .mockResolvedValueOnce({
-          organization: {
-            team: {
-              id: teamId
-            }
-          }
-        })
-        .mockRejectedValue(error);
-
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toBe(error);
+      await expect(lib.linkProjectToTeam(projectNumber, team)).rejects.toBe(
+        error
+      );
     });
 
     it('handles project not found', async () => {
       const mockOctokit = mockGetOctokit();
-      const error = createMockGraphqlResponseError([
-        {
-          type: 'NOT_FOUND',
-          message: `Could not resolve to a node with the global id of '${projectId}'`,
-          path: ['']
-        }
-      ]);
-      jest
-        .mocked(mockOctokit.graphql)
-        .mockResolvedValueOnce({
-          organization: {
-            team: {
-              id: teamId
-            }
+      jest.mocked(mockOctokit.graphql).mockResolvedValueOnce({
+        organization: {
+          team: {
+            id: teamId
           }
-        })
-        .mockRejectedValue(error);
+        }
+      });
+      mockProjectNotFoundError();
 
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toThrow(
+      await expect(lib.linkProjectToTeam(projectNumber, team)).rejects.toThrow(
         lib.ProjectNotFoundError
-      );
-    });
-
-    it('handles team not found by ID', async () => {
-      const mockOctokit = mockGetOctokit();
-      const error = createMockGraphqlResponseError([
-        {
-          type: 'NOT_FOUND',
-          message: `Could not resolve to a node with the global id of '${teamId}'`,
-          path: ['']
-        }
-      ]);
-      jest
-        .mocked(mockOctokit.graphql)
-        .mockResolvedValueOnce({
-          organization: {
-            team: {
-              id: teamId
-            }
-          }
-        })
-        .mockRejectedValue(error);
-
-      await expect(lib.linkProjectToTeam(projectId, team)).rejects.toThrow(
-        lib.TeamNotFoundError
       );
     });
 
@@ -1464,13 +1384,13 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
+      jest.mocked(execCliCommand);
 
-      await expect(lib.linkProjectToTeam(projectId, team)).resolves.toEqual(
+      await expect(lib.linkProjectToTeam(projectNumber, team)).resolves.toEqual(
         teamId
       );
-      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
-        expect.stringContaining('linkProjectV2ToTeam'),
-        { projectId, teamId }
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['link', '--team'])
       );
     });
 
@@ -1486,13 +1406,13 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
+      jest.mocked(execCliCommand);
 
       await expect(
-        lib.linkProjectToTeam(projectId, team, false)
+        lib.linkProjectToTeam(projectNumber, team, false)
       ).resolves.toEqual(teamId);
-      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
-        expect.stringContaining('unlinkProjectV2FromTeam'),
-        { projectId, teamId }
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['unlink', '--team'])
       );
     });
   });

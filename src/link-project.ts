@@ -22,13 +22,13 @@ export async function linkProjectAction(): Promise<void> {
 
     if (repository) {
       const repositoryId = await linkProjectToRepository(
-        project.id,
+        projectNumber,
         repository,
         linked
       );
       core.setOutput('repository-id', repositoryId);
     } else {
-      const teamId = await linkProjectToTeam(project.id, team, linked);
+      const teamId = await linkProjectToTeam(projectNumber, team, linked);
       core.setOutput('team-id', teamId);
     }
 
