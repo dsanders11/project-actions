@@ -101,19 +101,11 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-draft-issue.outputs.title }}" !== "My Favorite Issue") {
-              throw new Error("Draft issue title is not correct")
-            }
+            const assert = require('node:assert');
 
-            const body = `${{ steps.get-draft-issue.outputs.body }}`
-
-            if (!body.includes("Here's another bar")) {
-              throw new Error("Draft issue body is not correct")
-            }
-
-            if ("${{ steps.get-draft-issue.outputs.field-value }}" != "Low") {
-              throw new Error("Draft issue field is not correct")
-            }
+            assert.strictEqual('${{ steps.get-draft-issue.outputs.title }}', 'My Favorite Issue');
+            assert.strictEqual('${{ steps.get-draft-issue.outputs.field-value }}', 'Low');
+            assert.match(`${{ steps.get-draft-issue.outputs.body }}`, /Here's another bar/);
 
       - name: Run Completed By
         uses: ./completed-by/
@@ -128,16 +120,16 @@ jobs:
         uses: ./github-script/
         with:
           script: |
+            const assert = require('node:assert');
+
             const item = await actions.getItem(
-              "${{ steps.copy-project.outputs.owner }}",
-              "${{ steps.copy-project.outputs.number }}",
-              "${{ steps.get-draft-issue-id.outputs.id }}",
-              "Status"
+              '${{ steps.copy-project.outputs.owner }}',
+              '${{ steps.copy-project.outputs.number }}',
+              '${{ steps.get-draft-issue-id.outputs.id }}',
+              'Status'
             )
 
-            if (item.field?.value !== "Done") {
-              throw new Error("Field value is not correct")
-            }
+            assert.strictEqual(item.field?.value, 'Done');
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Add Item
@@ -165,9 +157,9 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-added-item.outputs.field-value }}" !== new Date("${{ steps.get-date.outputs.result }}").toISOString().split('T')[0]) {
-              throw new Error("Field value is not correct")
-            }
+            const assert = require('node:assert');
+
+            assert.strictEqual('${{ steps.get-added-item.outputs.field-value }}', new Date('${{ steps.get-date.outputs.result }}').toISOString().split('T')[0]);
 
       - name: Edit Item
         uses: ./edit-item/
@@ -194,31 +186,27 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-edited-item.outputs.field-value }}" !== "⛰️ High") {
-              throw new Error("Field value is not correct")
-            }
+            const assert = require('node:assert');
+
+            assert.strictEqual('${{ steps.get-edited-item.outputs.field-value }}', '⛰️ High');
 
       - name: Test GitHub Script Action
         uses: ./github-script/
         with:
           token: ${{ steps.get-auth-token.outputs.token }}
           script: |
+            const assert = require('node:assert');
+
             const item = await actions.getItem(
-              "${{ steps.copy-project.outputs.owner }}",
-              "${{ steps.copy-project.outputs.number }}",
-              "${{ steps.edit-item.outputs.id }}",
-              "Priority"
-            )
+              '${{ steps.copy-project.outputs.owner }}',
+              '${{ steps.copy-project.outputs.number }}',
+              '${{ steps.edit-item.outputs.id }}',
+              'Priority'
+            );
+            const items = await actions.getAllItems('${{ steps.copy-project.outputs.id }}');
 
-            if (item.field?.value !== "⛰️ High") {
-              throw new Error("Field value is not correct")
-            }
-
-            const items = await actions.getAllItems("${{ steps.copy-project.outputs.id }}")
-
-            if (items.length !== 2) {
-              throw new Error("Expected 2 items")
-            }
+            assert.strictEqual(item.field?.value, '⛰️ High');
+            assert.strictEqual(items.length, 2, 'Expected 2 items');
 
       # - name: Archive Item
       #   uses: ./archive-item/
@@ -349,9 +337,9 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.copy-project.outputs.number }}" !== "${{ steps.find-project.outputs.number }}") {
-              throw new Error("Could not find project by title")
-            }
+            const assert = require('node:assert');
+
+            assert.strictEqual('${{ steps.copy-project.outputs.number }}', '${{ steps.find-project.outputs.number }}', 'Expect to find project by title');
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Project
@@ -366,17 +354,11 @@ jobs:
         uses: ./github-script/
         with:
           script: |
-            if ("${{ steps.get-project.outputs.title }}" !== "New Title ${{ steps.copy-project.outputs.number }}") {
-              throw new Error("Project title is not correct")
-            }
+            const assert = require('node:assert');
 
-            if ("${{ steps.get-project.outputs.description }}" !== "New Description") {
-              throw new Error("Project description is not correct")
-            }
-
-            if ("${{ steps.get-project.outputs.readme }}" !== "This is the readme") {
-              throw new Error("Project readme is not correct")
-            }
+            assert.strictEqual('${{ steps.get-project.outputs.title }}', 'New Title ${{ steps.copy-project.outputs.number }}');
+            assert.strictEqual('${{ steps.get-project.outputs.description }}', 'New Description');
+            assert.strictEqual('${{ steps.get-project.outputs.readme }}', 'This is the readme');
 
       - name: Close Project
         uses: ./close-project/
