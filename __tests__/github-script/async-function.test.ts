@@ -1,7 +1,8 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable @typescript-eslint/no-explicit-any, jest/expect-expect */
+/* eslint-disable @typescript-eslint/no-explicit-any, vitest/expect-expect */
+import { describe, expect, test } from 'vitest';
 
 import { callAsyncFunction } from '../../src/github-script/async-function';
 

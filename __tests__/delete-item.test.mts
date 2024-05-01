@@ -1,16 +1,19 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/delete-item';
-import { ItemDetails, deleteItem, getItem } from '../src/lib';
-import { mockGetInput } from './utils';
+import * as index from '../src/delete-item.js';
+import { ItemDetails, deleteItem, getItem } from '../src/lib.js';
+import { mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const deleteItemActionSpy = jest.spyOn(index, 'deleteItemAction');
+const deleteItemActionSpy = vi.spyOn(index, 'deleteItemAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -19,7 +22,7 @@ const itemId = 'item-id';
 
 describe('deleteItemAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -48,7 +51,7 @@ describe('deleteItemAction', () => {
 
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(deleteItem).mockResolvedValue();
+    vi.mocked(deleteItem).mockResolvedValue();
 
     await index.deleteItemAction();
     expect(deleteItemActionSpy).toHaveReturned();
@@ -59,8 +62,8 @@ describe('deleteItemAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(deleteItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(deleteItem).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -73,8 +76,8 @@ describe('deleteItemAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(deleteItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(deleteItem).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -87,8 +90,8 @@ describe('deleteItemAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(deleteItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(deleteItem).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -101,8 +104,8 @@ describe('deleteItemAction', () => {
 
   it('passes inputs correctly', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(deleteItem).mockResolvedValue();
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(deleteItem).mockResolvedValue();
 
     await index.deleteItemAction();
     expect(deleteItemActionSpy).toHaveReturned();
