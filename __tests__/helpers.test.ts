@@ -1,3 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
+
 import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
 import { Octokit } from '@octokit/core';
@@ -5,19 +8,19 @@ import { Octokit } from '@octokit/core';
 import * as helpers from '../src/helpers';
 import { mockGetInput, overridePlatform, resetPlatform } from './utils';
 
-jest.mock('@actions/core');
-jest.mock('@actions/exec');
-jest.mock('@actions/tool-cache');
-jest.mock('@octokit/core', () => ({
+vi.mock('@actions/core');
+vi.mock('@actions/exec');
+vi.mock('@actions/tool-cache');
+vi.mock('@octokit/core', () => ({
   Octokit: {
-    plugin: jest.fn()
+    plugin: vi.fn()
   }
 }));
-jest.mock('@octokit/plugin-paginate-graphql');
+vi.mock('@octokit/plugin-paginate-graphql');
 
 describe('helpers', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('installGhCli', () => {
@@ -37,7 +40,7 @@ describe('helpers', () => {
     });
 
     it('checks cache for gh', async () => {
-      jest.mocked(tc.find).mockReturnValue('/path/to/tool/');
+      vi.mocked(tc.find).mockReturnValue('/path/to/tool/');
       await expect(helpers.installGhCli()).resolves.toEqual(
         '/path/to/tool/bin/gh'
       );
@@ -45,12 +48,10 @@ describe('helpers', () => {
     });
 
     it('downloads and caches gh', async () => {
-      jest.mocked(tc.find).mockReturnValue('');
-      jest
-        .mocked(tc.downloadTool)
-        .mockResolvedValue('/path/to/download.tar.gz');
-      jest.mocked(tc.extractTar).mockResolvedValue('/path/to/extracted/');
-      jest.mocked(tc.cacheDir).mockResolvedValue('/path/to/cached/');
+      vi.mocked(tc.find).mockReturnValue('');
+      vi.mocked(tc.downloadTool).mockResolvedValue('/path/to/download.tar.gz');
+      vi.mocked(tc.extractTar).mockResolvedValue('/path/to/extracted/');
+      vi.mocked(tc.cacheDir).mockResolvedValue('/path/to/cached/');
       await expect(helpers.installGhCli()).resolves.toEqual(
         '/path/to/cached/bin/gh'
       );
@@ -90,9 +91,11 @@ describe('helpers', () => {
       const stdout = 'output';
       const token = 'gh-token';
       mockGetInput({ token });
-      jest
-        .mocked(exec.getExecOutput)
-        .mockResolvedValue({ exitCode: 0, stdout, stderr: '' });
+      vi.mocked(exec.getExecOutput).mockResolvedValue({
+        exitCode: 0,
+        stdout,
+        stderr: ''
+      });
       await expect(helpers.execCliCommand(args)).resolves.toEqual(stdout);
       expect(exec.getExecOutput).toHaveBeenCalledWith(
         expect.anything(),
@@ -111,9 +114,11 @@ describe('helpers', () => {
       const stderr = 'my error';
       const token = 'gh-token';
       mockGetInput({ token });
-      jest
-        .mocked(exec.getExecOutput)
-        .mockResolvedValue({ exitCode: 1, stdout, stderr });
+      vi.mocked(exec.getExecOutput).mockResolvedValue({
+        exitCode: 1,
+        stdout,
+        stderr
+      });
       await expect(helpers.execCliCommand(args)).rejects.toThrow(stderr);
     });
 
@@ -123,9 +128,11 @@ describe('helpers', () => {
       const stderr = 'my error';
       const token = 'gh-token';
       mockGetInput({ token });
-      jest
-        .mocked(exec.getExecOutput)
-        .mockResolvedValue({ exitCode: 0, stdout, stderr });
+      vi.mocked(exec.getExecOutput).mockResolvedValue({
+        exitCode: 0,
+        stdout,
+        stderr
+      });
       await expect(helpers.execCliCommand(args)).rejects.toThrow(stderr);
     });
   });
@@ -142,9 +149,9 @@ describe('helpers', () => {
       const token = 'auth-token';
       mockGetInput({ token });
 
-      const mockOctokit = jest.fn();
+      const mockOctokit = vi.fn();
 
-      (Octokit.plugin as jest.Mock).mockReturnValue(mockOctokit);
+      (Octokit.plugin as Mock).mockReturnValue(mockOctokit);
 
       helpers.getOctokit();
       expect(mockOctokit).toHaveBeenCalledWith({ auth: token });

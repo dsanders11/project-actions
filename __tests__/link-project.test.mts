@@ -1,21 +1,24 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/link-project';
+import * as index from '../src/link-project.js';
 import {
   ProjectDetails,
   getProject,
   linkProjectToRepository,
   linkProjectToTeam
-} from '../src/lib';
-import { mockGetBooleanInput, mockGetInput } from './utils';
+} from '../src/lib.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
 // Spy the action's entrypoint
-const linkProjectActionSpy = jest.spyOn(index, 'linkProjectAction');
+const linkProjectActionSpy = vi.spyOn(index, 'linkProjectAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -27,7 +30,7 @@ const teamId = 'baz';
 
 describe('linkProjectAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -56,7 +59,7 @@ describe('linkProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, repository });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -69,7 +72,7 @@ describe('linkProjectAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, repository });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -82,7 +85,7 @@ describe('linkProjectAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, repository });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -96,10 +99,10 @@ describe('linkProjectAction', () => {
   it('can link a repository', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, repository });
     mockGetBooleanInput({ linked: true });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(linkProjectToRepository).mockResolvedValue(repositoryId);
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(linkProjectToRepository).mockResolvedValue(repositoryId);
 
     await index.linkProjectAction();
     expect(linkProjectActionSpy).toHaveReturned();
@@ -122,10 +125,10 @@ describe('linkProjectAction', () => {
   it('can link a team', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, team });
     mockGetBooleanInput({ linked: true });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(linkProjectToTeam).mockResolvedValue(teamId);
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(linkProjectToTeam).mockResolvedValue(teamId);
 
     await index.linkProjectAction();
     expect(linkProjectActionSpy).toHaveReturned();
@@ -144,10 +147,10 @@ describe('linkProjectAction', () => {
   it('can unlink', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, team });
     mockGetBooleanInput({ linked: false });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(linkProjectToTeam).mockResolvedValue(teamId);
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(linkProjectToTeam).mockResolvedValue(teamId);
 
     await index.linkProjectAction();
     expect(linkProjectActionSpy).toHaveReturned();

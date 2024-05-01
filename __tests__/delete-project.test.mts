@@ -1,23 +1,26 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/delete-project';
-import { deleteProject } from '../src/lib';
-import { mockGetInput } from './utils';
+import * as index from '../src/delete-project.js';
+import { deleteProject } from '../src/lib.js';
+import { mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const deleteProjectActionSpy = jest.spyOn(index, 'deleteProjectAction');
+const deleteProjectActionSpy = vi.spyOn(index, 'deleteProjectAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
 
 describe('deleteProjectAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -34,7 +37,7 @@ describe('deleteProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber });
-    jest.mocked(deleteProject).mockImplementation(() => {
+    vi.mocked(deleteProject).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -47,7 +50,7 @@ describe('deleteProjectAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber });
-    jest.mocked(deleteProject).mockImplementation(() => {
+    vi.mocked(deleteProject).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -60,7 +63,7 @@ describe('deleteProjectAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber });
-    jest.mocked(deleteProject).mockImplementation(() => {
+    vi.mocked(deleteProject).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 

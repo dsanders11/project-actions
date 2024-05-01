@@ -1,6 +1,8 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/copy-project';
+import * as index from '../src/copy-project.js';
 import {
   copyProject,
   editItem,
@@ -8,16 +10,17 @@ import {
   getDraftIssues,
   linkProjectToRepository,
   linkProjectToTeam
-} from '../src/lib';
-import { mockGetBooleanInput, mockGetInput } from './utils';
+} from '../src/lib.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const copyProjectActionSpy = jest.spyOn(index, 'copyProjectAction');
+const copyProjectActionSpy = vi.spyOn(index, 'copyProjectAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -32,7 +35,7 @@ const templateView = JSON.stringify({
 });
 
 function mockCopyProject(newProjectId: string, newProjectNumber: number): void {
-  jest.mocked(copyProject).mockResolvedValue({
+  vi.mocked(copyProject).mockResolvedValue({
     id: newProjectId,
     number: newProjectNumber,
     fields: {
@@ -56,7 +59,7 @@ function mockCopyProject(newProjectId: string, newProjectNumber: number): void {
 
 describe('copyProjectAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -102,7 +105,7 @@ describe('copyProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, title });
-    jest.mocked(copyProject).mockImplementation(() => {
+    vi.mocked(copyProject).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -115,7 +118,7 @@ describe('copyProjectAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, title });
-    jest.mocked(copyProject).mockImplementation(() => {
+    vi.mocked(copyProject).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -128,7 +131,7 @@ describe('copyProjectAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, title });
-    jest.mocked(copyProject).mockImplementation(() => {
+    vi.mocked(copyProject).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -228,7 +231,7 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: 'item-id',
         content: {
@@ -261,7 +264,7 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -299,7 +302,7 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -341,7 +344,7 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -352,7 +355,7 @@ describe('copyProjectAction', () => {
         }
       }
     ]);
-    jest.mocked(editItem).mockImplementation(() => {
+    vi.mocked(editItem).mockImplementation(() => {
       throw new Error(errorMessage);
     });
 

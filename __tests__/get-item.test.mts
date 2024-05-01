@@ -1,16 +1,19 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/get-item';
-import { getItem } from '../src/lib';
-import { mockGetInput } from './utils';
+import * as index from '../src/get-item.js';
+import { getItem } from '../src/lib.js';
+import { mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const getItemActionSpy = jest.spyOn(index, 'getItemAction');
+const getItemActionSpy = vi.spyOn(index, 'getItemAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -20,7 +23,7 @@ const itemId = 'item-id';
 
 describe('getItemAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -49,7 +52,7 @@ describe('getItemAction', () => {
 
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue(null);
+    vi.mocked(getItem).mockResolvedValue(null);
 
     await index.getItemAction();
     expect(getItemActionSpy).toHaveReturned();
@@ -60,7 +63,7 @@ describe('getItemAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockImplementation(() => {
+    vi.mocked(getItem).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -73,7 +76,7 @@ describe('getItemAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockImplementation(() => {
+    vi.mocked(getItem).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -86,7 +89,7 @@ describe('getItemAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockImplementation(() => {
+    vi.mocked(getItem).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -110,7 +113,7 @@ describe('getItemAction', () => {
       item,
       field: 'Status'
     });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { id: contentId, type: 'PullRequest', url, title, body },
       field: { id: fieldId, value: fieldValue },
@@ -143,7 +146,7 @@ describe('getItemAction', () => {
       item,
       field: 'Status'
     });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { id: contentId, type: 'PullRequest', url, title, body },
       field: { id: fieldId, value: null },

@@ -1,3 +1,6 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
+
 import { GraphqlResponseError } from '@octokit/graphql';
 
 import { execCliCommand, getOctokit } from '../src/helpers';
@@ -9,8 +12,8 @@ type MockGraphqlResponseErrorError = {
   path: string[];
 };
 
-jest.mock('@octokit/graphql');
-jest.mock('../src/helpers');
+vi.mock('@octokit/graphql');
+vi.mock('../src/helpers');
 
 function createMockGraphqlResponseError(
   errors: MockGraphqlResponseErrorError[]
@@ -23,30 +26,30 @@ type OcotkitType = ReturnType<typeof getOctokit>;
 
 type MockOctokitType = {
   graphql: OcotkitType['graphql'] & {
-    paginate: jest.Mock & {
-      iterator: jest.Mock;
+    paginate: Mock & {
+      iterator: Mock;
     };
   };
 };
 
 function mockGetOctokit(): MockOctokitType {
   const mockOctokit = {
-    graphql: jest.fn()
+    graphql: vi.fn()
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (mockOctokit.graphql as any).paginate = jest.fn();
+  (mockOctokit.graphql as any).paginate = vi.fn();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (mockOctokit.graphql as any).paginate.iterator = jest.fn();
-  (getOctokit as jest.Mock).mockReturnValue(mockOctokit);
+  (mockOctokit.graphql as any).paginate.iterator = vi.fn();
+  (getOctokit as Mock).mockReturnValue(mockOctokit);
 
   return mockOctokit as unknown as MockOctokitType;
 }
 
 function mockProjectNotFoundError(): void {
-  jest
-    .mocked(execCliCommand)
-    .mockRejectedValue(new Error('Could not resolve to a ProjectV2'));
+  vi.mocked(execCliCommand).mockRejectedValue(
+    new Error('Could not resolve to a ProjectV2')
+  );
 }
 
 describe('lib', () => {
@@ -57,7 +60,7 @@ describe('lib', () => {
   const projectTitle = 'My Cool Project';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('handleCliError', () => {
@@ -89,7 +92,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -114,7 +117,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -162,7 +165,7 @@ describe('lib', () => {
       ];
       const mockOctokit = mockGetOctokit();
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -199,7 +202,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -224,7 +227,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -286,7 +289,7 @@ describe('lib', () => {
 
       const mockOctokit = mockGetOctokit();
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -323,9 +326,9 @@ describe('lib', () => {
 
     it('returns item ID', async () => {
       const itemId = 'item-id';
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await expect(lib.addItem(owner, projectNumber, itemUrl)).resolves.toEqual(
         itemId
       );
@@ -341,7 +344,7 @@ describe('lib', () => {
     });
 
     it('can unarchive items', async () => {
-      jest.mocked(execCliCommand).mockResolvedValue('');
+      vi.mocked(execCliCommand).mockResolvedValue('');
       await lib.archiveItem(owner, projectNumber, 'foobar', false);
       expect(execCliCommand).toHaveBeenCalledWith(
         expect.arrayContaining(['--undo'])
@@ -358,9 +361,9 @@ describe('lib', () => {
     });
 
     it('can reopen projects', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(
         lib.closeProject(owner, projectNumber, false)
       ).resolves.toEqual({
@@ -372,9 +375,9 @@ describe('lib', () => {
     });
 
     it('returns project details', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(lib.closeProject(owner, projectNumber)).resolves.toEqual({
         id: projectId
       });
@@ -390,9 +393,9 @@ describe('lib', () => {
     });
 
     it('can copy draft issues', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(
         lib.copyProject(owner, projectNumber, owner, 'new title', true)
       ).resolves.toEqual({
@@ -404,9 +407,9 @@ describe('lib', () => {
     });
 
     it('returns project details', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(
         lib.copyProject(owner, projectNumber, owner, 'new title')
       ).resolves.toEqual({
@@ -463,9 +466,9 @@ describe('lib', () => {
 
     it('can edit title and body', async () => {
       const itemId = 'DI_item-id';
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await lib.editItem(projectId, itemId, {
         title: 'New Title',
         body: 'New Body'
@@ -480,7 +483,7 @@ describe('lib', () => {
       const field = 'Status';
       const fieldValue = 'Done';
       const mockOctokit = mockGetOctokit();
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(
         createMockGraphqlResponseError([
           {
             type: 'NOT_FOUND',
@@ -502,7 +505,7 @@ describe('lib', () => {
       const field = 'Status';
       const fieldValue = 'Done';
       const mockOctokit = mockGetOctokit();
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(
         createMockGraphqlResponseError([
           {
             type: 'NOT_FOUND',
@@ -531,7 +534,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(error);
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(error);
       await expect(
         lib.editItem(projectId, itemId, {
           field,
@@ -545,13 +548,11 @@ describe('lib', () => {
       const field = 'Opened';
       const fieldValue = '2023-01-01';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: undefined
-          }
-        });
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: undefined
+        }
+      });
       await expect(
         lib.editItem(projectId, itemId, {
           field,
@@ -565,15 +566,13 @@ describe('lib', () => {
       const field = 'Opened';
       const fieldValue = '2023-01-01';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: {
-              field: null
-            }
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: {
+            field: null
           }
-        });
+        }
+      });
       await expect(
         lib.editItem(projectId, itemId, {
           field,
@@ -588,21 +587,19 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = '2023-01-01T00:53:48.809Z';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: {
-              field: {
-                id: fieldId,
-                dataType: 'DATE'
-              }
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: {
+            field: {
+              id: fieldId,
+              dataType: 'DATE'
             }
           }
-        });
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+        }
+      });
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await lib.editItem(projectId, itemId, {
         field,
         fieldValue
@@ -618,21 +615,19 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = '3';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: {
-              field: {
-                id: fieldId,
-                dataType: 'NUMBER'
-              }
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: {
+            field: {
+              id: fieldId,
+              dataType: 'NUMBER'
             }
           }
-        });
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+        }
+      });
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await lib.editItem(projectId, itemId, {
         field,
         fieldValue
@@ -648,21 +643,19 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = 'foobar';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: {
-              field: {
-                id: fieldId,
-                dataType: 'TEXT'
-              }
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: {
+            field: {
+              id: fieldId,
+              dataType: 'TEXT'
             }
           }
-        });
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+        }
+      });
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await lib.editItem(projectId, itemId, {
         field,
         fieldValue
@@ -679,12 +672,11 @@ describe('lib', () => {
       const fieldValue = 'Done';
       const optionId = 'option-id';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(
-          mockOctokit.graphql<
-            lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
-          >
-        )
+      vi.mocked(
+        mockOctokit.graphql<
+          lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
+        >
+      )
         .mockResolvedValueOnce({
           projectV2Item: {
             project: {
@@ -702,9 +694,9 @@ describe('lib', () => {
             }
           }
         });
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await lib.editItem(projectId, itemId, {
         field,
         fieldValue
@@ -725,12 +717,11 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = 'Done';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(
-          mockOctokit.graphql<
-            lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
-          >
-        )
+      vi.mocked(
+        mockOctokit.graphql<
+          lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
+        >
+      )
         .mockResolvedValueOnce({
           projectV2Item: {
             project: {
@@ -762,12 +753,11 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = 'Done';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(
-          mockOctokit.graphql<
-            lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
-          >
-        )
+      vi.mocked(
+        mockOctokit.graphql<
+          lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
+        >
+      )
         .mockResolvedValueOnce({
           projectV2Item: {
             project: {
@@ -801,12 +791,11 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = 'Done';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(
-          mockOctokit.graphql<
-            lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
-          >
-        )
+      vi.mocked(
+        mockOctokit.graphql<
+          lib.FieldTypeResponse | lib.SingleSelectOptionIdResponse
+        >
+      )
         .mockResolvedValueOnce({
           projectV2Item: {
             project: {
@@ -840,19 +829,17 @@ describe('lib', () => {
       const fieldId = 'field-id';
       const fieldValue = '3';
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.FieldTypeResponse>)
-        .mockResolvedValue({
-          projectV2Item: {
-            project: {
-              field: {
-                id: fieldId,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                dataType: 'ITERATION' as any
-              }
+      vi.mocked(mockOctokit.graphql<lib.FieldTypeResponse>).mockResolvedValue({
+        projectV2Item: {
+          project: {
+            field: {
+              id: fieldId,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              dataType: 'ITERATION' as any
             }
           }
-        });
+        }
+      });
       await expect(
         lib.editItem(projectId, itemId, {
           field,
@@ -877,9 +864,9 @@ describe('lib', () => {
 
     it('returns item ID', async () => {
       const itemId = 'item-id';
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: itemId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
       await expect(lib.editItem(projectId, itemId, {})).resolves.toEqual(
         itemId
       );
@@ -895,9 +882,9 @@ describe('lib', () => {
     });
 
     it('can edit everything', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await lib.editProject(owner, projectNumber, {
         description: 'New Description',
         readme: 'New Readme',
@@ -915,9 +902,9 @@ describe('lib', () => {
     });
 
     it('can set visibility to private', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await lib.editProject(owner, projectNumber, {
         public: false
       });
@@ -927,9 +914,9 @@ describe('lib', () => {
     });
 
     it('returns project ID', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(lib.editProject(owner, projectNumber, {})).resolves.toEqual(
         projectId
       );
@@ -948,11 +935,11 @@ describe('lib', () => {
 
     it('returns null if item not found', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -995,11 +982,11 @@ describe('lib', () => {
         }
       ];
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1056,11 +1043,11 @@ describe('lib', () => {
         }
       ];
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1107,9 +1094,9 @@ describe('lib', () => {
 
     it('handles project not found (two)', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       const error = createMockGraphqlResponseError([
         {
           type: 'NOT_FOUND',
@@ -1117,7 +1104,7 @@ describe('lib', () => {
           path: ['projectV2']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1148,11 +1135,11 @@ describe('lib', () => {
         }
       ];
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1184,9 +1171,9 @@ describe('lib', () => {
 
     it('handles field not found (two)', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: 'project-id' }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: 'project-id' })
+      );
       const error = createMockGraphqlResponseError([
         {
           type: 'NOT_FOUND',
@@ -1194,7 +1181,7 @@ describe('lib', () => {
           path: ['projectV2', 'field']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1226,11 +1213,11 @@ describe('lib', () => {
         }
       ];
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       let iterateCount = 0;
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1277,9 +1264,9 @@ describe('lib', () => {
 
     it('throws other graphql errors', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       const error = createMockGraphqlResponseError([
         {
           type: 'SOME_ERROR',
@@ -1287,7 +1274,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
         [Symbol.asyncIterator]: () => ({
           async next(): Promise<{
             done: boolean;
@@ -1308,18 +1295,18 @@ describe('lib', () => {
     const project = { id: projectId, title: projectTitle };
 
     it('handles project not found', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ projects: [project] }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ projects: [project] })
+      );
       await expect(
         lib.findProject(owner, 'A Different Title')
       ).resolves.toEqual(null);
     });
 
     it('returns project details', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ projects: [project] }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ projects: [project] })
+      );
       await expect(lib.findProject(owner, projectTitle)).resolves.toEqual(
         project
       );
@@ -1335,9 +1322,9 @@ describe('lib', () => {
     });
 
     it('returns project details', async () => {
-      jest
-        .mocked(execCliCommand)
-        .mockResolvedValue(JSON.stringify({ id: projectId }));
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
       await expect(lib.getProject(owner, projectNumber)).resolves.toEqual({
         id: projectId
       });
@@ -1349,12 +1336,12 @@ describe('lib', () => {
     const repositoryId = 'repository-id';
 
     beforeEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('handles repository not found', async () => {
       const mockOctokit = mockGetOctokit();
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(
         createMockGraphqlResponseError([
           {
             type: 'NOT_FOUND',
@@ -1378,7 +1365,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(error);
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(error);
 
       await expect(
         lib.linkProjectToRepository(projectNumber, repository)
@@ -1387,13 +1374,13 @@ describe('lib', () => {
 
     it('handles project not found', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql<lib.RepositoryIdResponse>)
-        .mockResolvedValueOnce({
-          repository: {
-            id: repositoryId
-          }
-        });
+      vi.mocked(
+        mockOctokit.graphql<lib.RepositoryIdResponse>
+      ).mockResolvedValueOnce({
+        repository: {
+          id: repositoryId
+        }
+      });
       mockProjectNotFoundError();
 
       await expect(
@@ -1403,15 +1390,14 @@ describe('lib', () => {
 
     it('links repository to project', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql)
+      vi.mocked(mockOctokit.graphql)
         .mockResolvedValueOnce({
           repository: {
             id: repositoryId
           }
         })
         .mockResolvedValueOnce({});
-      jest.mocked(execCliCommand);
+      vi.mocked(execCliCommand);
 
       await expect(
         lib.linkProjectToRepository(projectNumber, repository)
@@ -1423,15 +1409,14 @@ describe('lib', () => {
 
     it('unlinks team from project', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql)
+      vi.mocked(mockOctokit.graphql)
         .mockResolvedValueOnce({
           repository: {
             id: repositoryId
           }
         })
         .mockResolvedValueOnce({});
-      jest.mocked(execCliCommand);
+      vi.mocked(execCliCommand);
 
       await expect(
         lib.linkProjectToRepository(projectNumber, repository, false)
@@ -1447,12 +1432,12 @@ describe('lib', () => {
     const teamId = 'team-id';
 
     beforeEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('handles team not found', async () => {
       const mockOctokit = mockGetOctokit();
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(
         createMockGraphqlResponseError([
           {
             type: 'NOT_FOUND',
@@ -1466,7 +1451,7 @@ describe('lib', () => {
         lib.TeamNotFoundError
       );
 
-      jest.mocked(mockOctokit.graphql<lib.TeamIdResponse>).mockResolvedValue({
+      vi.mocked(mockOctokit.graphql<lib.TeamIdResponse>).mockResolvedValue({
         organization: {
           team: null
         }
@@ -1486,7 +1471,7 @@ describe('lib', () => {
           path: ['']
         }
       ]);
-      jest.mocked(mockOctokit.graphql).mockRejectedValue(error);
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(error);
 
       await expect(lib.linkProjectToTeam(projectNumber, team)).rejects.toBe(
         error
@@ -1495,7 +1480,7 @@ describe('lib', () => {
 
     it('handles project not found', async () => {
       const mockOctokit = mockGetOctokit();
-      jest.mocked(mockOctokit.graphql).mockResolvedValueOnce({
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({
         organization: {
           team: {
             id: teamId
@@ -1511,8 +1496,7 @@ describe('lib', () => {
 
     it('links team to project', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql)
+      vi.mocked(mockOctokit.graphql)
         .mockResolvedValueOnce({
           organization: {
             team: {
@@ -1521,7 +1505,7 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
-      jest.mocked(execCliCommand);
+      vi.mocked(execCliCommand);
 
       await expect(lib.linkProjectToTeam(projectNumber, team)).resolves.toEqual(
         teamId
@@ -1533,8 +1517,7 @@ describe('lib', () => {
 
     it('unlinks team from project', async () => {
       const mockOctokit = mockGetOctokit();
-      jest
-        .mocked(mockOctokit.graphql)
+      vi.mocked(mockOctokit.graphql)
         .mockResolvedValueOnce({
           organization: {
             team: {
@@ -1543,7 +1526,7 @@ describe('lib', () => {
           }
         })
         .mockResolvedValueOnce({});
-      jest.mocked(execCliCommand);
+      vi.mocked(execCliCommand);
 
       await expect(
         lib.linkProjectToTeam(projectNumber, team, false)
@@ -1558,7 +1541,7 @@ describe('lib', () => {
     const prUrl = 'https://github.com/dsanders11/project-actions/pull/2';
 
     it('returns PR state', async () => {
-      jest.mocked(execCliCommand).mockResolvedValue(
+      vi.mocked(execCliCommand).mockResolvedValue(
         JSON.stringify({
           state: 'MERGED'
         })
@@ -1569,9 +1552,9 @@ describe('lib', () => {
 
     it('throws on cli error', async () => {
       const error = 'Error getting PR status';
-      jest
-        .mocked(execCliCommand)
-        .mockRejectedValue(new Error('Error getting PR status'));
+      vi.mocked(execCliCommand).mockRejectedValue(
+        new Error('Error getting PR status')
+      );
 
       await expect(lib.getPullRequestState(prUrl)).rejects.toThrow(error);
     });

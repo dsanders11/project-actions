@@ -1,22 +1,25 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/completed-by';
+import * as index from '../src/completed-by.js';
 import {
   ProjectDetails,
   editItem,
   getDraftIssues,
   getProject,
   getPullRequestState
-} from '../src/lib';
-import { mockGetInput } from './utils';
+} from '../src/lib.js';
+import { mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const completedByActionSpy = jest.spyOn(index, 'completedByAction');
+const completedByActionSpy = vi.spyOn(index, 'completedByAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -27,7 +30,7 @@ const fieldValue = 'Done';
 
 describe('completedByAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -73,7 +76,7 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -91,7 +94,7 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -109,7 +112,7 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest.mocked(getProject).mockImplementation(() => {
+    vi.mocked(getProject).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -127,10 +130,10 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -158,10 +161,10 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -172,7 +175,7 @@ describe('completedByAction', () => {
         }
       }
     ]);
-    jest.mocked(getPullRequestState).mockResolvedValue('MERGED');
+    vi.mocked(getPullRequestState).mockResolvedValue('MERGED');
 
     await index.completedByAction();
     expect(completedByActionSpy).toHaveReturned();
@@ -194,10 +197,10 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -208,7 +211,7 @@ describe('completedByAction', () => {
         }
       }
     ]);
-    jest.mocked(getPullRequestState).mockResolvedValue('OPEN');
+    vi.mocked(getPullRequestState).mockResolvedValue('OPEN');
 
     await index.completedByAction();
     expect(completedByActionSpy).toHaveReturned();
@@ -228,10 +231,10 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -245,8 +248,7 @@ describe('completedByAction', () => {
         }
       }
     ]);
-    jest
-      .mocked(getPullRequestState)
+    vi.mocked(getPullRequestState)
       .mockResolvedValueOnce('MERGED')
       .mockResolvedValueOnce('OPEN');
 
@@ -269,10 +271,10 @@ describe('completedByAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
-    jest.mocked(getDraftIssues).mockResolvedValue([
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
         content: {
@@ -283,7 +285,7 @@ describe('completedByAction', () => {
         }
       }
     ]);
-    jest.mocked(getPullRequestState).mockRejectedValue(new Error(errorMessage));
+    vi.mocked(getPullRequestState).mockRejectedValue(new Error(errorMessage));
 
     await index.completedByAction();
     expect(completedByActionSpy).toHaveReturned();
