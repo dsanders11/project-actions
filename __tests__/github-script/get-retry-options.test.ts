@@ -1,6 +1,8 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
+import { describe, expect, test } from 'vitest';
+
 import { getRetryOptions } from '../../src/github-script/retry-options';
 
 describe('getRequestOptions', () => {

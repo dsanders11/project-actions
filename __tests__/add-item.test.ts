@@ -1,14 +1,16 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
 import * as index from '../src/add-item';
 import { ProjectDetails, addItem, editItem, getProject } from '../src/lib';
 import { mockGetInput } from './utils';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
 // Spy the action's entrypoint
-const addItemActionSpy = jest.spyOn(index, 'addItemAction');
+const addItemActionSpy = vi.spyOn(index, 'addItemAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -18,7 +20,7 @@ const itemId = 'item-id';
 
 describe('addItemAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -85,7 +87,7 @@ describe('addItemAction', () => {
       'project-number': projectNumber,
       'content-url': contentUrl
     });
-    jest.mocked(addItem).mockImplementation(() => {
+    vi.mocked(addItem).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -102,7 +104,7 @@ describe('addItemAction', () => {
       'project-number': projectNumber,
       'content-url': contentUrl
     });
-    jest.mocked(addItem).mockImplementation(() => {
+    vi.mocked(addItem).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -123,10 +125,10 @@ describe('addItemAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest.mocked(addItem).mockResolvedValue(itemId);
-    jest
-      .mocked(getProject)
-      .mockResolvedValue({ id: projectId } as ProjectDetails);
+    vi.mocked(addItem).mockResolvedValue(itemId);
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
 
     await index.addItemAction();
     expect(addItemActionSpy).toHaveReturned();
@@ -143,7 +145,7 @@ describe('addItemAction', () => {
       'project-number': projectNumber,
       'content-url': contentUrl
     });
-    jest.mocked(addItem).mockResolvedValue(itemId);
+    vi.mocked(addItem).mockResolvedValue(itemId);
 
     await index.addItemAction();
     expect(addItemActionSpy).toHaveReturned();

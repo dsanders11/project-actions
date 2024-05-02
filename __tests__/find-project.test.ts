@@ -1,14 +1,16 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
 import * as index from '../src/find-project';
 import { findProject } from '../src/lib';
 import { mockGetInput } from './utils';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
 // Spy the action's entrypoint
-const findProjectActionSpy = jest.spyOn(index, 'findProjectAction');
+const findProjectActionSpy = vi.spyOn(index, 'findProjectAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -22,7 +24,7 @@ const url = 'url';
 
 describe('findProjectAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the title input', async () => {
@@ -39,7 +41,7 @@ describe('findProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, title });
-    jest.mocked(findProject).mockResolvedValue(null);
+    vi.mocked(findProject).mockResolvedValue(null);
 
     await index.findProjectAction();
     expect(findProjectActionSpy).toHaveReturned();
@@ -52,7 +54,7 @@ describe('findProjectAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, title });
-    jest.mocked(findProject).mockImplementation(() => {
+    vi.mocked(findProject).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -65,7 +67,7 @@ describe('findProjectAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, title });
-    jest.mocked(findProject).mockImplementation(() => {
+    vi.mocked(findProject).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -78,7 +80,7 @@ describe('findProjectAction', () => {
 
   it('sets output', async () => {
     mockGetInput({ owner, title });
-    jest.mocked(findProject).mockResolvedValue({
+    vi.mocked(findProject).mockResolvedValue({
       id: projectId,
       number: parseInt(projectNumber),
       fields: {
