@@ -1,16 +1,19 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/edit-item';
-import { ItemDetails, editItem, getItem } from '../src/lib';
-import { mockGetInput } from './utils';
+import * as index from '../src/edit-item.js';
+import { ItemDetails, editItem, getItem } from '../src/lib.js';
+import { mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const editItemActionSpy = jest.spyOn(index, 'editItemAction');
+const editItemActionSpy = vi.spyOn(index, 'editItemAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -20,7 +23,7 @@ const itemId = 'item-id';
 
 describe('editItemAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -83,7 +86,7 @@ describe('editItemAction', () => {
 
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue(itemId);
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -94,11 +97,11 @@ describe('editItemAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { type: 'PullRequest' }
     } as ItemDetails);
-    jest.mocked(editItem).mockImplementation(() => {
+    vi.mocked(editItem).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -111,7 +114,7 @@ describe('editItemAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(editItem).mockImplementation(() => {
+    vi.mocked(editItem).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -124,7 +127,7 @@ describe('editItemAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(editItem).mockImplementation(() => {
+    vi.mocked(editItem).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -142,9 +145,9 @@ describe('editItemAction', () => {
       item,
       title: 'New Title'
     });
-    jest
-      .mocked(getItem)
-      .mockResolvedValue({ content: { type: 'PullRequest' } } as ItemDetails);
+    vi.mocked(getItem).mockResolvedValue({
+      content: { type: 'PullRequest' }
+    } as ItemDetails);
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -165,12 +168,12 @@ describe('editItemAction', () => {
       field,
       'field-value': fieldValue
     });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { type: 'PullRequest' },
       projectId
     } as ItemDetails);
-    jest.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue(itemId);
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -191,12 +194,12 @@ describe('editItemAction', () => {
       title,
       body
     });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { type: 'DraftIssue' },
       projectId
     } as ItemDetails);
-    jest.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue(itemId);
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -206,12 +209,12 @@ describe('editItemAction', () => {
 
   it('sets output', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({
+    vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       content: { type: 'PullRequest' },
       projectId
     } as ItemDetails);
-    jest.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue(itemId);
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();

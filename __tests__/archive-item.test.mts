@@ -1,16 +1,19 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import * as core from '@actions/core';
 
-import * as index from '../src/archive-item';
-import { ItemDetails, archiveItem, getItem } from '../src/lib';
-import { mockGetBooleanInput, mockGetInput } from './utils';
+import * as index from '../src/archive-item.js';
+import { ItemDetails, archiveItem, getItem } from '../src/lib.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
-jest.mock('@actions/core');
-jest.mock('../src/lib');
+vi.mock('@actions/core');
+vi.mock('../src/lib');
 
-const { ProjectNotFoundError } = jest.requireActual('../src/lib');
+const { ProjectNotFoundError } =
+  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
 
 // Spy the action's entrypoint
-const archiveItemActionSpy = jest.spyOn(index, 'archiveItemAction');
+const archiveItemActionSpy = vi.spyOn(index, 'archiveItemAction');
 
 const owner = 'dsanders11';
 const projectNumber = '94';
@@ -19,7 +22,7 @@ const itemId = 'item-id';
 
 describe('archiveItemAction', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('requires the project-number input', async () => {
@@ -49,7 +52,7 @@ describe('archiveItemAction', () => {
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     mockGetBooleanInput({ 'fail-if-item-not-found': true });
-    jest.mocked(getItem).mockResolvedValue(null);
+    vi.mocked(getItem).mockResolvedValue(null);
 
     await index.archiveItemAction();
     expect(archiveItemActionSpy).toHaveReturned();
@@ -61,7 +64,7 @@ describe('archiveItemAction', () => {
   it('can ignore item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     mockGetBooleanInput({ 'fail-if-item-not-found': false });
-    jest.mocked(getItem).mockResolvedValue(null);
+    vi.mocked(getItem).mockResolvedValue(null);
 
     await index.archiveItemAction();
     expect(archiveItemActionSpy).toHaveReturned();
@@ -72,8 +75,8 @@ describe('archiveItemAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
 
@@ -86,8 +89,8 @@ describe('archiveItemAction', () => {
 
   it('handles generic errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockImplementation(() => {
       throw new Error('Server error');
     });
 
@@ -100,8 +103,8 @@ describe('archiveItemAction', () => {
 
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockImplementation(() => {
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockImplementation(() => {
       throw 42; // eslint-disable-line no-throw-literal
     });
 
@@ -115,8 +118,8 @@ describe('archiveItemAction', () => {
   it('passes inputs correctly', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     mockGetBooleanInput({ archived: true });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockResolvedValue();
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockResolvedValue();
 
     await index.archiveItemAction();
     expect(archiveItemActionSpy).toHaveReturned();
@@ -133,8 +136,8 @@ describe('archiveItemAction', () => {
   it('can unarchive an item', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     mockGetBooleanInput({ archived: false });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockResolvedValue();
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockResolvedValue();
 
     await index.archiveItemAction();
     expect(archiveItemActionSpy).toHaveReturned();
@@ -150,8 +153,8 @@ describe('archiveItemAction', () => {
 
   it('sets output', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
-    jest.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
-    jest.mocked(archiveItem).mockResolvedValue();
+    vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
+    vi.mocked(archiveItem).mockResolvedValue();
 
     await index.archiveItemAction();
     expect(archiveItemActionSpy).toHaveReturned();
