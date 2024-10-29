@@ -1,0 +1,38 @@
+name: Get Project Workflow
+description: Get a GitHub project workflow
+author: David Sanders
+
+inputs:
+  token:
+    description: A GitHub access token - either a classic PAT or a GitHub app installation token
+    required: true
+  owner:
+    description: The owner of the project - either an organization or a user
+    required: false
+    default: ${{ github.repository_owner }}
+  project-number:
+    description: The project number from the project's URL
+    required: true
+  number:
+    description: The project workflow number to get
+    required: true
+  fail-if-workflow-not-found:
+    description: Should the action fail if the workflow is not found on the project
+    required: false
+    default: true
+
+outputs:
+  id:
+    description: The global ID of the project workflow
+  name:
+    description: The name of the project workflow
+  number:
+    description: The number of the project workflow
+  enabled:
+    description: The enabled state of the project workflow
+  project-id:
+    description: The global ID of the project
+
+runs:
+  using: node20
+  main: ../dist/get-workflow.js

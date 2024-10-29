@@ -360,6 +360,46 @@ jobs:
             assert.strictEqual('${{ steps.get-project.outputs.description }}', 'New Description');
             assert.strictEqual('${{ steps.get-project.outputs.readme }}', 'This is the readme');
 
+      - name: Find Workflow
+        uses: ./find-workflow/
+        id: find-workflow
+        with:
+          owner: ${{ matrix.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          name: 'Item closed'
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Workflow Values
+        uses: ./github-script/
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.strictEqual('${{ steps.find-workflow.outputs.name }}', 'Item closed');
+            assert.strictEqual(${{ steps.find-workflow.outputs.enabled }}, true);
+            assert.strictEqual('${{ steps.find-workflow.outputs.project-id }}', '${{ steps.get-project.outputs.id }}');
+
+      - name: Get Workflow
+        uses: ./get-workflow/
+        id: get-workflow
+        with:
+          owner: ${{ matrix.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          number: ${{ steps.find-workflow.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Workflow Values
+        uses: ./github-script/
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.strictEqual('${{ steps.get-workflow.outputs.id }}', '${{ steps.find-workflow.outputs.id }}');
+            assert.strictEqual('${{ steps.get-workflow.outputs.name }}', 'Item closed');
+            assert.strictEqual('${{ steps.get-workflow.outputs.number }}', '${{ steps.find-workflow.outputs.number }}');
+            assert.strictEqual(${{ steps.get-workflow.outputs.enabled }}, true);
+            assert.strictEqual('${{ steps.get-workflow.outputs.project-id }}', '${{ steps.get-project.outputs.id }}');
+
       - name: Close Project
         uses: ./close-project/
         id: close-project

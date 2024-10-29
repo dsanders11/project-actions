@@ -34,10 +34,13 @@ import {
   deleteProject,
   editItem,
   editProject,
+  findProject,
+  findWorkflow,
   getAllItems,
   getDraftIssues,
   getItem,
   getProject,
+  getWorkflow,
   linkProjectToRepository,
   linkProjectToTeam
 } from '../lib';
@@ -102,10 +105,13 @@ export async function main(): Promise<void> {
         deleteProject,
         editItem,
         editProject,
+        findProject,
+        findWorkflow,
         getAllItems,
         getDraftIssues,
         getItem,
         getProject,
+        getWorkflow,
         linkProjectToRepository,
         linkProjectToTeam
       },

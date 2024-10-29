@@ -22164,6 +22164,30 @@ var PROJECT_ITEMS_QUERY = `
       }
     }
   }`;
+var PROJECT_WORKFLOW_FRAGMENT = `
+  ... on ProjectV2Workflow {
+    id
+    name
+    number
+    enabled
+  }`;
+var PROJECT_WORKFLOWS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        workflows(first: 50, after: $cursor) {
+          nodes {
+            ${PROJECT_WORKFLOW_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
 async function findProject(owner, title) {
   const { projects } = JSON.parse(
     await execCliCommand([

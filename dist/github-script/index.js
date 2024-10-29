@@ -37509,10 +37509,13 @@ async function main() {
             deleteProject: lib_1.deleteProject,
             editItem: lib_1.editItem,
             editProject: lib_1.editProject,
+            findProject: lib_1.findProject,
+            findWorkflow: lib_1.findWorkflow,
             getAllItems: lib_1.getAllItems,
             getDraftIssues: lib_1.getDraftIssues,
             getItem: lib_1.getItem,
             getProject: lib_1.getProject,
+            getWorkflow: lib_1.getWorkflow,
             linkProjectToRepository: lib_1.linkProjectToRepository,
             linkProjectToTeam: lib_1.linkProjectToTeam
         },
@@ -37760,7 +37763,7 @@ exports.getOctokit = getOctokit;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.findProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getDraftIssues = exports.getAllItems = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
+exports.getPullRequestState = exports.linkProjectToTeam = exports.linkProjectToRepository = exports.getProject = exports.findWorkflow = exports.findProject = exports.editProject = exports.editItem = exports.deleteProject = exports.deleteItem = exports.copyProject = exports.closeProject = exports.archiveItem = exports.addItem = exports.getWorkflow = exports.getDraftIssues = exports.getAllItems = exports.getItem = exports.handleCliError = exports.TeamNotFoundError = exports.SingleSelectOptionNotFoundError = exports.RepositoryNotFoundError = exports.ProjectNotFoundError = exports.ItemNotFoundError = exports.FieldNotFoundError = void 0;
 const graphql_1 = __nccwpck_require__(8467);
 const helpers_1 = __nccwpck_require__(3015);
 const PROJECT_ITEM_CONTENT_FRAGMENT = `
@@ -37793,6 +37796,30 @@ const PROJECT_ITEMS_QUERY = `
           nodes {
             id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
+const PROJECT_WORKFLOW_FRAGMENT = `
+  ... on ProjectV2Workflow {
+    id
+    name
+    number
+    enabled
+  }`;
+const PROJECT_WORKFLOWS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        workflows(first: 50, after: $cursor) {
+          nodes {
+            ${PROJECT_WORKFLOW_FRAGMENT}
           }
           pageInfo {
             hasNextPage
@@ -38000,6 +38027,43 @@ async function getDraftIssues(projectId) {
     return items.filter(isDraftIssue);
 }
 exports.getDraftIssues = getDraftIssues;
+/**
+ * @throws ProjectNotFoundError
+ */
+async function getWorkflow(owner, projectNumber, number) {
+    const octokit = (0, helpers_1.getOctokit)();
+    const { id: projectId } = await getProject(owner, projectNumber);
+    try {
+        const { projectV2: project } = await octokit.graphql(`query ($projectId: ID!, $number: Int!) {
+            projectV2: node(id: $projectId) {
+              ... on ProjectV2 {
+                workflow(number: $number) {
+                  ${PROJECT_WORKFLOW_FRAGMENT}
+                }
+              }
+            }
+          }`, { projectId, number });
+        if (project.workflow) {
+            return {
+                id: project.workflow.id,
+                name: project.workflow.name,
+                number: project.workflow.number,
+                enabled: project.workflow.enabled,
+                projectId
+            };
+        }
+    }
+    catch (error) {
+        if (error instanceof graphql_1.GraphqlResponseError) {
+            if (error.errors?.[0].type === 'NOT_FOUND') {
+                throw new ProjectNotFoundError(error);
+            }
+        }
+        throw error;
+    }
+    return null;
+}
+exports.getWorkflow = getWorkflow;
 async function addItem(owner, projectNumber, url) {
     let output;
     try {
@@ -38310,6 +38374,7 @@ async function editProject(owner, projectNumber, edit) {
 }
 exports.editProject = editProject;
 async function findProject(owner, title) {
+    // TODO - Pagination
     const { projects } = JSON.parse(await (0, helpers_1.execCliCommand)([
         'project',
         'list',
@@ -38326,6 +38391,39 @@ async function findProject(owner, title) {
     return null;
 }
 exports.findProject = findProject;
+/**
+ * @throws ProjectNotFoundError
+ */
+async function findWorkflow(owner, projectNumber, name) {
+    const octokit = (0, helpers_1.getOctokit)();
+    const project = await getProject(owner, projectNumber);
+    const pageIterator = octokit.graphql.paginate.iterator(PROJECT_WORKFLOWS_QUERY, { projectId: project.id });
+    try {
+        for await (const { projectV2 } of pageIterator) {
+            for (const node of projectV2.workflows.nodes) {
+                if (node.name === name) {
+                    return {
+                        id: node.id,
+                        name: node.name,
+                        number: node.number,
+                        enabled: node.enabled,
+                        projectId: project.id
+                    };
+                }
+            }
+        }
+    }
+    catch (error) {
+        if (error instanceof graphql_1.GraphqlResponseError) {
+            if (error.errors?.[0].type === 'NOT_FOUND') {
+                throw new ProjectNotFoundError(error);
+            }
+        }
+        throw error;
+    }
+    return null;
+}
+exports.findWorkflow = findWorkflow;
 /**
  * @throws ProjectNotFoundError
  */

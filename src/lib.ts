@@ -69,6 +69,32 @@ const PROJECT_ITEMS_QUERY = `
     }
   }`;
 
+const PROJECT_WORKFLOW_FRAGMENT = `
+  ... on ProjectV2Workflow {
+    id
+    name
+    number
+    enabled
+  }`;
+
+const PROJECT_WORKFLOWS_QUERY = `
+  query paginate($cursor: String, $projectId: ID!) {
+    projectV2: node(id: $projectId) {
+      ... on ProjectV2 {
+        id
+        workflows(first: 50, after: $cursor) {
+          nodes {
+            ${PROJECT_WORKFLOW_FRAGMENT}
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  }`;
+
 export interface ItemDetails {
   id: string;
   projectId: string;
@@ -98,6 +124,14 @@ export interface ProjectDetails {
     type: 'Organization' | 'User';
     login: string;
   };
+}
+
+export interface WorkflowDetails {
+  id: string;
+  name: string;
+  number: number;
+  enabled: boolean;
+  projectId: string;
 }
 
 export interface ItemEdit {
@@ -210,6 +244,28 @@ export type ProjectItemsResponse = {
   projectV2: {
     items: {
       nodes: ProjectItem[];
+      pageInfo: PageInfoForward;
+    };
+  };
+};
+
+export type ProjectWorkflow = {
+  id: string;
+  name: string;
+  number: number;
+  enabled: boolean;
+};
+
+export type ProjectWorkflowResponse = {
+  projectV2: {
+    workflow: ProjectWorkflow;
+  };
+};
+
+export type ProjectWorkflowsResponse = {
+  projectV2: {
+    workflows: {
+      nodes: ProjectWorkflow[];
       pageInfo: PageInfoForward;
     };
   };
@@ -436,6 +492,55 @@ export async function getDraftIssues(
   const items = await getAllItems(projectId);
 
   return items.filter(isDraftIssue);
+}
+
+/**
+ * @throws ProjectNotFoundError
+ */
+export async function getWorkflow(
+  owner: string,
+  projectNumber: string,
+  number: number
+): Promise<WorkflowDetails | null> {
+  const octokit = getOctokit();
+
+  const { id: projectId } = await getProject(owner, projectNumber);
+
+  try {
+    const { projectV2: project } =
+      await octokit.graphql<ProjectWorkflowResponse>(
+        `query ($projectId: ID!, $number: Int!) {
+            projectV2: node(id: $projectId) {
+              ... on ProjectV2 {
+                workflow(number: $number) {
+                  ${PROJECT_WORKFLOW_FRAGMENT}
+                }
+              }
+            }
+          }`,
+        { projectId, number }
+      );
+
+    if (project.workflow) {
+      return {
+        id: project.workflow.id,
+        name: project.workflow.name,
+        number: project.workflow.number,
+        enabled: project.workflow.enabled,
+        projectId
+      };
+    }
+  } catch (error) {
+    if (error instanceof GraphqlResponseError) {
+      if (error.errors?.[0].type === 'NOT_FOUND') {
+        throw new ProjectNotFoundError(error);
+      }
+    }
+
+    throw error;
+  }
+
+  return null;
 }
 
 export async function addItem(
@@ -820,6 +925,7 @@ export async function findProject(
   owner: string,
   title: string
 ): Promise<ProjectDetails | null> {
+  // TODO - Pagination
   const { projects } = JSON.parse(
     await execCliCommand([
       'project',
@@ -835,6 +941,51 @@ export async function findProject(
     if (project.title === title) {
       return project;
     }
+  }
+
+  return null;
+}
+
+/**
+ * @throws ProjectNotFoundError
+ */
+export async function findWorkflow(
+  owner: string,
+  projectNumber: string,
+  name: string
+): Promise<WorkflowDetails | null> {
+  const octokit = getOctokit();
+
+  const project = await getProject(owner, projectNumber);
+
+  const pageIterator =
+    octokit.graphql.paginate.iterator<ProjectWorkflowsResponse>(
+      PROJECT_WORKFLOWS_QUERY,
+      { projectId: project.id }
+    );
+
+  try {
+    for await (const { projectV2 } of pageIterator) {
+      for (const node of projectV2.workflows.nodes) {
+        if (node.name === name) {
+          return {
+            id: node.id,
+            name: node.name,
+            number: node.number,
+            enabled: node.enabled,
+            projectId: project.id
+          };
+        }
+      }
+    }
+  } catch (error) {
+    if (error instanceof GraphqlResponseError) {
+      if (error.errors?.[0].type === 'NOT_FOUND') {
+        throw new ProjectNotFoundError(error);
+      }
+    }
+
+    throw error;
   }
 
   return null;

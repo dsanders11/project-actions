@@ -32,8 +32,10 @@ private repositories the PAT must also have the `repo` scope.
 | [`project-actions/edit-item`](edit-item)           | Edit an item on a project                               |
 | [`project-actions/edit-project`](edit-project)     | Edit a project                                          |
 | [`project-actions/find-project`](find-project)     | Find a project                                          |
+| [`project-actions/find-workflow`](find-workflow)   | Find a project workflow                                 |
 | [`project-actions/get-item`](get-item)             | Get an item on a project                                |
 | [`project-actions/get-project`](get-project)       | Get a project                                           |
+| [`project-actions/get-workflow`](get-workflow)     | Get a project workflow                                  |
 | [`project-actions/github-script`](github-script)   | Modify projects programmatically                        |
 | [`project-actions/link-project`](link-project)     | Link a project to a repository or team                  |
 
