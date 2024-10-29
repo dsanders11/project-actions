@@ -59,6 +59,13 @@ describe('lib', () => {
   const projectNumber = '41';
   const projectTitle = 'My Cool Project';
 
+  const workflow = {
+    id: '42',
+    name: 'workflow-name',
+    number: 42,
+    enabled: true
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1310,6 +1317,218 @@ describe('lib', () => {
       await expect(lib.findProject(owner, projectTitle)).resolves.toEqual(
         project
       );
+    });
+  });
+
+  describe('findWorkflow', () => {
+    it('handles project not found', async () => {
+      mockProjectNotFoundError();
+      await expect(
+        lib.findWorkflow(owner, projectNumber, workflow.name)
+      ).rejects.toThrow(lib.ProjectNotFoundError);
+    });
+
+    it('returns null if workflow not found', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      let iterateCount = 0;
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectWorkflowsResponse;
+          }> {
+            return {
+              value: {
+                projectV2: {
+                  workflows: {
+                    nodes: [],
+                    pageInfo: {
+                      endCursor: 'end-cursor',
+                      hasNextPage: false
+                    }
+                  }
+                }
+              },
+              done: iterateCount++ === 1
+            };
+          }
+        })
+      });
+
+      await expect(
+        lib.findWorkflow(owner, projectNumber, workflow.name)
+      ).resolves.toBe(null);
+    });
+
+    it('handles project not found (two)', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'NOT_FOUND',
+          message: '',
+          path: ['projectV2']
+        }
+      ]);
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectWorkflowsResponse;
+          }> {
+            throw error;
+          }
+        })
+      });
+
+      await expect(
+        lib.findWorkflow(owner, projectNumber, workflow.name)
+      ).rejects.toThrow(lib.ProjectNotFoundError);
+    });
+
+    it('returns workflow details', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      let iterateCount = 0;
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectWorkflowsResponse;
+          }> {
+            return {
+              value: {
+                projectV2: {
+                  workflows: {
+                    nodes: [workflow],
+                    pageInfo: {
+                      endCursor: 'end-cursor',
+                      hasNextPage: false
+                    }
+                  }
+                }
+              },
+              done: iterateCount++ === 1
+            };
+          }
+        })
+      });
+      await expect(
+        lib.findWorkflow(owner, projectNumber, workflow.name)
+      ).resolves.toEqual({ ...workflow, projectId });
+    });
+
+    it('throws other graphql errors', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'SOME_ERROR',
+          message: '',
+          path: ['']
+        }
+      ]);
+      vi.mocked(mockOctokit.graphql.paginate.iterator).mockReturnValue({
+        [Symbol.asyncIterator]: () => ({
+          async next(): Promise<{
+            done: boolean;
+            value: lib.ProjectWorkflowsResponse;
+          }> {
+            throw error;
+          }
+        })
+      });
+
+      await expect(
+        lib.findWorkflow(owner, projectNumber, workflow.name)
+      ).rejects.toBe(error);
+    });
+  });
+
+  describe('getWorkflow', () => {
+    it('handles project not found', async () => {
+      mockProjectNotFoundError();
+      await expect(
+        lib.getWorkflow(owner, projectNumber, workflow.number)
+      ).rejects.toThrow(lib.ProjectNotFoundError);
+    });
+
+    it('returns null if workflow not found', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({
+        projectV2: {
+          workflow: null
+        }
+      });
+
+      await expect(
+        lib.getWorkflow(owner, projectNumber, workflow.number)
+      ).resolves.toBe(null);
+    });
+
+    it('handles project not found (two)', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'NOT_FOUND',
+          message: '',
+          path: ['projectV2']
+        }
+      ]);
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(error);
+
+      await expect(
+        lib.getWorkflow(owner, projectNumber, workflow.number)
+      ).rejects.toThrow(lib.ProjectNotFoundError);
+    });
+
+    it('returns workflow details', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({
+        projectV2: {
+          workflow
+        }
+      });
+      await expect(
+        lib.getWorkflow(owner, projectNumber, workflow.number)
+      ).resolves.toEqual({ ...workflow, projectId });
+    });
+
+    it('throws other graphql errors', async () => {
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: projectId })
+      );
+      const error = createMockGraphqlResponseError([
+        {
+          type: 'SOME_ERROR',
+          message: '',
+          path: ['']
+        }
+      ]);
+      vi.mocked(mockOctokit.graphql).mockRejectedValue(error);
+
+      await expect(
+        lib.getWorkflow(owner, projectNumber, workflow.number)
+      ).rejects.toBe(error);
     });
   });
 

@@ -19,10 +19,13 @@ import {
   deleteProject,
   editItem,
   editProject,
+  findProject,
+  findWorkflow,
   getAllItems,
   getDraftIssues,
   getItem,
   getProject,
+  getWorkflow,
   linkProjectToRepository,
   linkProjectToTeam
 } from '../lib';
@@ -38,10 +41,13 @@ type ProjectActions = {
   deleteProject: typeof deleteProject;
   editItem: typeof editItem;
   editProject: typeof editProject;
+  findProject: typeof findProject;
+  findWorkflow: typeof findWorkflow;
   getAllItems: typeof getAllItems;
   getDraftIssues: typeof getDraftIssues;
   getItem: typeof getItem;
   getProject: typeof getProject;
+  getWorkflow: typeof getWorkflow;
   linkProjectToRepository: typeof linkProjectToRepository;
   linkProjectToTeam: typeof linkProjectToTeam;
 };
