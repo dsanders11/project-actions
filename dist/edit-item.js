@@ -18872,7 +18872,7 @@ var require_core = __commonJS({
       return inputs.map((input) => input.trim());
     }
     exports2.getMultilineInput = getMultilineInput;
-    function getBooleanInput(name, options) {
+    function getBooleanInput2(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
       const val = getInput3(name, options);
@@ -18883,7 +18883,7 @@ var require_core = __commonJS({
       throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
 Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
-    exports2.getBooleanInput = getBooleanInput;
+    exports2.getBooleanInput = getBooleanInput2;
     function setOutput2(name, value) {
       const filePath = process.env["GITHUB_OUTPUT"] || "";
       if (filePath) {
@@ -23871,13 +23871,14 @@ async function editItemAction() {
     const body = core2.getInput("body");
     const field = core2.getInput("field");
     const fieldValue = core2.getInput("field-value", { required: !!field });
+    const failIfItemNotFound = core2.getBooleanInput("fail-if-item-not-found");
     if (!!fieldValue && !field) {
       core2.setFailed("Input required and not supplied: field");
       return;
     }
     const fullItem = await getItem(owner, projectNumber, item);
     if (!fullItem) {
-      core2.setFailed(`Item not found: ${item}`);
+      if (failIfItemNotFound) core2.setFailed(`Item not found: ${item}`);
       return;
     }
     if (fullItem.content.type !== "DraftIssue" && (!!title || !!body)) {

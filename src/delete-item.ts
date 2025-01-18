@@ -9,11 +9,14 @@ export async function deleteItemAction(): Promise<void> {
     const projectNumber = core.getInput('project-number', { required: true });
     const item = core.getInput('item', { required: true });
 
+    // Optional inputs
+    const failIfItemNotFound = core.getBooleanInput('fail-if-item-not-found');
+
     // Item might be the item ID, the content ID, or the content URL
     const fullItem = await getItem(owner, projectNumber, item);
 
     if (!fullItem) {
-      core.setFailed(`Item not found: ${item}`);
+      if (failIfItemNotFound) core.setFailed(`Item not found: ${item}`);
       return;
     }
 

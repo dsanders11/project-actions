@@ -17,6 +17,7 @@ Can not get archived items due to a bug in the GitHub GraphQL API, see <https://
 | `project-number` | The project number from the project's URL.         | Yes      |                                              |
 | `item`        | The item to get - may be the global ID for the item, the content ID, or the content URL. | No       | `${{ github.event.pull_request.html_url \|\| github.event.issue.html_url }}` |
 | `field`       | Project field to get on the item.                  | No       |                                              |
+| `fail-if-item-not-found` | Should the action fail if the item is not found on the project | No      | `true` |
 
 ## Outputs
 

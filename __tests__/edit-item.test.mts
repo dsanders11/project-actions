@@ -4,7 +4,7 @@ import * as core from '@actions/core';
 
 import * as index from '../src/edit-item.js';
 import { ItemDetails, editItem, getItem } from '../src/lib.js';
-import { mockGetInput } from './utils.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
 vi.mock('@actions/core');
 vi.mock('../src/lib');
@@ -86,6 +86,7 @@ describe('editItemAction', () => {
 
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
+    mockGetBooleanInput({ 'fail-if-item-not-found': true });
     vi.mocked(editItem).mockResolvedValue(itemId);
 
     await index.editItemAction();
@@ -93,6 +94,18 @@ describe('editItemAction', () => {
 
     expect(core.setFailed).toHaveBeenCalledTimes(1);
     expect(core.setFailed).toHaveBeenLastCalledWith(`Item not found: ${item}`);
+  });
+
+  it('can ignore item not found', async () => {
+    mockGetInput({ owner, 'project-number': projectNumber, item });
+    mockGetBooleanInput({ 'fail-if-item-not-found': false });
+    vi.mocked(getItem).mockResolvedValue(null);
+
+    await index.editItemAction();
+    expect(editItemActionSpy).toHaveReturned();
+
+    expect(core.setFailed).not.toHaveBeenCalled();
+    expect(core.setOutput).not.toHaveBeenCalled();
   });
 
   it('handles project not found', async () => {

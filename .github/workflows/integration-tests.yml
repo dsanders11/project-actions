@@ -172,12 +172,35 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Edit Item (Not Found)
+        uses: ./edit-item/
+        id: edit-item-not-found
+        with:
+          fail-if-item-not-found: false
+          field: Priority
+          field-value: ⛰️ High
+          item: foobar
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
       - name: Get Item
         uses: ./get-item/
         id: get-edited-item
         with:
           field: Priority
           item: ${{ steps.edit-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Item (Not Found)
+        uses: ./get-item/
+        id: get-item-not-found
+        with:
+          fail-if-item-not-found: false
+          field: Priority
+          item: foobar
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
@@ -232,6 +255,16 @@ jobs:
         id: delete-item
         with:
           item: ${{ steps.edit-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Delete Item (Not Found)
+        uses: ./delete-item/
+        id: delete-item-not-found
+        with:
+          item: foobar
+          fail-if-item-not-found: false
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
