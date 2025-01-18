@@ -17,6 +17,10 @@ inputs:
     description: The item to delete - may be the global ID for the item, the content ID, or the content URL
     required: false
     default: ${{ github.event.pull_request.html_url || github.event.issue.html_url }}
+  fail-if-item-not-found:
+    description: Should the action fail if the item is not found on the project
+    required: false
+    default: true
 
 runs:
   using: node20

@@ -14,6 +14,7 @@ export async function editItemAction(): Promise<void> {
     const body = core.getInput('body');
     const field = core.getInput('field');
     const fieldValue = core.getInput('field-value', { required: !!field });
+    const failIfItemNotFound = core.getBooleanInput('fail-if-item-not-found');
 
     if (!!fieldValue && !field) {
       core.setFailed('Input required and not supplied: field');
@@ -24,7 +25,7 @@ export async function editItemAction(): Promise<void> {
     const fullItem = await getItem(owner, projectNumber, item);
 
     if (!fullItem) {
-      core.setFailed(`Item not found: ${item}`);
+      if (failIfItemNotFound) core.setFailed(`Item not found: ${item}`);
       return;
     }
 

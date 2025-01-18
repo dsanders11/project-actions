@@ -11,12 +11,13 @@ export async function getItemAction(): Promise<void> {
 
     // Optional inputs
     const field = core.getInput('field') || undefined;
+    const failIfItemNotFound = core.getBooleanInput('fail-if-item-not-found');
 
     // Item might be the item ID, the content ID, or the content URL
     const fullItem = await getItem(owner, projectNumber, item, field);
 
     if (!fullItem) {
-      core.setFailed(`Item not found: ${item}`);
+      if (failIfItemNotFound) core.setFailed(`Item not found: ${item}`);
       return;
     }
 
