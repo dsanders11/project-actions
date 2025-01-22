@@ -128,9 +128,10 @@ describe('getItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { id: contentId, type: 'PullRequest', url, title, body },
+      content: { id: contentId, url, title, body },
       field: { id: fieldId, value: fieldValue },
-      projectId
+      projectId,
+      type: 'PULL_REQUEST'
     });
 
     await index.getItemAction();
@@ -161,9 +162,10 @@ describe('getItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { id: contentId, type: 'PullRequest', url, title, body },
+      content: { id: contentId, url, title, body },
       field: { id: fieldId, value: null },
-      projectId
+      projectId,
+      type: 'PULL_REQUEST'
     });
 
     await index.getItemAction();
@@ -177,5 +179,30 @@ describe('getItemAction', () => {
     expect(core.setOutput).toHaveBeenCalledWith('content-id', contentId);
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
     expect(core.setOutput).toHaveBeenCalledWith('field-id', fieldId);
+  });
+
+  it('handles redacted items', async () => {
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      item,
+      field: 'Status'
+    });
+    vi.mocked(getItem).mockResolvedValue({
+      id: itemId,
+      content: null,
+      projectId,
+      type: 'REDACTED'
+    });
+
+    await index.getItemAction();
+    expect(getItemActionSpy).toHaveReturned();
+
+    expect(core.setOutput).toHaveBeenCalledTimes(5);
+    expect(core.setOutput).toHaveBeenCalledWith('id', itemId);
+    expect(core.setOutput).toHaveBeenCalledWith('body', null);
+    expect(core.setOutput).toHaveBeenCalledWith('title', null);
+    expect(core.setOutput).toHaveBeenCalledWith('content-id', null);
+    expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
   });
 });

@@ -235,11 +235,11 @@ describe('copyProjectAction', () => {
       {
         id: 'item-id',
         content: {
-          __typename: 'DraftIssue',
           id: 'content-id',
           body: 'This is the item body',
           title: 'Item Title'
-        }
+        },
+        type: 'DRAFT_ISSUE'
       }
     ]);
 
@@ -268,11 +268,11 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
-          __typename: 'DraftIssue',
           id: contentId,
           body: 'This is the item {{ foo }}',
           title: 'Item {{ foo }}'
-        }
+        },
+        type: 'DRAFT_ISSUE'
       }
     ]);
 
@@ -306,7 +306,6 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
-          __typename: 'DraftIssue',
           id: 'content-id',
           body: `<!-- fields
           {
@@ -314,7 +313,8 @@ describe('copyProjectAction', () => {
           }
           -->`,
           title: 'Item Title'
-        }
+        },
+        type: 'DRAFT_ISSUE'
       }
     ]);
 
@@ -348,11 +348,11 @@ describe('copyProjectAction', () => {
       {
         id: itemId,
         content: {
-          __typename: 'DraftIssue',
           id: contentId,
           body: 'This is the item {{ foo }}',
           title: 'Item {{ foo }}'
-        }
+        },
+        type: 'DRAFT_ISSUE'
       }
     ]);
     vi.mocked(editItem).mockImplementation(() => {

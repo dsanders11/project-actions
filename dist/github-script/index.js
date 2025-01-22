@@ -37776,7 +37776,6 @@ const graphql_1 = __nccwpck_require__(7);
 const helpers_1 = __nccwpck_require__(1302);
 const PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {
-    __typename
     ... on DraftIssue {
       id
       body
@@ -37794,7 +37793,9 @@ const PROJECT_ITEM_CONTENT_FRAGMENT = `
       body
       title
     }
-  }`;
+  }
+  id
+  type`;
 const PROJECT_ITEMS_QUERY = `
   query paginate($cursor: String, $projectId: ID!) {
     projectV2: node(id: $projectId) {
@@ -37802,7 +37803,6 @@ const PROJECT_ITEMS_QUERY = `
         id
         items(first: 50, after: $cursor) {
           nodes {
-            id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
           }
           pageInfo {
@@ -37874,7 +37874,7 @@ class TeamNotFoundError extends Error {
 }
 exports.TeamNotFoundError = TeamNotFoundError;
 function isDraftIssue(item) {
-    return item.content.__typename === 'DraftIssue';
+    return item.type === 'DRAFT_ISSUE';
 }
 function handleCliError(error) {
     if (error instanceof Error &&
@@ -37911,7 +37911,6 @@ async function getItem(owner, projectNumber, item, field) {
               }
               items(first: 50, after: $cursor) {
                 nodes {
-                  id
                   fieldValueByName(name: $field) {
                     ... on ProjectV2ItemFieldDateValue {
                       date
@@ -37947,19 +37946,19 @@ async function getItem(owner, projectNumber, item, field) {
         for await (const { projectV2 } of pageIterator) {
             for (const node of projectV2.items.nodes) {
                 if (node.id === item ||
-                    node.content.id === item ||
-                    (node.content.__typename !== 'DraftIssue' &&
+                    node.content?.id === item ||
+                    (node.type !== 'DRAFT_ISSUE' &&
+                        node.type !== 'REDACTED' &&
                         node.content.url === item)) {
-                    const { __typename, ...content } = node.content;
                     const details = {
                         id: node.id,
                         projectId: project.id,
-                        content: {
-                            type: __typename,
-                            ...content
-                        }
+                        content: node.content,
+                        type: node.type
                     };
-                    if ('field' in projectV2 && 'fieldValueByName' in node) {
+                    if (details.type !== 'REDACTED' &&
+                        'field' in projectV2 &&
+                        'fieldValueByName' in node) {
                         if (projectV2.field === null) {
                             throw new FieldNotFoundError();
                         }
@@ -38010,7 +38009,7 @@ async function getAllItems(projectId) {
     try {
         for await (const { projectV2 } of pageIterator) {
             for (const node of projectV2.items.nodes) {
-                if (Object.keys(node.content).length) {
+                if (node.type === 'REDACTED' || Object.keys(node.content).length) {
                     items.push(node);
                 }
             }

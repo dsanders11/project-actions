@@ -22,16 +22,16 @@ export async function getItemAction(): Promise<void> {
     }
 
     core.setOutput('id', fullItem.id);
-    core.setOutput('body', fullItem.content.body);
-    core.setOutput('content-id', fullItem.content.id);
+    core.setOutput('body', fullItem.content?.body ?? null);
+    core.setOutput('content-id', fullItem.content?.id ?? null);
     core.setOutput('project-id', fullItem.projectId);
-    core.setOutput('title', fullItem.content.title);
+    core.setOutput('title', fullItem.content?.title ?? null);
 
-    if (fullItem.content.type !== 'DraftIssue') {
+    if (fullItem.type === 'ISSUE' || fullItem.type === 'PULL_REQUEST') {
       core.setOutput('url', fullItem.content.url);
     }
 
-    if (fullItem.field) {
+    if (fullItem.type !== 'REDACTED' && fullItem.field) {
       core.setOutput('field-id', fullItem.field.id);
 
       if (fullItem.field.value !== null) {

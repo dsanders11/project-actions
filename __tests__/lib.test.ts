@@ -143,31 +143,36 @@ describe('lib', () => {
         {
           id: 'DI_one',
           content: {
-            __typename: 'DraftIssue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One'
-          }
+          },
+          type: 'DRAFT_ISSUE'
         },
         {
           id: 'PR_two',
           content: {
-            __typename: 'PullRequest',
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
             url: 'foobar'
-          }
+          },
+          type: 'PULL_REQUEST'
         },
         {
           id: 'I_three',
           content: {
-            __typename: 'Issue',
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
             url: 'foobar-two'
-          }
+          },
+          type: 'ISSUE'
+        },
+        {
+          id: 'REDACTED_foo',
+          content: null,
+          type: 'REDACTED'
         }
       ];
       const mockOctokit = mockGetOctokit();
@@ -253,20 +258,20 @@ describe('lib', () => {
         {
           id: 'DI_one',
           content: {
-            __typename: 'DraftIssue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One'
-          }
+          },
+          type: 'DRAFT_ISSUE'
         },
         {
           id: 'DI_two',
           content: {
-            __typename: 'DraftIssue',
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two'
-          }
+          },
+          type: 'DRAFT_ISSUE'
         }
       ];
 
@@ -274,23 +279,28 @@ describe('lib', () => {
         {
           id: 'PR_two',
           content: {
-            __typename: 'PullRequest',
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
             url: 'foobar'
-          }
+          },
+          type: 'PULL_REQUEST'
+        },
+        {
+          id: 'REDACTED_foo',
+          content: null,
+          type: 'REDACTED'
         },
         ...draftItems,
         {
           id: 'I_three',
           content: {
-            __typename: 'Issue',
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
             url: 'foobar-two'
-          }
+          },
+          type: 'ISSUE'
         }
       ];
 
@@ -432,6 +442,14 @@ describe('lib', () => {
         lib.deleteItem(owner, projectNumber, 'foobar')
       ).rejects.toThrow(lib.ProjectNotFoundError);
     });
+
+    it('passes arguments correctly', async () => {
+      vi.mocked(execCliCommand).mockResolvedValue('');
+      await lib.deleteItem(owner, projectNumber, 'foobar');
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining([owner, projectNumber])
+      );
+    });
   });
 
   describe('deleteProject', () => {
@@ -439,6 +457,14 @@ describe('lib', () => {
       mockProjectNotFoundError();
       await expect(lib.deleteProject(owner, projectNumber)).rejects.toThrow(
         lib.ProjectNotFoundError
+      );
+    });
+
+    it('passes arguments correctly', async () => {
+      vi.mocked(execCliCommand).mockResolvedValue('');
+      await lib.deleteProject(owner, projectNumber);
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining([owner, projectNumber])
       );
     });
   });
@@ -980,12 +1006,12 @@ describe('lib', () => {
         {
           id: itemId,
           content: {
-            __typename: 'Issue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
             url: itemUrl
-          }
+          },
+          type: 'ISSUE'
         }
       ];
       const mockOctokit = mockGetOctokit();
@@ -1017,16 +1043,14 @@ describe('lib', () => {
         })
       });
 
-      const { __typename, ...content } = items[0].content;
+      const { content, type } = items[0];
 
       await expect(lib.getItem(owner, projectNumber, itemUrl)).resolves.toEqual(
         {
           id: itemId,
           projectId,
-          content: {
-            type: __typename,
-            ...content
-          }
+          content,
+          type
         }
       );
     });
@@ -1038,7 +1062,6 @@ describe('lib', () => {
         {
           id: itemId,
           content: {
-            __typename: 'Issue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
@@ -1046,7 +1069,8 @@ describe('lib', () => {
           },
           fieldValueByName: {
             singleSelectValue: fieldValue
-          }
+          },
+          type: 'ISSUE'
         }
       ];
       const mockOctokit = mockGetOctokit();
@@ -1081,21 +1105,19 @@ describe('lib', () => {
         })
       });
 
-      const { __typename, ...content } = items[0].content;
+      const { content, type } = items[0];
 
       await expect(
         lib.getItem(owner, projectNumber, itemUrl, 'Name')
       ).resolves.toEqual({
         id: itemId,
         projectId,
-        content: {
-          type: __typename,
-          ...content
-        },
+        content,
         field: {
           id: fieldId,
           value: fieldValue
-        }
+        },
+        type
       });
     });
 
@@ -1132,13 +1154,13 @@ describe('lib', () => {
         {
           id: itemId,
           content: {
-            __typename: 'Issue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
             url: itemUrl
           },
-          fieldValueByName: null
+          fieldValueByName: null,
+          type: 'ISSUE'
         }
       ];
       const mockOctokit = mockGetOctokit();
@@ -1210,13 +1232,13 @@ describe('lib', () => {
         {
           id: itemId,
           content: {
-            __typename: 'Issue',
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
             url: itemUrl
           },
-          fieldValueByName: null
+          fieldValueByName: null,
+          type: 'ISSUE'
         }
       ];
       const mockOctokit = mockGetOctokit();
@@ -1251,21 +1273,19 @@ describe('lib', () => {
         })
       });
 
-      const { __typename, ...content } = items[0].content;
+      const { content, type } = items[0];
 
       await expect(
         lib.getItem(owner, projectNumber, itemUrl, 'Name')
       ).resolves.toEqual({
         id: itemId,
         projectId,
-        content: {
-          type: __typename,
-          ...content
-        },
+        content,
         field: {
           id: fieldId,
           value: null
-        }
+        },
+        type
       });
     });
 

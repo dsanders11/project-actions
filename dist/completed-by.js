@@ -23518,7 +23518,6 @@ function getOctokit() {
 // src/lib.ts
 var PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {
-    __typename
     ... on DraftIssue {
       id
       body
@@ -23536,7 +23535,9 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       body
       title
     }
-  }`;
+  }
+  id
+  type`;
 var PROJECT_ITEMS_QUERY = `
   query paginate($cursor: String, $projectId: ID!) {
     projectV2: node(id: $projectId) {
@@ -23544,7 +23545,6 @@ var PROJECT_ITEMS_QUERY = `
         id
         items(first: 50, after: $cursor) {
           nodes {
-            id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
           }
           pageInfo {
@@ -23605,7 +23605,7 @@ var SingleSelectOptionNotFoundError = class extends Error {
   }
 };
 function isDraftIssue(item) {
-  return item.content.__typename === "DraftIssue";
+  return item.type === "DRAFT_ISSUE";
 }
 function handleCliError(error2) {
   if (error2 instanceof Error && error2.message.includes("Could not resolve to a ProjectV2")) {
@@ -23626,7 +23626,7 @@ async function getAllItems(projectId) {
   try {
     for await (const { projectV2 } of pageIterator) {
       for (const node of projectV2.items.nodes) {
-        if (Object.keys(node.content).length) {
+        if (node.type === "REDACTED" || Object.keys(node.content).length) {
           items.push(node);
         }
       }
