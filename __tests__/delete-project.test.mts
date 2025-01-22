@@ -73,4 +73,15 @@ describe('deleteProjectAction', () => {
     expect(core.setFailed).toHaveBeenCalledTimes(1);
     expect(core.setFailed).toHaveBeenLastCalledWith('42');
   });
+
+  it('passes inputs correctly', async () => {
+    mockGetInput({ owner, 'project-number': projectNumber });
+    vi.mocked(deleteProject).mockResolvedValue();
+
+    await index.deleteProjectAction();
+    expect(deleteProjectActionSpy).toHaveReturned();
+
+    expect(deleteProject).toHaveBeenCalledTimes(1);
+    expect(deleteProject).toHaveBeenLastCalledWith(owner, projectNumber);
+  });
 });

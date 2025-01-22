@@ -3,34 +3,8 @@ import type { PageInfoForward } from '@octokit/plugin-paginate-graphql';
 
 import { getOctokit, execCliCommand } from './helpers';
 
-interface DraftIssueContent {
-  type: 'DraftIssue';
-  id: string;
-  body: string;
-  title: string;
-}
-
-interface IssueContent {
-  type: 'Issue';
-  id: string;
-  url: string;
-  body: string;
-  title: string;
-}
-
-interface PullRequestContent {
-  type: 'PullRequest';
-  id: string;
-  url: string;
-  body: string;
-  title: string;
-}
-
-type ItemContent = DraftIssueContent | IssueContent | PullRequestContent;
-
 const PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {
-    __typename
     ... on DraftIssue {
       id
       body
@@ -48,7 +22,9 @@ const PROJECT_ITEM_CONTENT_FRAGMENT = `
       body
       title
     }
-  }`;
+  }
+  id
+  type`;
 
 const PROJECT_ITEMS_QUERY = `
   query paginate($cursor: String, $projectId: ID!) {
@@ -57,7 +33,6 @@ const PROJECT_ITEMS_QUERY = `
         id
         items(first: 50, after: $cursor) {
           nodes {
-            id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
           }
           pageInfo {
@@ -95,15 +70,23 @@ const PROJECT_WORKFLOWS_QUERY = `
     }
   }`;
 
-export interface ItemDetails {
+interface ItemField {
+  id: string;
+  value: string | number | null;
+}
+
+export type ItemDetails = {
   id: string;
   projectId: string;
-  content: ItemContent;
-  field?: {
-    id: string;
-    value: string | number | null;
-  };
-}
+} & (
+  | { content: DraftIssueItemContent; field?: ItemField; type: 'DRAFT_ISSUE' }
+  | {
+      content: ProjectItemContent;
+      field?: ItemField;
+      type: 'ISSUE' | 'PULL_REQUEST';
+    }
+  | { content: null; type: 'REDACTED' }
+);
 
 export interface ProjectDetails {
   number: number;
@@ -179,42 +162,37 @@ export class TeamNotFoundError extends Error {
   }
 }
 
-type DraftIssueItemContent = {
-  __typename: 'DraftIssue';
+export type ProjectItemContent = {
   id: string;
+  url: string;
   body: string;
   title: string;
 };
 
-export type ProjectItemContent =
-  | DraftIssueItemContent
-  | {
-      __typename: 'Issue' | 'PullRequest';
-      id: string;
-      url: string;
-      body: string;
-      title: string;
-    };
+type DraftIssueItemContent = Omit<ProjectItemContent, 'url'>;
 
-export type ProjectItemWithFieldValue = {
-  id: string;
+export type ProjectItem =
+  | {
+      id: string;
+      content: ProjectItemContent;
+      type: 'ISSUE' | 'PULL_REQUEST';
+    }
+  | DraftIssueItem
+  | { id: string; content: null; type: 'REDACTED' };
+
+export type ProjectItemWithFieldValue = ProjectItem & {
   fieldValueByName: {
     date?: string;
     text?: string;
     number?: number;
     singleSelectValue?: string;
   } | null;
-  content: ProjectItemContent;
-};
-
-export type ProjectItem = {
-  id: string;
-  content: ProjectItemContent;
 };
 
 export type DraftIssueItem = {
   id: string;
   content: DraftIssueItemContent;
+  type: 'DRAFT_ISSUE';
 };
 
 export type FieldTypeResponse = {
@@ -296,7 +274,7 @@ export type SingleSelectOptionIdResponse = {
 };
 
 function isDraftIssue(item: ProjectItem): item is DraftIssueItem {
-  return item.content.__typename === 'DraftIssue';
+  return item.type === 'DRAFT_ISSUE';
 }
 
 export function handleCliError(error: unknown): never {
@@ -348,7 +326,6 @@ export async function getItem(
               }
               items(first: 50, after: $cursor) {
                 nodes {
-                  id
                   fieldValueByName(name: $field) {
                     ... on ProjectV2ItemFieldDateValue {
                       date
@@ -390,22 +367,23 @@ export async function getItem(
       for (const node of projectV2.items.nodes) {
         if (
           node.id === item ||
-          node.content.id === item ||
-          (node.content.__typename !== 'DraftIssue' &&
+          node.content?.id === item ||
+          (node.type !== 'DRAFT_ISSUE' &&
+            node.type !== 'REDACTED' &&
             node.content.url === item)
         ) {
-          const { __typename, ...content } = node.content;
-
-          const details: ItemDetails = {
+          const details = {
             id: node.id,
             projectId: project.id,
-            content: {
-              type: __typename,
-              ...content
-            } as ItemContent
-          };
+            content: node.content,
+            type: node.type
+          } as ItemDetails;
 
-          if ('field' in projectV2 && 'fieldValueByName' in node) {
+          if (
+            details.type !== 'REDACTED' &&
+            'field' in projectV2 &&
+            'fieldValueByName' in node
+          ) {
             if (projectV2.field === null) {
               throw new FieldNotFoundError();
             }
@@ -465,7 +443,7 @@ export async function getAllItems(projectId: string): Promise<ProjectItem[]> {
   try {
     for await (const { projectV2 } of pageIterator) {
       for (const node of projectV2.items.nodes) {
-        if (Object.keys(node.content).length) {
+        if (node.type === 'REDACTED' || Object.keys(node.content).length) {
           items.push(node);
         }
       }

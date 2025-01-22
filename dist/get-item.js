@@ -23518,7 +23518,6 @@ function getOctokit() {
 // src/lib.ts
 var PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {
-    __typename
     ... on DraftIssue {
       id
       body
@@ -23536,7 +23535,9 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       body
       title
     }
-  }`;
+  }
+  id
+  type`;
 var PROJECT_ITEMS_QUERY = `
   query paginate($cursor: String, $projectId: ID!) {
     projectV2: node(id: $projectId) {
@@ -23544,7 +23545,6 @@ var PROJECT_ITEMS_QUERY = `
         id
         items(first: 50, after: $cursor) {
           nodes {
-            id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
           }
           pageInfo {
@@ -23620,7 +23620,6 @@ async function getItem(owner, projectNumber, item, field) {
               }
               items(first: 50, after: $cursor) {
                 nodes {
-                  id
                   fieldValueByName(name: $field) {
                     ... on ProjectV2ItemFieldDateValue {
                       date
@@ -23659,17 +23658,14 @@ async function getItem(owner, projectNumber, item, field) {
   try {
     for await (const { projectV2 } of pageIterator) {
       for (const node of projectV2.items.nodes) {
-        if (node.id === item || node.content.id === item || node.content.__typename !== "DraftIssue" && node.content.url === item) {
-          const { __typename, ...content } = node.content;
+        if (node.id === item || node.content?.id === item || node.type !== "DRAFT_ISSUE" && node.type !== "REDACTED" && node.content.url === item) {
           const details = {
             id: node.id,
             projectId: project.id,
-            content: {
-              type: __typename,
-              ...content
-            }
+            content: node.content,
+            type: node.type
           };
-          if ("field" in projectV2 && "fieldValueByName" in node) {
+          if (details.type !== "REDACTED" && "field" in projectV2 && "fieldValueByName" in node) {
             if (projectV2.field === null) {
               throw new FieldNotFoundError();
             }
@@ -23738,14 +23734,14 @@ async function getItemAction() {
       return;
     }
     core2.setOutput("id", fullItem.id);
-    core2.setOutput("body", fullItem.content.body);
-    core2.setOutput("content-id", fullItem.content.id);
+    core2.setOutput("body", fullItem.content?.body ?? null);
+    core2.setOutput("content-id", fullItem.content?.id ?? null);
     core2.setOutput("project-id", fullItem.projectId);
-    core2.setOutput("title", fullItem.content.title);
-    if (fullItem.content.type !== "DraftIssue") {
+    core2.setOutput("title", fullItem.content?.title ?? null);
+    if (fullItem.type === "ISSUE" || fullItem.type === "PULL_REQUEST") {
       core2.setOutput("url", fullItem.content.url);
     }
-    if (fullItem.field) {
+    if (fullItem.type !== "REDACTED" && fullItem.field) {
       core2.setOutput("field-id", fullItem.field.id);
       if (fullItem.field.value !== null) {
         core2.setOutput("field-value", fullItem.field.value);

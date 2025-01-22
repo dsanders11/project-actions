@@ -22065,7 +22065,6 @@ async function execCliCommand(args) {
 // src/lib.ts
 var PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {
-    __typename
     ... on DraftIssue {
       id
       body
@@ -22083,7 +22082,9 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       body
       title
     }
-  }`;
+  }
+  id
+  type`;
 var PROJECT_ITEMS_QUERY = `
   query paginate($cursor: String, $projectId: ID!) {
     projectV2: node(id: $projectId) {
@@ -22091,7 +22092,6 @@ var PROJECT_ITEMS_QUERY = `
         id
         items(first: 50, after: $cursor) {
           nodes {
-            id
             ${PROJECT_ITEM_CONTENT_FRAGMENT}
           }
           pageInfo {

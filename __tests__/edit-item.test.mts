@@ -112,7 +112,7 @@ describe('editItemAction', () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { type: 'PullRequest' }
+      type: 'PULL_REQUEST'
     } as ItemDetails);
     vi.mocked(editItem).mockImplementation(() => {
       throw new ProjectNotFoundError();
@@ -151,6 +151,26 @@ describe('editItemAction', () => {
     expect(core.setFailed).toHaveBeenLastCalledWith('42');
   });
 
+  it('cannot edit redacted items', async () => {
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      item,
+      title: 'New Title'
+    });
+    vi.mocked(getItem).mockResolvedValue({
+      type: 'REDACTED'
+    } as ItemDetails);
+
+    await index.editItemAction();
+    expect(editItemActionSpy).toHaveReturned();
+
+    expect(core.setFailed).toHaveBeenCalledTimes(1);
+    expect(core.setFailed).toHaveBeenLastCalledWith(
+      'Cannot edit redacted items'
+    );
+  });
+
   it('can only set title/body for draft issues', async () => {
     mockGetInput({
       owner,
@@ -159,7 +179,7 @@ describe('editItemAction', () => {
       title: 'New Title'
     });
     vi.mocked(getItem).mockResolvedValue({
-      content: { type: 'PullRequest' }
+      type: 'PULL_REQUEST'
     } as ItemDetails);
 
     await index.editItemAction();
@@ -183,7 +203,7 @@ describe('editItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { type: 'PullRequest' },
+      type: 'PULL_REQUEST',
       projectId
     } as ItemDetails);
     vi.mocked(editItem).mockResolvedValue(itemId);
@@ -209,7 +229,7 @@ describe('editItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { type: 'DraftIssue' },
+      type: 'DRAFT_ISSUE',
       projectId
     } as ItemDetails);
     vi.mocked(editItem).mockResolvedValue(itemId);
@@ -224,7 +244,7 @@ describe('editItemAction', () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { type: 'PullRequest' },
+      type: 'PULL_REQUEST',
       projectId
     } as ItemDetails);
     vi.mocked(editItem).mockResolvedValue(itemId);

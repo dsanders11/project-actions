@@ -29,7 +29,12 @@ export async function editItemAction(): Promise<void> {
       return;
     }
 
-    if (fullItem.content.type !== 'DraftIssue' && (!!title || !!body)) {
+    if (fullItem.type === 'REDACTED') {
+      core.setFailed('Cannot edit redacted items');
+      return;
+    }
+
+    if (fullItem.type !== 'DRAFT_ISSUE' && (!!title || !!body)) {
       core.setFailed('Can only set title or body for draft issues');
       return;
     }

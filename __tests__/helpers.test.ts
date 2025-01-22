@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
+import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
 import { Octokit } from '@octokit/core';
@@ -102,6 +103,30 @@ describe('helpers', () => {
         args,
         expect.objectContaining({
           env: {
+            GH_TOKEN: token
+          }
+        })
+      );
+    });
+
+    it('sets GH_DEBUG if core.isDebug() is true', async () => {
+      const args = ['project', 'view'];
+      const stdout = 'output';
+      const token = 'gh-token';
+      mockGetInput({ token });
+      vi.mocked(core.isDebug).mockReturnValue(true);
+      vi.mocked(exec.getExecOutput).mockResolvedValue({
+        exitCode: 0,
+        stdout,
+        stderr: ''
+      });
+      await expect(helpers.execCliCommand(args)).resolves.toEqual(stdout);
+      expect(exec.getExecOutput).toHaveBeenCalledWith(
+        expect.anything(),
+        args,
+        expect.objectContaining({
+          env: {
+            GH_DEBUG: 'api',
             GH_TOKEN: token
           }
         })
