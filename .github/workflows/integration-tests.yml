@@ -19,6 +19,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - auth: PAT
