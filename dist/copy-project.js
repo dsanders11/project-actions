@@ -23922,6 +23922,7 @@ var require_mustache = __commonJS({
 });
 
 // src/copy-project.ts
+var import_promises = require("node:timers/promises");
 var core2 = __toESM(require_core());
 
 // src/lib.ts
@@ -24300,6 +24301,23 @@ async function editProject(owner, projectNumber, edit) {
   }
   return JSON.parse(output).id;
 }
+async function getProject(owner, projectNumber) {
+  let details;
+  try {
+    details = await execCliCommand([
+      "project",
+      "view",
+      projectNumber,
+      "--owner",
+      owner,
+      "--format",
+      "json"
+    ]);
+  } catch (error2) {
+    handleCliError(error2);
+  }
+  return JSON.parse(details);
+}
 async function linkProjectToRepository(projectNumber, repository, linked = true) {
   const octokit = getOctokit();
   const [owner, name] = repository.split("/");
@@ -24422,7 +24440,20 @@ async function copyProjectAction() {
       await linkProjectToTeam(project.number.toString(), linkToTeam);
     }
     if (templateView) {
-      const draftIssues = await getDraftIssues(project.id);
+      const {
+        items: { totalCount: draftIssueCount }
+      } = await getProject(owner, projectNumber);
+      let draftIssues = [];
+      for (let i = 0; i < 10; i++) {
+        await (0, import_promises.setTimeout)(1e3);
+        draftIssues = await getDraftIssues(project.id);
+        if (draftIssues.length === draftIssueCount) break;
+      }
+      if (draftIssues.length !== draftIssueCount) {
+        core2.error(
+          `Not all draft issues available for interpolation, expected ${draftIssueCount} but got ${draftIssues.length}`
+        );
+      }
       for (const draftIssue of draftIssues) {
         try {
           const { content } = draftIssue;
