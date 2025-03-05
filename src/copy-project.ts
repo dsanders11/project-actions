@@ -1,10 +1,14 @@
+import { setTimeout } from 'node:timers/promises';
+
 import * as core from '@actions/core';
 
 import {
   copyProject,
+  DraftIssueItem,
   editItem,
   editProject,
   getDraftIssues,
+  getProject,
   linkProjectToRepository,
   linkProjectToTeam
 } from './lib';
@@ -69,7 +73,28 @@ export async function copyProjectAction(): Promise<void> {
 
     // Do template interpolation on draft issues
     if (templateView) {
-      const draftIssues = await getDraftIssues(project.id);
+      // HACK - It seems that GitHub now populates the draft issues
+      // on the new project in an async manner so they may not all
+      // be available yet. Wait until the number of draft issues
+      // matches the number of draft issues in the source project.
+      const {
+        items: { totalCount: draftIssueCount }
+      } = await getProject(owner, projectNumber);
+
+      let draftIssues: DraftIssueItem[] = [];
+
+      for (let i = 0; i < 10; i++) {
+        await setTimeout(1000);
+        draftIssues = await getDraftIssues(project.id);
+        if (draftIssues.length === draftIssueCount) break;
+      }
+
+      // Log an error but continue as partial success is better than failure
+      if (draftIssues.length !== draftIssueCount) {
+        core.error(
+          `Not all draft issues available for interpolation, expected ${draftIssueCount} but got ${draftIssues.length}`
+        );
+      }
 
       for (const draftIssue of draftIssues) {
         try {

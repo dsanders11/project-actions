@@ -8,8 +8,10 @@ import {
   editItem,
   editProject,
   getDraftIssues,
+  getProject,
   linkProjectToRepository,
-  linkProjectToTeam
+  linkProjectToTeam,
+  ProjectDetails
 } from '../src/lib.js';
 import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
@@ -231,6 +233,11 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
+    vi.mocked(getProject).mockResolvedValue({
+      items: {
+        totalCount: 1
+      }
+    } as ProjectDetails);
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: 'item-id',
@@ -264,6 +271,11 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
+    vi.mocked(getProject).mockResolvedValue({
+      items: {
+        totalCount: 1
+      }
+    } as ProjectDetails);
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
@@ -302,6 +314,11 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
+    vi.mocked(getProject).mockResolvedValue({
+      items: {
+        totalCount: 1
+      }
+    } as ProjectDetails);
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
