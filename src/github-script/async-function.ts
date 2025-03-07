@@ -6,7 +6,7 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
 import * as exec from '@actions/exec';
-import { Context } from '@actions/github/lib/context';
+import { Context } from '@actions/github/lib/context.js';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
 
@@ -28,7 +28,7 @@ import {
   getWorkflow,
   linkProjectToRepository,
   linkProjectToTeam
-} from '../lib';
+} from '../lib.js';
 
 const AsyncFunction = Object.getPrototypeOf(async () => null).constructor;
 

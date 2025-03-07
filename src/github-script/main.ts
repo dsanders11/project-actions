@@ -6,24 +6,21 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { context } from '@actions/github';
-import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils';
+import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils.js';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
 import { Octokit } from '@octokit/core';
-import type {
-  OctokitOptions,
-  OctokitPlugin
-} from '@octokit/core/dist-types/types';
+import type { OctokitOptions, OctokitPlugin } from '@octokit/core/types';
 import { requestLog } from '@octokit/plugin-request-log';
 import { retry } from '@octokit/plugin-retry';
 import type { RequestRequestOptions } from '@octokit/types';
-import { callAsyncFunction } from './async-function';
+import { callAsyncFunction } from './async-function.js';
 import {
   RetryOptions,
   getRetryOptions,
   parseNumberArray
-} from './retry-options';
-import { wrapRequire } from './wrap-require';
+} from './retry-options.js';
+import { wrapRequire } from './wrap-require.js';
 
 import {
   addItem,
@@ -43,7 +40,7 @@ import {
   getWorkflow,
   linkProjectToRepository,
   linkProjectToTeam
-} from '../lib';
+} from '../lib.js';
 
 declare const __non_webpack_require__: NodeRequire;
 

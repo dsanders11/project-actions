@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { ItemEdit, editItem, getItem } from './lib';
+import { ItemEdit, editItem, getItem } from './lib.js';
 
 export async function editItemAction(): Promise<void> {
   try {

@@ -5,7 +5,7 @@ import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
 
 import { Octokit } from '@octokit/core';
-import { paginateGraphql } from '@octokit/plugin-paginate-graphql';
+import { paginateGraphQL } from '@octokit/plugin-paginate-graphql';
 
 const GH_CLI_RELEASES = 'https://github.com/cli/cli/releases/';
 const GH_VERSION = '2.45.0';
@@ -59,10 +59,10 @@ export async function execCliCommand(args: string[]): Promise<string> {
   return stdout;
 }
 
-export function getOctokit(): Octokit & ReturnType<typeof paginateGraphql> {
+export function getOctokit(): Octokit & ReturnType<typeof paginateGraphQL> {
   const token = core.getInput('token', { required: true });
 
-  const PaginatedOctokit = Octokit.plugin(paginateGraphql);
+  const PaginatedOctokit = Octokit.plugin(paginateGraphQL);
 
   return new PaginatedOctokit({ auth: token });
 }

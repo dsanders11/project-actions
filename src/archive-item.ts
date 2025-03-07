@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { archiveItem, getItem } from './lib';
+import { archiveItem, getItem } from './lib.js';
 
 export async function archiveItemAction(): Promise<void> {
   try {

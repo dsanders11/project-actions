@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { closeProject } from './lib';
+import { closeProject } from './lib.js';
 
 export async function closeProjectAction(): Promise<void> {
   try {

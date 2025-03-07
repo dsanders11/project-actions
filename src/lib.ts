@@ -1,7 +1,7 @@
 import { GraphqlResponseError } from '@octokit/graphql';
 import type { PageInfoForward } from '@octokit/plugin-paginate-graphql';
 
-import { getOctokit, execCliCommand } from './helpers';
+import { getOctokit, execCliCommand } from './helpers.js';
 
 const PROJECT_ITEM_CONTENT_FRAGMENT = `
   content {

@@ -6,8 +6,8 @@ import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
 import { Octokit } from '@octokit/core';
 
-import * as helpers from '../src/helpers';
-import { mockGetInput, overridePlatform, resetPlatform } from './utils';
+import * as helpers from '../src/helpers.js';
+import { mockGetInput, overridePlatform, resetPlatform } from './utils.js';
 
 vi.mock('@actions/core');
 vi.mock('@actions/exec');

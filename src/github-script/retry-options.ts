@@ -2,7 +2,7 @@
 // Copyright GitHub, Inc. and contributors
 
 import * as core from '@actions/core';
-import type { OctokitOptions } from '@octokit/core/dist-types/types';
+import type { OctokitOptions } from '@octokit/core/types';
 import type { RequestRequestOptions } from '@octokit/types';
 
 export type RetryOptions = {

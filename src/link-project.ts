@@ -1,6 +1,10 @@
 import * as core from '@actions/core';
 
-import { getProject, linkProjectToRepository, linkProjectToTeam } from './lib';
+import {
+  getProject,
+  linkProjectToRepository,
+  linkProjectToTeam
+} from './lib.js';
 
 export async function linkProjectAction(): Promise<void> {
   try {

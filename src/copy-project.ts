@@ -11,7 +11,7 @@ import {
   getProject,
   linkProjectToRepository,
   linkProjectToTeam
-} from './lib';
+} from './lib.js';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, import/no-commonjs
 const Mustache = require('mustache'); // ESM confusion necessitates this
