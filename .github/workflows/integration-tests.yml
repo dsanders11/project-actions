@@ -144,6 +144,11 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      # HACK - This is a workaround for a GitHub change in behavior
+      # where the item is not immediately available after creation
+      - name: Sleep (Wait for Item to be Added)
+        run: sleep 5
+
       - name: Get Added Item
         uses: ./get-item/
         id: get-added-item
@@ -318,6 +323,10 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           team: dsanders11-playground-org/maintainers
           token: ${{ steps.get-auth-token.outputs.token }}
+
+      # HACK - Sometimes the linking isn't immediately reflected
+      - name: Sleep (Wait for Project to be Linked)
+        run: sleep 5
 
       - name: Check Project is Linked to Team
         uses: ./github-script/
