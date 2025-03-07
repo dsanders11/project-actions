@@ -13,6 +13,10 @@ inputs:
   project-number:
     description: The project number from the project's URL
     required: true
+  fail-if-project-not-found:
+    description: Should the action fail if the project is not found
+    required: false
+    default: true
 
 runs:
   using: node20

@@ -19691,7 +19691,7 @@ var require_core = __commonJS({
       return inputs.map((input) => input.trim());
     }
     exports.getMultilineInput = getMultilineInput;
-    function getBooleanInput(name, options) {
+    function getBooleanInput2(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
       const val = getInput3(name, options);
@@ -19702,7 +19702,7 @@ var require_core = __commonJS({
       throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
 Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
-    exports.getBooleanInput = getBooleanInput;
+    exports.getBooleanInput = getBooleanInput2;
     function setOutput(name, value) {
       const filePath = process.env["GITHUB_OUTPUT"] || "";
       if (filePath) {
@@ -21900,7 +21900,17 @@ async function deleteProjectAction() {
   try {
     const owner = core2.getInput("owner", { required: true });
     const projectNumber = core2.getInput("project-number", { required: true });
-    await deleteProject(owner, projectNumber);
+    const failIfProjectNotFound = core2.getBooleanInput(
+      "fail-if-project-not-found"
+    );
+    try {
+      await deleteProject(owner, projectNumber);
+    } catch (error) {
+      if (error instanceof ProjectNotFoundError && !failIfProjectNotFound) {
+        return;
+      }
+      throw error;
+    }
   } catch (error) {
     if (error instanceof Error && error.stack) core2.debug(error.stack);
     core2.setFailed(

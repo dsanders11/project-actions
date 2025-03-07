@@ -19,8 +19,8 @@
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "ci-test": "vitest run --coverage --reporter=verbose",
-    "format:write": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"**/*.ts\"",
+    "format:write": "prettier --write \"**/*.{mts,ts}\"",
+    "format:check": "prettier --check \"**/*.{mts,ts}\"",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
     "package:add-item": "esbuild add-item/index.ts --bundle --format=esm --outfile=dist/add-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
     "package:archive-item": "esbuild archive-item/index.ts --bundle --format=esm --outfile=dist/archive-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
