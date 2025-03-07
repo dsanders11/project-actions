@@ -22,6 +22,27 @@ const title = 'My Title';
 const readme = 'README';
 const url = 'url';
 
+const mockProject = {
+  id: projectId,
+  number: parseInt(projectNumber),
+  fields: {
+    totalCount: fieldCount
+  },
+  items: {
+    totalCount: itemCount
+  },
+  url,
+  title,
+  readme,
+  shortDescription,
+  public: true,
+  closed: false,
+  owner: {
+    type: 'Organization' as const,
+    login: owner
+  }
+};
+
 describe('findProjectAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -91,28 +112,31 @@ describe('findProjectAction', () => {
     expect(core.setFailed).toHaveBeenLastCalledWith('42');
   });
 
+  it('finds closed projects', async () => {
+    mockGetInput({ owner, title });
+    mockGetBooleanInput({ 'include-closed': true });
+    vi.mocked(findProject).mockResolvedValue(mockProject);
+
+    await index.findProjectAction();
+    expect(findProjectActionSpy).toHaveReturned();
+
+    expect(findProject).toHaveBeenCalledWith(owner, title, true, '');
+  });
+
+  it('can set limit', async () => {
+    mockGetInput({ owner, title, limit: '50' });
+    mockGetBooleanInput({});
+    vi.mocked(findProject).mockResolvedValue(mockProject);
+
+    await index.findProjectAction();
+    expect(findProjectActionSpy).toHaveReturned();
+
+    expect(findProject).toHaveBeenCalledWith(owner, title, false, '50');
+  });
+
   it('sets output', async () => {
     mockGetInput({ owner, title });
-    vi.mocked(findProject).mockResolvedValue({
-      id: projectId,
-      number: parseInt(projectNumber),
-      fields: {
-        totalCount: fieldCount
-      },
-      items: {
-        totalCount: itemCount
-      },
-      url,
-      title,
-      readme,
-      shortDescription,
-      public: true,
-      closed: false,
-      owner: {
-        type: 'Organization',
-        login: owner
-      }
-    });
+    vi.mocked(findProject).mockResolvedValue(mockProject);
 
     await index.findProjectAction();
     expect(findProjectActionSpy).toHaveReturned();

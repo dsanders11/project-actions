@@ -40518,16 +40518,15 @@ async function editProject(owner, projectNumber, edit) {
     }
     return JSON.parse(output).id;
 }
-async function findProject(owner, title) {
-    // TODO - Pagination
-    const { projects } = JSON.parse(await helpers_execCliCommand([
-        'project',
-        'list',
-        '--owner',
-        owner,
-        '--format',
-        'json'
-    ]));
+async function findProject(owner, title, closed = false, limit) {
+    const args = ['project', 'list', '--owner', owner, '--format', 'json'];
+    if (closed) {
+        args.push('--closed');
+    }
+    if (limit) {
+        args.push('--limit', limit);
+    }
+    const { projects } = JSON.parse(await helpers_execCliCommand(args));
     for (const project of projects) {
         if (project.title === title) {
             return project;
