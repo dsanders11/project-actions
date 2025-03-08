@@ -901,19 +901,21 @@ export async function editProject(
 
 export async function findProject(
   owner: string,
-  title: string
+  title: string,
+  closed = false,
+  limit?: string
 ): Promise<ProjectDetails | null> {
-  // TODO - Pagination
-  const { projects } = JSON.parse(
-    await execCliCommand([
-      'project',
-      'list',
-      '--owner',
-      owner,
-      '--format',
-      'json'
-    ])
-  );
+  const args = ['project', 'list', '--owner', owner, '--format', 'json'];
+
+  if (closed) {
+    args.push('--closed');
+  }
+
+  if (limit) {
+    args.push('--limit', limit);
+  }
+
+  const { projects } = JSON.parse(await execCliCommand(args));
 
   for (const project of projects) {
     if (project.title === title) {

@@ -17,6 +17,14 @@ inputs:
     description: Should the action fail if the project is not found
     required: false
     default: true
+  include-closed:
+    description: Include closed projects
+    required: false
+    default: false
+  limit:
+    description: Maximum number of projects to fetch
+    required: false
+    default: 30
 
 outputs:
   id:

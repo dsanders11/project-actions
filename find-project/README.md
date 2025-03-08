@@ -10,6 +10,8 @@ Find a GitHub project
 |-------------------|----------------------------------------------------|----------|----------------------------------------------|
 | `token`           | A GitHub access token - either a classic PAT or a GitHub app installation token. | Yes      |                                              |
 | `owner`           | The owner of the project - either an organization or a user. If not provided, it defaults to the repository owner. | No       | `${{ github.repository_owner }}`           |
+| `include-closed`  | Include closed projects.                  | No       | `false` |
+| `limit`           | Maximum number of projects to fetch.      | No       | 30 |
 | `title`           | The title of the project to find.         | Yes      |                                              |
 | `fail-if-project-not-found` | Should the action fail if the project is not found | No      | `true` |
 

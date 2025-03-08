@@ -1330,12 +1330,39 @@ describe('lib', () => {
       ).resolves.toEqual(null);
     });
 
+    it('can include closed projects', async () => {
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ projects: [project] })
+      );
+      await expect(lib.findProject(owner, projectTitle, true)).resolves.toEqual(
+        project
+      );
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['--closed'])
+      );
+    });
+
+    it('can set a limit', async () => {
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ projects: [project] })
+      );
+      await expect(
+        lib.findProject(owner, projectTitle, false, '50')
+      ).resolves.toEqual(project);
+      expect(execCliCommand).toHaveBeenCalledWith(
+        expect.arrayContaining(['--limit'])
+      );
+    });
+
     it('returns project details', async () => {
       vi.mocked(execCliCommand).mockResolvedValue(
         JSON.stringify({ projects: [project] })
       );
       await expect(lib.findProject(owner, projectTitle)).resolves.toEqual(
         project
+      );
+      expect(execCliCommand).not.toHaveBeenCalledWith(
+        expect.arrayContaining(['--limit'])
       );
     });
   });

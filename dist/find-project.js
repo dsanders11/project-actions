@@ -21862,17 +21862,15 @@ var PROJECT_WORKFLOWS_QUERY = `
       }
     }
   }`;
-async function findProject(owner, title) {
-  const { projects } = JSON.parse(
-    await execCliCommand([
-      "project",
-      "list",
-      "--owner",
-      owner,
-      "--format",
-      "json"
-    ])
-  );
+async function findProject(owner, title, closed = false, limit) {
+  const args = ["project", "list", "--owner", owner, "--format", "json"];
+  if (closed) {
+    args.push("--closed");
+  }
+  if (limit) {
+    args.push("--limit", limit);
+  }
+  const { projects } = JSON.parse(await execCliCommand(args));
   for (const project of projects) {
     if (project.title === title) {
       return project;
@@ -21889,7 +21887,9 @@ async function findProjectAction() {
     const failIfProjectNotFound = core2.getBooleanInput(
       "fail-if-project-not-found"
     );
-    const project = await findProject(owner, title);
+    const includeClosed = core2.getBooleanInput("include-closed");
+    const limit = core2.getInput("limit");
+    const project = await findProject(owner, title, includeClosed, limit);
     if (!project) {
       if (failIfProjectNotFound) core2.setFailed(`Project not found: ${title}`);
       return;
