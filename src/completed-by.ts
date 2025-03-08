@@ -5,7 +5,7 @@ import {
   getDraftIssues,
   getProject,
   getPullRequestState
-} from './lib';
+} from './lib.js';
 
 export async function completedByAction(): Promise<void> {
   try {

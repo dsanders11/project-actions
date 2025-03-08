@@ -2,7 +2,7 @@
 
 import * as core from '@actions/core';
 
-import { main } from '../src/github-script/main';
+import { main } from '../src/github-script/main.js';
 
 process.on('unhandledRejection', handleError);
 main().catch(handleError);

@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { findWorkflow } from './lib';
+import { findWorkflow } from './lib.js';
 
 export async function findWorkflowAction(): Promise<void> {
   try {

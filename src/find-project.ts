@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { findProject } from './lib';
+import { findProject } from './lib.js';
 
 export async function findProjectAction(): Promise<void> {
   try {

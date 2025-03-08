@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { getProject } from './lib';
+import { getProject } from './lib.js';
 
 export async function getProjectAction(): Promise<void> {
   try {

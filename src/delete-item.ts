@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { deleteItem, getItem } from './lib';
+import { deleteItem, getItem } from './lib.js';
 
 export async function deleteItemAction(): Promise<void> {
   try {
