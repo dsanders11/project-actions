@@ -376,6 +376,15 @@ jobs:
           title: New Title ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Find Project (Not Found)
+        uses: ./find-project/
+        id: find-project-not-found
+        with:
+          fail-if-project-not-found: false
+          owner: ${{ matrix.owner }}
+          title: Foobar
+          token: ${{ steps.get-auth-token.outputs.token }}
+          
       - name: Confirm Project Found
         uses: ./github-script/
         with:
@@ -451,6 +460,15 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Close Project (Not Found)
+        uses: ./close-project/
+        id: close-project-not-found
+        with:
+          fail-if-project-not-found: false
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: 99999
+          token: ${{ steps.get-auth-token.outputs.token }}
+
       - name: Reopen Project
         uses: ./close-project/
         id: reopen-project
@@ -466,4 +484,13 @@ jobs:
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Delete Project (Not Found)
+        uses: ./delete-project/
+        id: delete-project-not-found
+        with:
+          fail-if-project-not-found: false
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: 99999
           token: ${{ steps.get-auth-token.outputs.token }}

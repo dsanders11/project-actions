@@ -4,7 +4,7 @@ import * as core from '@actions/core';
 
 import * as index from '../src/find-project';
 import { findProject } from '../src/lib';
-import { mockGetInput } from './utils';
+import { mockGetBooleanInput, mockGetInput } from './utils';
 
 vi.mock('@actions/core');
 vi.mock('../src/lib');
@@ -41,6 +41,7 @@ describe('findProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, title });
+    mockGetBooleanInput({ 'fail-if-project-not-found': true });
     vi.mocked(findProject).mockResolvedValue(null);
 
     await index.findProjectAction();
@@ -50,6 +51,18 @@ describe('findProjectAction', () => {
     expect(core.setFailed).toHaveBeenLastCalledWith(
       `Project not found: ${title}`
     );
+  });
+
+  it('can ignore project not found', async () => {
+    mockGetInput({ owner, title });
+    mockGetBooleanInput({ 'fail-if-project-not-found': false });
+    vi.mocked(findProject).mockResolvedValue(null);
+
+    await index.findProjectAction();
+    expect(findProjectActionSpy).toHaveReturned();
+
+    expect(core.setFailed).not.toHaveBeenCalled();
+    expect(core.setOutput).not.toHaveBeenCalled();
   });
 
   it('handles generic errors', async () => {

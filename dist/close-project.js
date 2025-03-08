@@ -21907,8 +21907,18 @@ async function closeProjectAction() {
     const owner = core2.getInput("owner", { required: true });
     const projectNumber = core2.getInput("project-number", { required: true });
     const closed = core2.getBooleanInput("closed");
-    const project = await closeProject(owner, projectNumber, closed);
-    core2.setOutput("id", project.id);
+    const failIfProjectNotFound = core2.getBooleanInput(
+      "fail-if-project-not-found"
+    );
+    try {
+      const project = await closeProject(owner, projectNumber, closed);
+      core2.setOutput("id", project.id);
+    } catch (error) {
+      if (error instanceof ProjectNotFoundError && !failIfProjectNotFound) {
+        return;
+      }
+      throw error;
+    }
   } catch (error) {
     if (error instanceof Error && error.stack) core2.debug(error.stack);
     core2.setFailed(

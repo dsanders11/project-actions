@@ -13,6 +13,10 @@ inputs:
   title:
     description: The title of the project to find
     required: true
+  fail-if-project-not-found:
+    description: Should the action fail if the project is not found
+    required: false
+    default: true
 
 outputs:
   id:

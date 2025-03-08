@@ -17,6 +17,10 @@ inputs:
     description: Closed state of the project - set false to reopen a closed project
     required: false
     default: true
+  fail-if-project-not-found:
+    description: Should the action fail if the project is not found
+    required: false
+    default: true
 
 outputs:
   id:

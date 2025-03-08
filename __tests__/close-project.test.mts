@@ -3,14 +3,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as core from '@actions/core';
 
 import * as index from '../src/close-project.js';
-import { ProjectDetails, closeProject } from '../src/lib.js';
-import { mockGetInput } from './utils.js';
+import {
+  ProjectDetails,
+  ProjectNotFoundError,
+  closeProject
+} from '../src/lib.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
 vi.mock('@actions/core');
-vi.mock('../src/lib');
-
-const { ProjectNotFoundError } =
-  await vi.importActual<typeof import('../src/lib.js')>('../src/lib');
+vi.mock('../src/lib.js', async () => {
+  const { ProjectNotFoundError: ActualProjectNotFoundError } =
+    await vi.importActual<typeof import('../src/lib.js')>('../src/lib.js');
+  return {
+    closeProject: vi.fn(),
+    ProjectNotFoundError: ActualProjectNotFoundError
+  };
+});
 
 // Spy the action's entrypoint
 const closeProjectActionSpy = vi.spyOn(index, 'closeProjectAction');
@@ -38,6 +46,7 @@ describe('closeProjectAction', () => {
 
   it('handles project not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber });
+    mockGetBooleanInput({ 'fail-if-project-not-found': true });
     vi.mocked(closeProject).mockImplementation(() => {
       throw new ProjectNotFoundError();
     });
@@ -47,6 +56,20 @@ describe('closeProjectAction', () => {
 
     expect(core.setFailed).toHaveBeenCalledTimes(1);
     expect(core.setFailed).toHaveBeenLastCalledWith('Project not found');
+  });
+
+  it('can ignore project not found', async () => {
+    mockGetInput({ owner, 'project-number': projectNumber });
+    mockGetBooleanInput({ 'fail-if-project-not-found': false });
+    vi.mocked(closeProject).mockImplementation(() => {
+      throw new ProjectNotFoundError();
+    });
+
+    await index.closeProjectAction();
+    expect(closeProjectActionSpy).toHaveReturned();
+
+    expect(core.setFailed).not.toHaveBeenCalled();
+    expect(core.setOutput).not.toHaveBeenCalled();
   });
 
   it('handles generic errors', async () => {

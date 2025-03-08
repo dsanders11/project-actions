@@ -8,10 +8,15 @@ export async function findProjectAction(): Promise<void> {
     const owner = core.getInput('owner', { required: true });
     const title = core.getInput('title', { required: true });
 
+    // Optional inputs
+    const failIfProjectNotFound = core.getBooleanInput(
+      'fail-if-project-not-found'
+    );
+
     const project = await findProject(owner, title);
 
     if (!project) {
-      core.setFailed(`Project not found: ${title}`);
+      if (failIfProjectNotFound) core.setFailed(`Project not found: ${title}`);
       return;
     }
 
