@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, vitest/expect-expect */
 import { describe, expect, test } from 'vitest';
 
-import { callAsyncFunction } from '../../src/github-script/async-function';
+import { callAsyncFunction } from '../../src/github-script/async-function.js';
 
 describe('callAsyncFunction', () => {
   test('calls the function with its arguments', async () => {

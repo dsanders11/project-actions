@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as core from '@actions/core';
 
-import * as index from '../src/find-project';
-import { findProject } from '../src/lib';
-import { mockGetBooleanInput, mockGetInput } from './utils';
+import * as index from '../src/find-project.js';
+import { findProject } from '../src/lib.js';
+import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
 vi.mock('@actions/core');
 vi.mock('../src/lib');
