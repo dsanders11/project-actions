@@ -3,7 +3,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { getRetryOptions } from '../../src/github-script/retry-options';
+import { getRetryOptions } from '../../src/github-script/retry-options.js';
 
 describe('getRequestOptions', () => {
   test('retries disabled if retries == 0', async () => {
