@@ -467,6 +467,7 @@ jobs:
           fail-if-project-not-found: false
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: 99999
+          token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Find Closed Project
         uses: ./find-project/
