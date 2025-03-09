@@ -3,8 +3,8 @@ import type { Mock } from 'vitest';
 
 import { GraphqlResponseError } from '@octokit/graphql';
 
-import { execCliCommand, getOctokit } from '../src/helpers';
-import * as lib from '../src/lib';
+import { execCliCommand, getOctokit } from '../src/helpers.js';
+import * as lib from '../src/lib.js';
 
 type MockGraphqlResponseErrorError = {
   type: string;
