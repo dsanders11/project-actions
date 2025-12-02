@@ -57,7 +57,7 @@ jobs:
           GHA_TOKEN: ${{ steps.generate-app-token.outputs.token }}
           PAT: ${{ secrets.PAT }}
         run: |
-          if [[ -z "$GHA_TOKEN" ]]; then
+          if [[ -n "$GHA_TOKEN" ]]; then
             echo "token=$GHA_TOKEN" >> "$GITHUB_OUTPUT"
           else
             echo "token=$PAT" >> "$GITHUB_OUTPUT"
