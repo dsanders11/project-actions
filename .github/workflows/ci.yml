@@ -2,9 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
   workflow_call:
   schedule:
     - cron: '0 22 * * 2'
@@ -46,3 +43,4 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: test-typescript
     uses: ./.github/workflows/integration-tests.yml
+    secrets: inherit
