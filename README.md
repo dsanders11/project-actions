@@ -1,6 +1,5 @@
 # GitHub Project Actions
 
-[![CI](https://github.com/dsanders11/project-actions/actions/workflows/ci.yml/badge.svg)](https://github.com/dsanders11/project-actions/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/dsanders11/project-actions?color=blue)](https://github.com/dsanders11/project-actions/releases)
 
 A collection of actions for automating GitHub projects
