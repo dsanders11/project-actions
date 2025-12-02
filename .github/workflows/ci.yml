@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - 'releases/*'
+  workflow_call:
   schedule:
     - cron: '0 22 * * 2'
 
@@ -41,3 +41,8 @@ jobs:
       - name: Test
         id: npm-ci-test
         run: npm run ci-test
+
+  integration-tests:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: test-typescript
+    uses: ./.github/workflows/integration-tests.yml
