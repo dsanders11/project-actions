@@ -474,7 +474,7 @@ jobs:
         id: find-closed-project
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
-          title: ${{ steps.copy-project.outputs.title }}
+          title: ${{ steps.find-project.outputs.title }}
           include-closed: true
           token: ${{ steps.get-auth-token.outputs.token }}
 
