@@ -10,7 +10,9 @@ permissions: {}
 jobs:
   ci:
     uses: ./.github/workflows/ci.yml
-    secrets: inherit
+    secrets:
+      GH_APP_CREDS: ${{ secrets.GH_APP_CREDS }}
+      PAT: ${{ secrets.PAT }}
 
   release:
     name: release

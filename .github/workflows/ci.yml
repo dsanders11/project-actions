@@ -6,15 +6,20 @@ on:
   schedule:
     - cron: '0 22 * * 2'
 
+permissions: {}
+
 jobs:
   test-typescript:
     name: TypeScript Tests
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         id: setup-node
@@ -43,4 +48,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: test-typescript
     uses: ./.github/workflows/integration-tests.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GH_APP_CREDS: ${{ secrets.GH_APP_CREDS }}
+      PAT: ${{ secrets.PAT }}
