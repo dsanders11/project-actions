@@ -1,16 +1,12 @@
 name: Integration Tests
 
 on:
+  workflow_call:
   workflow_dispatch:
-  workflow_run:
-    workflows: ['CI']
-    branches:
-      - main
-      - 'releases/*'
-    types: 
-      - completed
   schedule:
     - cron: '0 22 * * 3'
+
+permissions: {}
 
 jobs:
   integration-tests:
@@ -36,6 +32,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       - name: Get Date
         uses: ./github-script/
@@ -55,7 +53,15 @@ jobs:
 
       - name: Get Auth Token
         id: get-auth-token
-        run: echo "token=${{ steps.generate-app-token.outputs.token || secrets.PAT }}" >> "$GITHUB_OUTPUT"
+        env:
+          GHA_TOKEN: ${{ steps.generate-app-token.outputs.token }}
+          PAT: ${{ secrets.PAT }}
+        run: |
+          if [[ -n "$GHA_TOKEN" ]]; then
+            echo "token=$GHA_TOKEN" >> "$GITHUB_OUTPUT"
+          else
+            echo "token=$PAT" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create Template View
         uses: ./github-script/
@@ -84,8 +90,10 @@ jobs:
         id: get-draft-issue-id
         run: |
           set -eo pipefail
-          echo "id=$(gh project item-list ${{ steps.copy-project.outputs.number }} --owner ${{ steps.copy-project.outputs.owner }} --format json | jq -r '.items[0] | .id')" >> "$GITHUB_OUTPUT"
+          echo "id=$(gh project item-list ${PROJECT_NUMBER} --owner ${OWNER} --format json | jq -r '.items[0] | .id')" >> "$GITHUB_OUTPUT"
         env:
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          OWNER: ${{ steps.copy-project.outputs.owner }}
           GH_TOKEN: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Draft Issue
@@ -100,13 +108,17 @@ jobs:
 
       - name: Check Draft Issue
         uses: ./github-script/
+        env:
+          BODY: ${{ steps.get-draft-issue.outputs.body }}
+          FIELD_VALUE: ${{ steps.get-draft-issue.outputs.field-value }}
+          TITLE: ${{ steps.get-draft-issue.outputs.title }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.get-draft-issue.outputs.title }}', 'My Favorite Issue');
-            assert.strictEqual('${{ steps.get-draft-issue.outputs.field-value }}', 'Low');
-            assert.match(`${{ steps.get-draft-issue.outputs.body }}`, /Here's another bar/);
+            assert.strictEqual(process.env.TITLE, 'My Favorite Issue');
+            assert.strictEqual(process.env.FIELD_VALUE, 'Low');
+            assert.match(process.env.BODY, /Here's another bar/);
 
       - name: Run Completed By
         uses: ./completed-by/
@@ -119,14 +131,18 @@ jobs:
 
       - name: Check Draft Issue Is Completed
         uses: ./github-script/
+        env:
+          ITEM_ID: ${{ steps.get-draft-issue-id.outputs.id }}
+          OWNER: ${{ steps.copy-project.outputs.owner }}
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
         with:
           script: |
             const assert = require('node:assert');
 
             const item = await actions.getItem(
-              '${{ steps.copy-project.outputs.owner }}',
-              '${{ steps.copy-project.outputs.number }}',
-              '${{ steps.get-draft-issue-id.outputs.id }}',
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
               'Status'
             )
 
@@ -161,11 +177,14 @@ jobs:
 
       - name: Check Added Item Field Value
         uses: ./github-script/
+        env:
+          DATE_STRING: ${{ steps.get-date.outputs.result }}
+          FIELD_VALUE: ${{ steps.get-added-item.outputs.field-value }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.get-added-item.outputs.field-value }}', new Date('${{ steps.get-date.outputs.result }}').toISOString().split('T')[0]);
+            assert.strictEqual(process.env.FIELD_VALUE, new Date(process.env.DATE_STRING).toISOString().split('T')[0]);
 
       - name: Edit Item
         uses: ./edit-item/
@@ -213,26 +232,33 @@ jobs:
 
       - name: Check Edited Item Field Value
         uses: ./github-script/
+        env:
+          FIELD_VALUE: ${{ steps.get-edited-item.outputs.field-value }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.get-edited-item.outputs.field-value }}', '⛰️ High');
+            assert.strictEqual(process.env.FIELD_VALUE, '⛰️ High');
 
       - name: Test GitHub Script Action
         uses: ./github-script/
+        env:
+          ITEM_ID: ${{ steps.edit-item.outputs.id }}
+          PROJECT_ID: ${{ steps.copy-project.outputs.id }}
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          OWNER: ${{ steps.copy-project.outputs.owner }}
         with:
           token: ${{ steps.get-auth-token.outputs.token }}
           script: |
             const assert = require('node:assert');
 
             const item = await actions.getItem(
-              '${{ steps.copy-project.outputs.owner }}',
-              '${{ steps.copy-project.outputs.number }}',
-              '${{ steps.edit-item.outputs.id }}',
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
               'Priority'
             );
-            const items = await actions.getAllItems('${{ steps.copy-project.outputs.id }}');
+            const items = await actions.getAllItems(process.env.PROJECT_ID);
 
             assert.strictEqual(item.field?.value, '⛰️ High');
             assert.strictEqual(items.length, 2, 'Expected 2 items');
@@ -288,6 +314,9 @@ jobs:
       - name: Check Project is Linked to Repository
         uses: ./github-script/
         if: ${{ matrix.owner == 'dsanders11' }}
+        env:
+          PROJECT_ID: ${{ steps.copy-project.outputs.id }}
+          REPOSITORY_ID: ${{ steps.link-project-to-repo.outputs.repository-id }}
         with:
           token: ${{ steps.get-auth-token.outputs.token }}
           script: |
@@ -307,12 +336,12 @@ jobs:
                   }
                 }
               }`,
-              { projectId: '${{ steps.copy-project.outputs.id }}' }
+              { projectId: process.env.PROJECT_ID }
             );
 
             assert.strictEqual(projectV2.repositories.nodes.length, 1, 'Expected one linked repository');
             assert.strictEqual(projectV2.repositories.nodes[0].nameWithOwner, 'dsanders11/project-actions', 'Project not linked to repository');
-            assert.strictEqual(projectV2.repositories.nodes[0].id, '${{ steps.link-project-to-repo.outputs.repository-id }}', `Output 'repository-id' is not as expected`);
+            assert.strictEqual(projectV2.repositories.nodes[0].id, process.env.REPOSITORY_ID, `Output 'repository-id' is not as expected`);
 
       - name: Link Project to Team
         uses: ./link-project/
@@ -331,6 +360,9 @@ jobs:
       - name: Check Project is Linked to Team
         uses: ./github-script/
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
+        env:
+          PROJECT_ID: ${{ steps.copy-project.outputs.id }}
+          TEAM_ID: ${{ steps.link-project-to-team.outputs.team-id }}
         with:
           token: ${{ steps.get-auth-token.outputs.token }}
           script: |
@@ -350,12 +382,12 @@ jobs:
                   }
                 }
               }`,
-              { projectId: '${{ steps.copy-project.outputs.id }}' }
+              { projectId: process.env.PROJECT_ID }
             );
 
             assert.strictEqual(projectV2.teams.nodes.length, 1, 'Expected one linked team');
             assert.strictEqual(projectV2.teams.nodes[0].name, 'maintainers', 'Project not linked to team');
-            assert.strictEqual(projectV2.teams.nodes[0].id, '${{ steps.link-project-to-team.outputs.team-id }}', `Output 'team-id' is not as expected`);
+            assert.strictEqual(projectV2.teams.nodes[0].id, process.env.TEAM_ID, `Output 'team-id' is not as expected`);
 
       - name: Edit Project
         uses: ./edit-project/
@@ -387,11 +419,14 @@ jobs:
           
       - name: Confirm Project Found
         uses: ./github-script/
+        env:
+          ACTUAL_PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          EXPECTED_PROJECT_NUMBER: ${{ steps.find-project.outputs.number }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.copy-project.outputs.number }}', '${{ steps.find-project.outputs.number }}', 'Expect to find project by title');
+            assert.strictEqual(process.env.ACTUAL_PROJECT_NUMBER, process.env.EXPECTED_PROJECT_NUMBER, 'Expect to find project by title');
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Project
@@ -404,13 +439,18 @@ jobs:
 
       - name: Check Project Values
         uses: ./github-script/
+        env:
+          DESCRIPTION: ${{ steps.get-project.outputs.description }}
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          README: ${{ steps.get-project.outputs.readme }}
+          TITLE: ${{ steps.get-project.outputs.title }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.get-project.outputs.title }}', 'New Title ${{ steps.copy-project.outputs.number }}');
-            assert.strictEqual('${{ steps.get-project.outputs.description }}', 'New Description');
-            assert.strictEqual('${{ steps.get-project.outputs.readme }}', 'This is the readme');
+            assert.strictEqual(process.env.TITLE, `New Title ${process.env.PROJECT_NUMBER}`);
+            assert.strictEqual(process.env.DESCRIPTION, 'New Description');
+            assert.strictEqual(process.env.README, 'This is the readme');
 
       - name: Find Workflow
         uses: ./find-workflow/
@@ -423,13 +463,18 @@ jobs:
 
       - name: Check Workflow Values
         uses: ./github-script/
+        env:
+          ACTUAL_PROJECT_ID: ${{ steps.find-workflow.outputs.project-id }}
+          EXPECTED_PROJECT_ID: ${{ steps.get-project.outputs.id }}
+          WORKFLOW_ENABLED: ${{ steps.find-workflow.outputs.enabled }}
+          WORKFLOW_NAME: ${{ steps.find-workflow.outputs.name }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.find-workflow.outputs.name }}', 'Item closed');
-            assert.strictEqual(${{ steps.find-workflow.outputs.enabled }}, true);
-            assert.strictEqual('${{ steps.find-workflow.outputs.project-id }}', '${{ steps.get-project.outputs.id }}');
+            assert.strictEqual(process.env.WORKFLOW_NAME, 'Item closed');
+            assert.strictEqual(process.env.WORKFLOW_ENABLED, 'true');
+            assert.strictEqual(process.env.ACTUAL_PROJECT_ID, process.env.EXPECTED_PROJECT_ID);
 
       - name: Get Workflow
         uses: ./get-workflow/
@@ -442,15 +487,24 @@ jobs:
 
       - name: Check Workflow Values
         uses: ./github-script/
+        env:
+          ACTUAL_PROJECT_ID: ${{ steps.get-workflow.outputs.project-id }}
+          ACTUAL_WORKFLOW_ID: ${{ steps.get-workflow.outputs.id }}
+          ACTUAL_WORKFLOW_NUMBER: ${{ steps.get-workflow.outputs.number }}
+          EXPECTED_PROJECT_ID: ${{ steps.get-project.outputs.id }}
+          EXPECTED_WORKFLOW_ID: ${{ steps.find-workflow.outputs.id }}
+          EXPECTED_WORKFLOW_NUMBER: ${{ steps.find-workflow.outputs.number }}
+          WORKFLOW_ENABLED: ${{ steps.get-workflow.outputs.enabled }}
+          WORKFLOW_NAME: ${{ steps.get-workflow.outputs.name }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual('${{ steps.get-workflow.outputs.id }}', '${{ steps.find-workflow.outputs.id }}');
-            assert.strictEqual('${{ steps.get-workflow.outputs.name }}', 'Item closed');
-            assert.strictEqual('${{ steps.get-workflow.outputs.number }}', '${{ steps.find-workflow.outputs.number }}');
-            assert.strictEqual(${{ steps.get-workflow.outputs.enabled }}, true);
-            assert.strictEqual('${{ steps.get-workflow.outputs.project-id }}', '${{ steps.get-project.outputs.id }}');
+            assert.strictEqual(process.env.ACTUAL_WORKFLOW_ID, process.env.EXPECTED_WORKFLOW_ID);
+            assert.strictEqual(process.env.WORKFLOW_NAME, 'Item closed');
+            assert.strictEqual(process.env.ACTUAL_WORKFLOW_NUMBER, process.env.EXPECTED_WORKFLOW_NUMBER);
+            assert.strictEqual(process.env.WORKFLOW_ENABLED, 'true');
+            assert.strictEqual(process.env.ACTUAL_PROJECT_ID, process.env.EXPECTED_PROJECT_ID);
 
       - name: Close Project
         uses: ./close-project/
