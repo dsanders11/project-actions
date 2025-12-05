@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
   workflow_call:
+    secrets:
+      GH_APP_CREDS:
+        required: true
+      PAT:
+        required: true
   schedule:
     - cron: '0 22 * * 2'
 
