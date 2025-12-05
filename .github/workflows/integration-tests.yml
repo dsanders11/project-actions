@@ -2,6 +2,11 @@ name: Integration Tests
 
 on:
   workflow_call:
+    secrets:
+      GH_APP_CREDS:
+        required: true
+      PAT:
+        required: true
   workflow_dispatch:
 
 permissions: {}
