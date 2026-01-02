@@ -10,6 +10,8 @@ permissions: {}
 jobs:
   ci:
     uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
     secrets:
       GH_APP_CREDS: ${{ secrets.GH_APP_CREDS }}
       PAT: ${{ secrets.PAT }}
