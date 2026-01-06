@@ -3,24 +3,34 @@ name: CI
 on:
   pull_request:
   workflow_call:
+    secrets:
+      GH_APP_CREDS:
+        required: true
+      PAT:
+        required: true
   schedule:
     - cron: '0 22 * * 2'
+
+permissions: {}
 
 jobs:
   test-typescript:
     name: TypeScript Tests
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
 
       - name: Install Dependencies
@@ -43,4 +53,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: test-typescript
     uses: ./.github/workflows/integration-tests.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GH_APP_CREDS: ${{ secrets.GH_APP_CREDS }}
+      PAT: ${{ secrets.PAT }}
