@@ -119,11 +119,21 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Get Draft Issue (again)
+        uses: ./get-item/
+        id: get-draft-issue-again
+        with:
+          field: Priority
+          item: ${{ steps.get-draft-issue-id.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
       - name: Check Draft Issue Assignees
         uses: ./github-script/
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
-          ASSIGNEES: ${{ steps.edit-draft-issue-assignees.outputs.assignees }}
+          ASSIGNEES: ${{ steps.get-draft-issue-again.outputs.assignees }}
         with:
           script: |
             const assert = require('node:assert');
