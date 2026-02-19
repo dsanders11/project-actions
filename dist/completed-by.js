@@ -23292,16 +23292,16 @@ async function editItem(projectId, id, edit) {
         assigneeIds.push(user.id);
       }
       await octokit.graphql(
-        `mutation($id: ID!, $assigneeIds: [ID!]!) {
-          updateProjectV2DraftIssue(input: {id: $id, assigneeIds: $assigneeIds}) {
+        `mutation ($draftIssueId: ID!, $assigneeIds: [ID!]!) {
+          updateProjectV2DraftIssue(input: {draftIssueId: $draftIssueId, assigneeIds: $assigneeIds}) {
             clientMutationId
           }
         }`,
-        { id, assigneeIds }
+        { draftIssueId: id, assigneeIds }
       );
     } else {
       const { node } = await octokit.graphql(
-        `query($id: ID!) {
+        `query ($id: ID!) {
           node(id: $id) {
             ... on ProjectV2Item {
               content {
@@ -23314,7 +23314,7 @@ async function editItem(projectId, id, edit) {
         { id }
       );
       await octokit.graphql(
-        `mutation($assignableId: ID!, $actorLogins: [String!]!) {
+        `mutation ($assignableId: ID!, $actorLogins: [String!]!) {
           replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
             clientMutationId
           }

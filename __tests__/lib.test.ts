@@ -960,7 +960,7 @@ describe('lib', () => {
       expect(mockOctokit.graphql).toHaveBeenCalledTimes(3);
       expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
         expect.stringContaining('updateProjectV2DraftIssue'),
-        { id: itemId, assigneeIds: userIds }
+        { draftIssueId: itemId, assigneeIds: userIds }
       );
     });
 
