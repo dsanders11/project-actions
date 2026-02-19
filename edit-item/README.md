@@ -4,6 +4,10 @@
 
 Edit a GitHub project item
 
+## Permissions
+
+Editing `assignees` requires a GitHub app auth token.
+
 ## Known Issues
 
 Can not edit archived items due to a bug in the GitHub GraphQL API, see <https://github.com/orgs/community/discussions/42727>
