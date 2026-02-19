@@ -40042,6 +40042,11 @@ class TeamNotFoundError extends Error {
         super('Team not found', { cause });
     }
 }
+class UserNotFoundError extends Error {
+    constructor(cause) {
+        super('User not found', { cause });
+    }
+}
 function isDraftIssue(item) {
     return item.type === 'DRAFT_ISSUE';
 }
@@ -40503,11 +40508,31 @@ async function editItem(projectId, id, edit) {
     const itemId = JSON.parse(output).id;
     if (edit.assignees) {
         const octokit = getOctokit();
-        await octokit.graphql(`mutation($assignableId: ID!, $actorLogins: [String!]!) {
-        replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
-          clientMutationId
+        if (itemId.startsWith('DI_')) {
+            // Map user logins to user IDs for draft issues
+            const assigneeIds = [];
+            for (const login of edit.assignees) {
+                const { user } = await octokit.graphql(`query($login: String!) { user(login: $login) { id } }`, {
+                    login
+                });
+                if (!user) {
+                    throw new UserNotFoundError();
+                }
+                assigneeIds.push(user.id);
+            }
+            await octokit.graphql(`mutation($id: ID!, $assigneeIds: [ID!]!) {
+          updateProjectV2DraftIssue(input: {id: $id, assigneeIds: $assigneeIds}) {
+            clientMutationId
+          }
+        }`, { id: itemId, assigneeIds });
         }
-      }`, { assignableId: itemId, actorLogins: edit.assignees });
+        else {
+            await octokit.graphql(`mutation($assignableId: ID!, $actorLogins: [String!]!) {
+          replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+            clientMutationId
+          }
+        }`, { assignableId: itemId, actorLogins: edit.assignees });
+        }
     }
     return itemId;
 }

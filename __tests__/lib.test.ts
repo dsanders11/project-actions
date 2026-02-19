@@ -908,6 +908,65 @@ describe('lib', () => {
         itemId
       );
     });
+
+    it('sets assignees on non-draft issues using replaceActorsForAssignable', async () => {
+      const itemId = 'item-id';
+      const assignees = ['octocat', 'dsanders11'];
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({
+        replaceActorsForAssignable: { clientMutationId: null }
+      });
+
+      await lib.editItem(projectId, itemId, { assignees });
+
+      expect(mockOctokit.graphql).toHaveBeenCalledWith(
+        expect.stringContaining('replaceActorsForAssignable'),
+        { assignableId: itemId, actorLogins: assignees }
+      );
+    });
+
+    it('sets assignees on draft issues using updateProjectV2DraftIssue', async () => {
+      const itemId = 'DI_draft-issue-id';
+      const assignees = ['octocat', 'dsanders11'];
+      const userIds = ['user-id-1', 'user-id-2'];
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
+      vi.mocked(mockOctokit.graphql)
+        // user lookup for 'octocat'
+        .mockResolvedValueOnce({ user: { id: userIds[0] } })
+        // user lookup for 'dsanders11'
+        .mockResolvedValueOnce({ user: { id: userIds[1] } })
+        // updateProjectV2DraftIssue
+        .mockResolvedValueOnce({
+          updateProjectV2DraftIssue: { clientMutationId: null }
+        });
+
+      await lib.editItem(projectId, itemId, { assignees });
+
+      expect(mockOctokit.graphql).toHaveBeenCalledTimes(3);
+      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
+        expect.stringContaining('updateProjectV2DraftIssue'),
+        { id: itemId, assigneeIds: userIds }
+      );
+    });
+
+    it('throws UserNotFoundError for draft issues when user not found', async () => {
+      const itemId = 'DI_draft-issue-id';
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({ user: null });
+
+      await expect(
+        lib.editItem(projectId, itemId, { assignees: ['nonexistent-user'] })
+      ).rejects.toThrow(lib.UserNotFoundError);
+    });
   });
 
   describe('editProject', () => {
