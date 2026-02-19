@@ -108,12 +108,23 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Edit Draft Issue
+        uses: ./edit-item/
+        id: edit-draft-issue
+        with:
+          assignees: dsanders11
+          item: ${{ steps.get-draft-issue-id.outputs.content-id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
       - name: Check Draft Issue
         uses: ./github-script/
         env:
-          BODY: ${{ steps.get-draft-issue.outputs.body }}
-          FIELD_VALUE: ${{ steps.get-draft-issue.outputs.field-value }}
-          TITLE: ${{ steps.get-draft-issue.outputs.title }}
+          ASSIGNEES: ${{ steps.edit-draft-issue.outputs.assignees }}
+          BODY: ${{ steps.edit-draft-issue.outputs.body }}
+          FIELD_VALUE: ${{ steps.edit-draft-issue.outputs.field-value }}
+          TITLE: ${{ steps.edit-draft-issue.outputs.title }}
         with:
           script: |
             const assert = require('node:assert');
@@ -121,6 +132,7 @@ jobs:
             assert.strictEqual(process.env.TITLE, 'My Favorite Issue');
             assert.strictEqual(process.env.FIELD_VALUE, 'Low');
             assert.match(process.env.BODY, /Here's another bar/);
+            assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Run Completed By
         uses: ./completed-by/
@@ -178,7 +190,7 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
-      - name: Check Added Item Field Value
+      - name: Check Added Item
         uses: ./github-script/
         env:
           DATE_STRING: ${{ steps.get-date.outputs.result }}
@@ -196,7 +208,7 @@ jobs:
         id: edit-item-assignees
         with:
           assignees: dsanders11
-          item: ${{ steps.get-added-item.outputs.content-id }}
+          item: ${{ steps.get-added-item.outputs.id }}
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
