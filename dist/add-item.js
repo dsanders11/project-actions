@@ -23144,11 +23144,12 @@ async function editItem(projectId, id, edit) {
     "--format",
     "json"
   ];
+  const additionalArgs = [];
   if (edit.title !== void 0) {
-    args.push("--title", edit.title);
+    additionalArgs.push("--title", edit.title);
   }
   if (edit.body !== void 0) {
-    args.push("--body", edit.body);
+    additionalArgs.push("--body", edit.body);
   }
   if (edit.title !== void 0 || edit.body !== void 0) {
     if (!id.startsWith("DI_")) {
@@ -23199,20 +23200,20 @@ async function editItem(projectId, id, edit) {
     if (projectV2Item.project.field === null) {
       throw new FieldNotFoundError();
     }
-    args.push("--field-id", projectV2Item.project.field.id);
+    additionalArgs.push("--field-id", projectV2Item.project.field.id);
     switch (projectV2Item.project.field.dataType) {
       case "DATE":
-        args.push(
+        additionalArgs.push(
           "--date",
           new Date(edit.fieldValue).toISOString().split("T")[0]
         );
         break;
       // TODO - Support 'ITERATION'
       case "NUMBER":
-        args.push("--number", edit.fieldValue);
+        additionalArgs.push("--number", edit.fieldValue);
         break;
       case "TEXT":
-        args.push("--text", edit.fieldValue);
+        additionalArgs.push("--text", edit.fieldValue);
         break;
       case "SINGLE_SELECT":
         try {
@@ -23235,7 +23236,10 @@ async function editItem(projectId, id, edit) {
           if (project.field.options.length === 0) {
             throw new SingleSelectOptionNotFoundError();
           }
-          args.push("--single-select-option-id", project.field.options[0].id);
+          additionalArgs.push(
+            "--single-select-option-id",
+            project.field.options[0].id
+          );
         } catch (error) {
           if (error instanceof GraphqlResponseError) {
             if (error.errors?.[0].type === "NOT_FOUND") {
@@ -23254,13 +23258,13 @@ async function editItem(projectId, id, edit) {
         throw new Error("Unsupported field type");
     }
   }
-  let output;
-  try {
-    output = await execCliCommand(args);
-  } catch (error) {
-    handleCliError(error);
+  if (additionalArgs.length > 0) {
+    try {
+      await execCliCommand([...args, ...additionalArgs]);
+    } catch (error) {
+      handleCliError(error);
+    }
   }
-  const itemId = JSON.parse(output).id;
   if (edit.assignees) {
     const octokit = getOctokit();
     if (id.startsWith("DI_")) {
@@ -23306,7 +23310,6 @@ async function editItem(projectId, id, edit) {
       );
     }
   }
-  return itemId;
 }
 async function getProject(owner, projectNumber) {
   let details;

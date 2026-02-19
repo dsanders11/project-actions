@@ -475,10 +475,14 @@ describe('lib', () => {
 
   describe('editItem', () => {
     it('handles project not found', async () => {
+      const itemId = 'DI_item-id';
       mockProjectNotFoundError();
-      await expect(lib.editItem(projectId, 'item-id', {})).rejects.toThrow(
-        lib.ProjectNotFoundError
-      );
+      await expect(
+        lib.editItem(projectId, itemId, {
+          title: 'New Title',
+          body: 'New Body'
+        })
+      ).rejects.toThrow(lib.ProjectNotFoundError);
     });
 
     it('requires fieldValue if field supplied', async () => {
@@ -897,16 +901,6 @@ describe('lib', () => {
           fieldValue
         })
       ).rejects.toThrow('Cannot edit field at same time as title or body');
-    });
-
-    it('returns item ID', async () => {
-      const itemId = 'item-id';
-      vi.mocked(execCliCommand).mockResolvedValue(
-        JSON.stringify({ id: itemId })
-      );
-      await expect(lib.editItem(projectId, itemId, {})).resolves.toEqual(
-        itemId
-      );
     });
 
     it('sets assignees on non-draft issues using replaceActorsForAssignable', async () => {

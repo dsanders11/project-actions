@@ -40392,11 +40392,12 @@ async function editItem(projectId, id, edit) {
         '--format',
         'json'
     ];
+    const additionalArgs = [];
     if (edit.title !== undefined) {
-        args.push('--title', edit.title);
+        additionalArgs.push('--title', edit.title);
     }
     if (edit.body !== undefined) {
-        args.push('--body', edit.body);
+        additionalArgs.push('--body', edit.body);
     }
     if (edit.title !== undefined || edit.body !== undefined) {
         if (!id.startsWith('DI_')) {
@@ -40446,18 +40447,18 @@ async function editItem(projectId, id, edit) {
         if (projectV2Item.project.field === null) {
             throw new FieldNotFoundError();
         }
-        args.push('--field-id', projectV2Item.project.field.id);
+        additionalArgs.push('--field-id', projectV2Item.project.field.id);
         switch (projectV2Item.project.field.dataType) {
             case 'DATE':
                 // Convert potential datetimes to just the date
-                args.push('--date', new Date(edit.fieldValue).toISOString().split('T')[0]);
+                additionalArgs.push('--date', new Date(edit.fieldValue).toISOString().split('T')[0]);
                 break;
             // TODO - Support 'ITERATION'
             case 'NUMBER':
-                args.push('--number', edit.fieldValue);
+                additionalArgs.push('--number', edit.fieldValue);
                 break;
             case 'TEXT':
-                args.push('--text', edit.fieldValue);
+                additionalArgs.push('--text', edit.fieldValue);
                 break;
             case 'SINGLE_SELECT':
                 try {
@@ -40477,7 +40478,7 @@ async function editItem(projectId, id, edit) {
                     if (project.field.options.length === 0) {
                         throw new SingleSelectOptionNotFoundError();
                     }
-                    args.push('--single-select-option-id', project.field.options[0].id);
+                    additionalArgs.push('--single-select-option-id', project.field.options[0].id);
                 }
                 catch (error) {
                     if (error instanceof GraphqlResponseError) {
@@ -40498,14 +40499,14 @@ async function editItem(projectId, id, edit) {
                 throw new Error('Unsupported field type');
         }
     }
-    let output;
-    try {
-        output = await helpers_execCliCommand(args);
+    if (additionalArgs.length > 0) {
+        try {
+            await helpers_execCliCommand([...args, ...additionalArgs]);
+        }
+        catch (error) {
+            handleCliError(error);
+        }
     }
-    catch (error) {
-        handleCliError(error);
-    }
-    const itemId = JSON.parse(output).id;
     if (edit.assignees) {
         const octokit = getOctokit();
         if (id.startsWith('DI_')) {
@@ -40544,7 +40545,6 @@ async function editItem(projectId, id, edit) {
         }`, { assignableId: node.content.id, actorLogins: edit.assignees });
         }
     }
-    return itemId;
 }
 /**
  * @throws ProjectNotFoundError

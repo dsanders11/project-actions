@@ -721,7 +721,7 @@ export async function editItem(
   projectId: string,
   id: string,
   edit: ItemEdit
-): Promise<string> {
+): Promise<void> {
   if ((edit.field && !edit.fieldValue) || (!edit.field && edit.fieldValue)) {
     throw new Error(
       'Must supply both field and fieldValue if either is provided'
@@ -738,13 +738,14 @@ export async function editItem(
     '--format',
     'json'
   ];
+  const additionalArgs: string[] = [];
 
   if (edit.title !== undefined) {
-    args.push('--title', edit.title);
+    additionalArgs.push('--title', edit.title);
   }
 
   if (edit.body !== undefined) {
-    args.push('--body', edit.body);
+    additionalArgs.push('--body', edit.body);
   }
 
   if (edit.title !== undefined || edit.body !== undefined) {
@@ -803,12 +804,12 @@ export async function editItem(
       throw new FieldNotFoundError();
     }
 
-    args.push('--field-id', projectV2Item.project.field.id);
+    additionalArgs.push('--field-id', projectV2Item.project.field.id);
 
     switch (projectV2Item.project.field.dataType) {
       case 'DATE':
         // Convert potential datetimes to just the date
-        args.push(
+        additionalArgs.push(
           '--date',
           new Date(edit.fieldValue).toISOString().split('T')[0]
         );
@@ -817,11 +818,11 @@ export async function editItem(
       // TODO - Support 'ITERATION'
 
       case 'NUMBER':
-        args.push('--number', edit.fieldValue);
+        additionalArgs.push('--number', edit.fieldValue);
         break;
 
       case 'TEXT':
-        args.push('--text', edit.fieldValue);
+        additionalArgs.push('--text', edit.fieldValue);
         break;
 
       case 'SINGLE_SELECT':
@@ -848,7 +849,10 @@ export async function editItem(
             throw new SingleSelectOptionNotFoundError();
           }
 
-          args.push('--single-select-option-id', project.field.options[0].id);
+          additionalArgs.push(
+            '--single-select-option-id',
+            project.field.options[0].id
+          );
         } catch (error) {
           if (error instanceof GraphqlResponseError) {
             if (error.errors?.[0].type === 'NOT_FOUND') {
@@ -870,15 +874,13 @@ export async function editItem(
     }
   }
 
-  let output: string;
-
-  try {
-    output = await execCliCommand(args);
-  } catch (error) {
-    handleCliError(error);
+  if (additionalArgs.length > 0) {
+    try {
+      await execCliCommand([...args, ...additionalArgs]);
+    } catch (error) {
+      handleCliError(error);
+    }
   }
-
-  const itemId = JSON.parse(output).id;
 
   if (edit.assignees) {
     const octokit = getOctokit();
@@ -933,8 +935,6 @@ export async function editItem(
       );
     }
   }
-
-  return itemId;
 }
 
 /**

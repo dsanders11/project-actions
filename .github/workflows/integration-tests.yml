@@ -196,7 +196,7 @@ jobs:
         id: edit-item-assignees
         with:
           assignees: dsanders11
-          item: ${{ steps.get-added-item.outputs.id }}
+          item: ${{ steps.get-added-item.outputs.content-id }}
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
