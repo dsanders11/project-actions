@@ -220,6 +220,7 @@ describe('editItemAction', () => {
   it('can edit draft issue content', async () => {
     const title = 'New Title';
     const body = 'New Body';
+    const contentId = 'content-id';
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -230,19 +231,26 @@ describe('editItemAction', () => {
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
       type: 'DRAFT_ISSUE',
-      projectId
+      projectId,
+      content: {
+        id: contentId
+      }
     } as ItemDetails);
     vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
 
-    expect(editItem).toHaveBeenCalledWith(projectId, itemId, { title, body });
+    expect(editItem).toHaveBeenCalledWith(projectId, contentId, {
+      title,
+      body
+    });
   });
 
   it('can set assignees', async () => {
     const assigneeLogins = ['octocat', 'dsanders11'];
     const currentAssignees = [{ id: 'old-user-id', login: 'old-user' }];
+    const contentId = 'content-id';
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -254,6 +262,7 @@ describe('editItemAction', () => {
       type: 'DRAFT_ISSUE',
       projectId,
       content: {
+        id: contentId,
         assignees: { nodes: currentAssignees }
       }
     } as ItemDetails);
@@ -264,7 +273,7 @@ describe('editItemAction', () => {
 
     expect(editItem).toHaveBeenCalledWith(
       projectId,
-      itemId,
+      contentId,
       expect.objectContaining({
         assignees: assigneeLogins
       })

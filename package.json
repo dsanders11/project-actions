@@ -21,7 +21,7 @@
     "ci-test": "vitest run --coverage --reporter=verbose",
     "format:write": "prettier --write \"**/*.{mts,ts}\"",
     "format:check": "prettier --check \"**/*.{mts,ts}\"",
-    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml && npm run typecheck",
     "package:add-item": "esbuild add-item/index.ts --bundle --format=esm --outfile=dist/add-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
     "package:archive-item": "esbuild archive-item/index.ts --bundle --format=esm --outfile=dist/archive-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
     "package:close-project": "esbuild close-project/index.ts --bundle --format=esm --outfile=dist/close-project.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
@@ -41,6 +41,7 @@
     "package": "npm-run-all \"package:!(watch)\"",
     "package:watch": "npm run package -- --watch",
     "test": "vitest run --coverage --reporter=verbose",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p __tests__/tsconfig.json",
     "all": "npm run format:write && npm run lint && npm run test && npm run package",
     "prepare": "husky"
   },

@@ -1,6 +1,12 @@
 import * as core from '@actions/core';
 
-import { type ItemEdit, addItem, editItem, getProject } from './lib.js';
+import {
+  type ItemEdit,
+  addItem,
+  editItem,
+  getItem,
+  getProject
+} from './lib.js';
 
 export async function addItemAction(): Promise<void> {
   try {
@@ -43,7 +49,18 @@ export async function addItemAction(): Promise<void> {
       }
 
       // Project was just found above
-      await editItem(project.id, itemId, edit);
+      const fullItem = await getItem(owner, projectNumber, itemId);
+
+      if (!fullItem) {
+        core.setFailed(`Item not found: ${itemId}`);
+        return;
+      }
+
+      if (fullItem.type === 'DRAFT_ISSUE') {
+        await editItem(project.id, fullItem.content.id, edit);
+      } else {
+        await editItem(project.id, itemId, edit);
+      }
     }
 
     core.setOutput('id', itemId);

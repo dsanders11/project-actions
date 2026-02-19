@@ -23448,7 +23448,11 @@ async function editItemAction() {
     if (assignees) {
       edit.assignees = assignees.split(",").map((s) => s.trim()).filter(Boolean);
     }
-    await editItem(fullItem.projectId, fullItem.id, edit);
+    if (fullItem.type === "DRAFT_ISSUE") {
+      await editItem(fullItem.projectId, fullItem.content.id, edit);
+    } else {
+      await editItem(fullItem.projectId, fullItem.id, edit);
+    }
     core2.setOutput("id", fullItem.id);
     core2.setOutput("project-id", fullItem.projectId);
   } catch (error) {

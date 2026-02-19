@@ -145,7 +145,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-one',
             body: 'Body One',
-            title: 'Title One'
+            title: 'Title One',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         },
@@ -262,7 +263,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-one',
             body: 'Body One',
-            title: 'Title One'
+            title: 'Title One',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         },
@@ -271,7 +273,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-two',
             body: 'Body Two',
-            title: 'Title Two'
+            title: 'Title Two',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         }

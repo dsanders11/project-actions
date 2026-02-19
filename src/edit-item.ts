@@ -55,7 +55,11 @@ export async function editItemAction(): Promise<void> {
         .filter(Boolean);
     }
 
-    await editItem(fullItem.projectId, fullItem.id, edit);
+    if (fullItem.type === 'DRAFT_ISSUE') {
+      await editItem(fullItem.projectId, fullItem.content.id, edit);
+    } else {
+      await editItem(fullItem.projectId, fullItem.id, edit);
+    }
 
     core.setOutput('id', fullItem.id);
     core.setOutput('project-id', fullItem.projectId);
