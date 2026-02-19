@@ -29,6 +29,9 @@ inputs:
   field-value:
     description: Value to set project field to
     required: false
+  assignees:
+    description: Comma-separated list of assignee logins to set on the item
+    required: false
   fail-if-item-not-found:
     description: Should the action fail if the item is not found on the project
     required: false

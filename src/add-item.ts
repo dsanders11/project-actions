@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { addItem, editItem, getProject } from './lib.js';
+import { type ItemEdit, addItem, editItem, getProject } from './lib.js';
 
 export async function addItemAction(): Promise<void> {
   try {
@@ -12,6 +12,7 @@ export async function addItemAction(): Promise<void> {
     // Optional inputs
     const field = core.getInput('field');
     const fieldValue = core.getInput('field-value', { required: !!field });
+    const assignees = core.getInput('assignees');
 
     if (!!fieldValue && !field) {
       core.setFailed('Input required and not supplied: field');
@@ -20,14 +21,29 @@ export async function addItemAction(): Promise<void> {
 
     const itemId = await addItem(owner, projectNumber, contentUrl);
 
-    if (fieldValue) {
+    const assigneeLogins = assignees
+      ? assignees
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : undefined;
+
+    if (fieldValue || assigneeLogins) {
       const project = await getProject(owner, projectNumber);
 
+      const edit: ItemEdit = {};
+
+      if (fieldValue) {
+        edit.field = field;
+        edit.fieldValue = fieldValue;
+      }
+
+      if (assigneeLogins) {
+        edit.assignees = assigneeLogins;
+      }
+
       // Project was just found above
-      await editItem(project.id, itemId, {
-        field,
-        fieldValue
-      });
+      await editItem(project.id, itemId, edit);
     }
 
     core.setOutput('id', itemId);

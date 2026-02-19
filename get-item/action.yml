@@ -42,6 +42,8 @@ outputs:
     description: The global ID of the field if the field input was set
   field-value:
     description: The project field value for the item if the field input was set
+  assignees:
+    description: Comma-separated list of assignee logins for the item
 
 runs:
   using: node20

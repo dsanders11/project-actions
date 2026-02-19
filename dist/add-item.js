@@ -22995,18 +22995,36 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -23237,7 +23255,19 @@ async function editItem(projectId, id, edit) {
   } catch (error) {
     handleCliError(error);
   }
-  return JSON.parse(output).id;
+  const itemId = JSON.parse(output).id;
+  if (edit.assignees) {
+    const octokit = getOctokit();
+    await octokit.graphql(
+      `mutation($assignableId: ID!, $actorLogins: [String!]!) {
+        replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+          clientMutationId
+        }
+      }`,
+      { assignableId: itemId, actorLogins: edit.assignees }
+    );
+  }
+  return itemId;
 }
 async function getProject(owner, projectNumber) {
   let details;
@@ -23265,17 +23295,24 @@ async function addItemAction() {
     const contentUrl = core2.getInput("content-url", { required: true });
     const field = core2.getInput("field");
     const fieldValue = core2.getInput("field-value", { required: !!field });
+    const assignees = core2.getInput("assignees");
     if (!!fieldValue && !field) {
       core2.setFailed("Input required and not supplied: field");
       return;
     }
     const itemId = await addItem(owner, projectNumber, contentUrl);
-    if (fieldValue) {
+    const assigneeLogins = assignees ? assignees.split(",").map((s) => s.trim()).filter(Boolean) : void 0;
+    if (fieldValue || assigneeLogins) {
       const project = await getProject(owner, projectNumber);
-      await editItem(project.id, itemId, {
-        field,
-        fieldValue
-      });
+      const edit = {};
+      if (fieldValue) {
+        edit.field = field;
+        edit.fieldValue = fieldValue;
+      }
+      if (assigneeLogins) {
+        edit.assignees = assigneeLogins;
+      }
+      await editItem(project.id, itemId, edit);
     }
     core2.setOutput("id", itemId);
   } catch (error) {

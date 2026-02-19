@@ -22995,18 +22995,36 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -23213,6 +23231,12 @@ async function getItemAction() {
     core2.setOutput("title", fullItem.content?.title ?? null);
     if (fullItem.type === "ISSUE" || fullItem.type === "PULL_REQUEST") {
       core2.setOutput("url", fullItem.content.url);
+    }
+    if (fullItem.type !== "REDACTED") {
+      core2.setOutput(
+        "assignees",
+        fullItem.content?.assignees.nodes.map((a) => a.login).join(",")
+      );
     }
     if (fullItem.type !== "REDACTED" && fullItem.field) {
       core2.setOutput("field-id", fullItem.field.id);

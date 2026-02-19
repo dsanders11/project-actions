@@ -139,6 +139,34 @@ describe('addItemAction', () => {
     });
   });
 
+  it('sets assignees after adding', async () => {
+    const assigneeLogins = ['octocat', 'dsanders11'];
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      'content-url': contentUrl,
+      assignees: assigneeLogins.join(',')
+    });
+    vi.mocked(addItem).mockResolvedValue(itemId);
+    vi.mocked(getProject).mockResolvedValue({
+      id: projectId
+    } as ProjectDetails);
+    vi.mocked(editItem).mockResolvedValue(itemId);
+
+    await index.addItemAction();
+    expect(addItemActionSpy).toHaveReturned();
+
+    expect(editItem).toHaveBeenCalledWith(
+      projectId,
+      itemId,
+      expect.objectContaining({
+        assignees: assigneeLogins
+      })
+    );
+    expect(core.setOutput).toHaveBeenCalledTimes(1);
+    expect(core.setOutput).toHaveBeenLastCalledWith('id', itemId);
+  });
+
   it('sets output', async () => {
     mockGetInput({
       owner,

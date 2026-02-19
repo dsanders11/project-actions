@@ -9,18 +9,36 @@ const PROJECT_ITEM_CONTENT_FRAGMENT = `
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -122,6 +140,7 @@ export interface ItemEdit {
   body?: string;
   field?: string;
   fieldValue?: string;
+  assignees?: string[];
 }
 
 export interface ProjectEdit {
@@ -167,6 +186,9 @@ export type ProjectItemContent = {
   url: string;
   body: string;
   title: string;
+  assignees: {
+    nodes: { id: string; login: string }[];
+  };
 };
 
 type DraftIssueItemContent = Omit<ProjectItemContent, 'url'>;
@@ -851,7 +873,22 @@ export async function editItem(
     handleCliError(error);
   }
 
-  return JSON.parse(output).id;
+  const itemId = JSON.parse(output).id;
+
+  if (edit.assignees) {
+    const octokit = getOctokit();
+
+    await octokit.graphql(
+      `mutation($assignableId: ID!, $actorLogins: [String!]!) {
+        replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+          clientMutationId
+        }
+      }`,
+      { assignableId: itemId, actorLogins: edit.assignees }
+    );
+  }
+
+  return itemId;
 }
 
 /**

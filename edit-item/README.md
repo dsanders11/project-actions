@@ -20,6 +20,7 @@ Can not edit archived items due to a bug in the GitHub GraphQL API, see <https:/
 | `body`        | Body for the item - can only be set for draft issues. | No       |                                              |
 | `field`       | Project field to set on the item.                  | No       |                                              |
 | `field-value` | Value to set project field to.                     | No       |                                              |
+| `assignees`   | Comma-separated list of assignee logins to set on the item.  | No       |                                              |
 | `fail-if-item-not-found` | Should the action fail if the item is not found on the project | No      | `true` |
 
 ## Outputs

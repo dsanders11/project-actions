@@ -23,6 +23,9 @@ inputs:
   field-value:
     description: Value to set project field to
     required: false
+  assignees:
+    description: Comma-separated list of assignee logins to set on the item after adding
+    required: false
 
 outputs:
   id:

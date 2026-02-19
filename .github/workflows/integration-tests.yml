@@ -155,6 +155,7 @@ jobs:
         uses: ./add-item/
         id: add-item
         with:
+          assignees: dsanders11
           content-url: https://github.com/dsanders11/project-actions/pull/2
           field: Added
           field-value: ${{ steps.get-date.outputs.result }}
@@ -182,11 +183,42 @@ jobs:
         env:
           DATE_STRING: ${{ steps.get-date.outputs.result }}
           FIELD_VALUE: ${{ steps.get-added-item.outputs.field-value }}
+          ASSIGNEES: ${{ steps.get-added-item.outputs.assignees }}
         with:
           script: |
             const assert = require('node:assert');
 
             assert.strictEqual(process.env.FIELD_VALUE, new Date(process.env.DATE_STRING).toISOString().split('T')[0]);
+            assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
+
+      - name: Edit Item Assignees
+        uses: ./edit-item/
+        id: edit-item-assignees
+        with:
+          assignees: dsanders11
+          item: ${{ steps.get-added-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Item After Assignee Edit
+        uses: ./get-item/
+        id: get-item-after-assignee-edit
+        with:
+          item: ${{ steps.get-added-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Assignees After Edit
+        uses: ./github-script/
+        env:
+          ASSIGNEES: ${{ steps.get-item-after-assignee-edit.outputs.assignees }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Edit Item
         uses: ./edit-item/
@@ -254,7 +286,7 @@ jobs:
           script: |
             const assert = require('node:assert');
 
-            const item = await actions.getItem(
+            let item = await actions.getItem(
               process.env.OWNER,
               process.env.PROJECT_NUMBER,
               process.env.ITEM_ID,
@@ -264,6 +296,19 @@ jobs:
 
             assert.strictEqual(item.field?.value, '⛰️ High');
             assert.strictEqual(items.length, 2, 'Expected 2 items');
+
+            await actions.editItem(process.env.PROJECT_ID, process.env.ITEM_ID, {
+              assignees: ['dsanders11'],
+            });
+
+            // Verify assignees were set by re-fetching the item
+            item = await actions.getItem(
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
+            );
+            const logins = item.content.assignees.nodes.map(a => a.login);
+            assert.ok(logins.includes('dsanders11'), 'Expected dsanders11 to be an assignee');
 
       # - name: Archive Item
       #   uses: ./archive-item/

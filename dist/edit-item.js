@@ -22995,18 +22995,36 @@ var PROJECT_ITEM_CONTENT_FRAGMENT = `
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -23317,7 +23335,19 @@ async function editItem(projectId, id, edit) {
   } catch (error) {
     handleCliError(error);
   }
-  return JSON.parse(output).id;
+  const itemId = JSON.parse(output).id;
+  if (edit.assignees) {
+    const octokit = getOctokit();
+    await octokit.graphql(
+      `mutation($assignableId: ID!, $actorLogins: [String!]!) {
+        replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+          clientMutationId
+        }
+      }`,
+      { assignableId: itemId, actorLogins: edit.assignees }
+    );
+  }
+  return itemId;
 }
 async function getProject(owner, projectNumber) {
   let details;
@@ -23347,6 +23377,7 @@ async function editItemAction() {
     const body = core2.getInput("body");
     const field = core2.getInput("field");
     const fieldValue = core2.getInput("field-value", { required: !!field });
+    const assignees = core2.getInput("assignees");
     const failIfItemNotFound = core2.getBooleanInput("fail-if-item-not-found");
     if (!!fieldValue && !field) {
       core2.setFailed("Input required and not supplied: field");
@@ -23371,6 +23402,9 @@ async function editItemAction() {
     if (field) {
       edit.field = field;
       edit.fieldValue = fieldValue;
+    }
+    if (assignees) {
+      edit.assignees = assignees.split(",").map((s) => s.trim()).filter(Boolean);
     }
     await editItem(fullItem.projectId, fullItem.id, edit);
     core2.setOutput("id", fullItem.id);

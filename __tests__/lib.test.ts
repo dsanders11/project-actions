@@ -155,7 +155,8 @@ describe('lib', () => {
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
-            url: 'foobar'
+            url: 'foobar',
+            assignees: { nodes: [] }
           },
           type: 'PULL_REQUEST'
         },
@@ -165,7 +166,8 @@ describe('lib', () => {
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
-            url: 'foobar-two'
+            url: 'foobar-two',
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         },
@@ -282,7 +284,8 @@ describe('lib', () => {
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
-            url: 'foobar'
+            url: 'foobar',
+            assignees: { nodes: [] }
           },
           type: 'PULL_REQUEST'
         },
@@ -298,7 +301,8 @@ describe('lib', () => {
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
-            url: 'foobar-two'
+            url: 'foobar-two',
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         }
@@ -1009,7 +1013,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         }
@@ -1065,7 +1070,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: {
             singleSelectValue: fieldValue
@@ -1157,7 +1163,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: null,
           type: 'ISSUE'
@@ -1235,7 +1242,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: null,
           type: 'ISSUE'

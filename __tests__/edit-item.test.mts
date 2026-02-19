@@ -240,6 +240,39 @@ describe('editItemAction', () => {
     expect(editItem).toHaveBeenCalledWith(projectId, itemId, { title, body });
   });
 
+  it('can set assignees', async () => {
+    const assigneeLogins = ['octocat', 'dsanders11'];
+    const currentAssignees = [{ id: 'old-user-id', login: 'old-user' }];
+    const contentId = 'content-id';
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      item,
+      assignees: assigneeLogins.join(',')
+    });
+    vi.mocked(getItem).mockResolvedValue({
+      id: itemId,
+      type: 'DRAFT_ISSUE',
+      projectId,
+      content: {
+        assignees: { nodes: currentAssignees }
+      }
+    } as ItemDetails);
+    vi.mocked(editItem).mockResolvedValue(itemId);
+
+    await index.editItemAction();
+    expect(editItemActionSpy).toHaveReturned();
+
+    expect(editItem).toHaveBeenCalledWith(
+      projectId,
+      itemId,
+      expect.objectContaining({
+        assignees: assigneeLogins
+      })
+    );
+    expect(core.setFailed).not.toHaveBeenCalled();
+  });
+
   it('sets output', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     vi.mocked(getItem).mockResolvedValue({

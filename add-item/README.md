@@ -14,6 +14,7 @@ Add an issue or pull request to a GitHub project
 | `content-url` | The URL for the issue or pull request to add to the project. If not provided, it defaults to the URL of the triggering issue or pull request. | No       | `${{ github.event.pull_request.html_url \|\| github.event.issue.html_url }}` |
 | `field`       | Project field to set after adding the item.        | No       |                                              |
 | `field-value` | Value to set the project field to.                  | No       |                                              |
+| `assignees`   | Comma-separated list of assignee logins to set on the item after adding. | No       |                                              |
 
 ## Outputs
 
