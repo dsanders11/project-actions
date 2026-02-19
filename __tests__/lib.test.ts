@@ -911,20 +911,32 @@ describe('lib', () => {
 
     it('sets assignees on non-draft issues using replaceActorsForAssignable', async () => {
       const itemId = 'item-id';
+      const contentId = 'content-node-id';
       const assignees = ['octocat', 'dsanders11'];
       const mockOctokit = mockGetOctokit();
       vi.mocked(execCliCommand).mockResolvedValue(
         JSON.stringify({ id: itemId })
       );
-      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({
-        replaceActorsForAssignable: { clientMutationId: null }
-      });
+      vi.mocked(mockOctokit.graphql)
+        // content ID lookup
+        .mockResolvedValueOnce({ node: { content: { id: contentId } } })
+        // replaceActorsForAssignable
+        .mockResolvedValueOnce({
+          replaceActorsForAssignable: { clientMutationId: null }
+        });
 
       await lib.editItem(projectId, itemId, { assignees });
 
-      expect(mockOctokit.graphql).toHaveBeenCalledWith(
+      expect(mockOctokit.graphql).toHaveBeenCalledTimes(2);
+      expect(mockOctokit.graphql).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('content'),
+        { id: itemId }
+      );
+      expect(mockOctokit.graphql).toHaveBeenNthCalledWith(
+        2,
         expect.stringContaining('replaceActorsForAssignable'),
-        { assignableId: itemId, actorLogins: assignees }
+        { assignableId: contentId, actorLogins: assignees }
       );
     });
 

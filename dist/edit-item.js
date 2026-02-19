@@ -23343,7 +23343,7 @@ async function editItem(projectId, id, edit) {
   const itemId = JSON.parse(output).id;
   if (edit.assignees) {
     const octokit = getOctokit();
-    if (itemId.startsWith("DI_")) {
+    if (id.startsWith("DI_")) {
       const assigneeIds = [];
       for (const login of edit.assignees) {
         const { user } = await octokit.graphql(`query($login: String!) { user(login: $login) { id } }`, {
@@ -23360,16 +23360,29 @@ async function editItem(projectId, id, edit) {
             clientMutationId
           }
         }`,
-        { id: itemId, assigneeIds }
+        { id, assigneeIds }
       );
     } else {
+      const { node } = await octokit.graphql(
+        `query($id: ID!) {
+          node(id: $id) {
+            ... on ProjectV2Item {
+              content {
+                ... on Issue { id }
+                ... on PullRequest { id }
+              }
+            }
+          }
+        }`,
+        { id }
+      );
       await octokit.graphql(
         `mutation($assignableId: ID!, $actorLogins: [String!]!) {
           replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
             clientMutationId
           }
         }`,
-        { assignableId: itemId, actorLogins: edit.assignees }
+        { assignableId: node.content.id, actorLogins: edit.assignees }
       );
     }
   }
