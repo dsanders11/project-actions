@@ -111,17 +111,17 @@ jobs:
       - name: Edit Draft Issue Assignees
         uses: ./edit-item/
         id: edit-draft-issue-assignees
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
           assignees: dsanders11
-          item: ${{ steps.get-draft-issue-id.outputs.content-id }}
+          item: ${{ steps.get-draft-issue.outputs.content-id }}
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Draft Issue Assignees
         uses: ./github-script/
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           ASSIGNEES: ${{ steps.edit-draft-issue-assignees.outputs.assignees }}
         with:
@@ -199,7 +199,7 @@ jobs:
       - name: Edit Item Assignees
         uses: ./edit-item/
         id: edit-item-assignees
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
           assignees: dsanders11
           item: ${{ steps.get-added-item.outputs.id }}
@@ -210,7 +210,7 @@ jobs:
       - name: Get Item After Assignee Edit
         uses: ./get-item/
         id: get-item-after-assignee-edit
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
           item: ${{ steps.get-added-item.outputs.id }}
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -219,7 +219,7 @@ jobs:
 
       - name: Check Assignees After Edit
         uses: ./github-script/
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           ASSIGNEES: ${{ steps.get-item-after-assignee-edit.outputs.assignees }}
         with:
@@ -307,7 +307,7 @@ jobs:
 
       - name: Test GitHub Script Action (Assignees)
         uses: ./github-script/
-        if: ${{ matrix.auth == 'GHA' }}
+        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           ITEM_ID: ${{ steps.edit-item.outputs.id }}
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
