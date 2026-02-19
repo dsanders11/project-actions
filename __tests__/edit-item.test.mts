@@ -87,7 +87,7 @@ describe('editItemAction', () => {
   it('handles item not found', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     mockGetBooleanInput({ 'fail-if-item-not-found': true });
-    vi.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -206,7 +206,7 @@ describe('editItemAction', () => {
       type: 'PULL_REQUEST',
       projectId
     } as ItemDetails);
-    vi.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -232,7 +232,7 @@ describe('editItemAction', () => {
       type: 'DRAFT_ISSUE',
       projectId
     } as ItemDetails);
-    vi.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -243,7 +243,6 @@ describe('editItemAction', () => {
   it('can set assignees', async () => {
     const assigneeLogins = ['octocat', 'dsanders11'];
     const currentAssignees = [{ id: 'old-user-id', login: 'old-user' }];
-    const contentId = 'content-id';
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -258,7 +257,7 @@ describe('editItemAction', () => {
         assignees: { nodes: currentAssignees }
       }
     } as ItemDetails);
-    vi.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
@@ -280,7 +279,7 @@ describe('editItemAction', () => {
       type: 'PULL_REQUEST',
       projectId
     } as ItemDetails);
-    vi.mocked(editItem).mockResolvedValue(itemId);
+    vi.mocked(editItem).mockResolvedValue();
 
     await index.editItemAction();
     expect(editItemActionSpy).toHaveReturned();
