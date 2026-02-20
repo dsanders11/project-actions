@@ -320,7 +320,7 @@ jobs:
         uses: ./github-script/
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
-          ITEM_ID: ${{ steps.edit-item.outputs.id }}
+          ITEM_ID: ${{ steps.get-draft-issue.outputs.id }}
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
           PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
           OWNER: ${{ steps.copy-project.outputs.owner }}
