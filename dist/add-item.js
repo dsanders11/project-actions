@@ -23109,105 +23109,6 @@ function handleCliError(error) {
     throw error;
   }
 }
-async function getItem(owner, projectNumber, item, field) {
-  const octokit = getOctokit();
-  let pageIterator;
-  const project = await getProject(owner, projectNumber);
-  if (field !== void 0) {
-    pageIterator = octokit.graphql.paginate.iterator(
-      `query paginate($cursor: String, $projectId: ID!, $field: String!) {
-          projectV2: node(id: $projectId) {
-            ... on ProjectV2 {
-              id
-              field(name: $field) {
-                ... on ProjectV2FieldCommon {
-                  id
-                }
-              }
-              items(first: 50, after: $cursor) {
-                nodes {
-                  fieldValueByName(name: $field) {
-                    ... on ProjectV2ItemFieldDateValue {
-                      date
-                    }
-                    ... on ProjectV2ItemFieldTextValue {
-                      text
-                    }
-                    ... on ProjectV2ItemFieldNumberValue {
-                      number
-                    }
-                    ... on ProjectV2ItemFieldSingleSelectValue {
-                      singleSelectValue: name
-                    }
-                  }
-                  ${PROJECT_ITEM_CONTENT_FRAGMENT}
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`,
-      {
-        projectId: project.id,
-        field
-      }
-    );
-  } else {
-    pageIterator = octokit.graphql.paginate.iterator(
-      PROJECT_ITEMS_QUERY,
-      { projectId: project.id }
-    );
-  }
-  try {
-    for await (const { projectV2 } of pageIterator) {
-      for (const node of projectV2.items.nodes) {
-        if (node.id === item || node.content?.id === item || node.type !== "DRAFT_ISSUE" && node.type !== "REDACTED" && node.content.url === item) {
-          const details = {
-            id: node.id,
-            projectId: project.id,
-            content: node.content,
-            type: node.type
-          };
-          if (details.type !== "REDACTED" && "field" in projectV2 && "fieldValueByName" in node) {
-            if (projectV2.field === null) {
-              throw new FieldNotFoundError();
-            }
-            if (node.fieldValueByName !== null) {
-              const { date, number, text, singleSelectValue } = node.fieldValueByName;
-              details.field = {
-                id: projectV2.field.id,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                value: date ?? number ?? text ?? singleSelectValue
-              };
-            } else {
-              details.field = {
-                id: projectV2.field.id,
-                value: null
-              };
-            }
-          }
-          return details;
-        }
-      }
-    }
-  } catch (error) {
-    if (error instanceof GraphqlResponseError) {
-      if (error.errors?.[0].type === "NOT_FOUND") {
-        const { path: path2 } = error.errors[0];
-        if (path2.length === 1) {
-          throw new ProjectNotFoundError(error);
-        } else if (path2.length === 2 && path2.at(1) === "field") {
-          throw new FieldNotFoundError(error);
-        }
-      }
-    }
-    throw error;
-  }
-  return null;
-}
 async function addItem(owner, projectNumber, url) {
   let output;
   try {
@@ -23453,16 +23354,7 @@ async function addItemAction() {
       if (assigneeLogins) {
         edit.assignees = assigneeLogins;
       }
-      const fullItem = await getItem(owner, projectNumber, itemId);
-      if (!fullItem) {
-        core2.setFailed(`Item not found: ${itemId}`);
-        return;
-      }
-      if (fullItem.type === "DRAFT_ISSUE") {
-        await editItem(project.id, fullItem.content.id, edit);
-      } else {
-        await editItem(project.id, itemId, edit);
-      }
+      await editItem(project.id, itemId, edit);
     }
     core2.setOutput("id", itemId);
   } catch (error) {
