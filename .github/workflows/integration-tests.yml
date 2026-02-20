@@ -329,12 +329,18 @@ jobs:
           script: |
             const assert = require('node:assert');
 
-            await actions.editItem(process.env.PROJECT_ID, process.env.ITEM_ID, {
+            const item = await actions.getItem(
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
+            );
+
+            await actions.editItem(process.env.PROJECT_ID, item.content.id, {
               assignees: ['dsanders11'],
             });
 
             // Verify assignees were set by re-fetching the item
-            const item = await actions.getItem(
+            item = await actions.getItem(
               process.env.OWNER,
               process.env.PROJECT_NUMBER,
               process.env.ITEM_ID,
