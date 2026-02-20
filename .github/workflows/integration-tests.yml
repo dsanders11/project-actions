@@ -329,7 +329,7 @@ jobs:
           script: |
             const assert = require('node:assert');
 
-            const item = await actions.getItem(
+            let item = await actions.getItem(
               process.env.OWNER,
               process.env.PROJECT_NUMBER,
               process.env.ITEM_ID,
