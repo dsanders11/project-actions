@@ -8,6 +8,8 @@ Edit a GitHub project item
 
 Can not edit archived items due to a bug in the GitHub GraphQL API, see <https://github.com/orgs/community/discussions/42727>
 
+Title and body for draft issues have to be edited together, see <https://github.com/cli/cli/issues/12726>
+
 ## Inputs
 
 | Name          | Description                                        | Required | Default                                      |
