@@ -3,14 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as core from '@actions/core';
 
 import * as index from '../src/add-item.js';
-import {
-  ItemDetails,
-  ProjectDetails,
-  addItem,
-  editItem,
-  getItem,
-  getProject
-} from '../src/lib.js';
+import { ProjectDetails, addItem, editItem, getProject } from '../src/lib.js';
 import { mockGetInput } from './utils.js';
 
 vi.mock('@actions/core');
@@ -125,7 +118,6 @@ describe('addItemAction', () => {
   it('sets the field value', async () => {
     const field = 'My Field';
     const fieldValue = '42';
-    const contentId = 'content-id';
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -137,18 +129,11 @@ describe('addItemAction', () => {
     vi.mocked(getProject).mockResolvedValue({
       id: projectId
     } as ProjectDetails);
-    vi.mocked(getItem).mockResolvedValue({
-      id: itemId,
-      content: {
-        id: contentId
-      },
-      type: 'DRAFT_ISSUE'
-    } as ItemDetails);
 
     await index.addItemAction();
     expect(addItemActionSpy).toHaveReturned();
 
-    expect(editItem).toHaveBeenCalledWith(projectId, contentId, {
+    expect(editItem).toHaveBeenCalledWith(projectId, itemId, {
       field,
       fieldValue
     });
@@ -156,7 +141,6 @@ describe('addItemAction', () => {
 
   it('sets assignees after adding', async () => {
     const assigneeLogins = ['octocat', 'dsanders11'];
-    const contentId = 'content-id';
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -168,20 +152,13 @@ describe('addItemAction', () => {
       id: projectId
     } as ProjectDetails);
     vi.mocked(editItem).mockResolvedValue();
-    vi.mocked(getItem).mockResolvedValue({
-      id: itemId,
-      content: {
-        id: contentId
-      },
-      type: 'DRAFT_ISSUE'
-    } as ItemDetails);
 
     await index.addItemAction();
     expect(addItemActionSpy).toHaveReturned();
 
     expect(editItem).toHaveBeenCalledWith(
       projectId,
-      contentId,
+      itemId,
       expect.objectContaining({
         assignees: assigneeLogins
       })
