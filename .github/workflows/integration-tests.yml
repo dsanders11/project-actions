@@ -108,15 +108,17 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
-      - name: Edit Draft Issue Title
-        uses: ./edit-item/
-        id: edit-draft-issue-title
-        with:
-          item: ${{ steps.get-draft-issue.outputs.id }}
-          owner: ${{ steps.copy-project.outputs.owner }}
-          project-number: ${{ steps.copy-project.outputs.number }}
-          token: ${{ steps.get-auth-token.outputs.token }}
-          title: New Draft Issue Title
+      # Upstream needs to fix https://github.com/cli/cli/issues/12726
+      #
+      # - name: Edit Draft Issue Title
+      #   uses: ./edit-item/
+      #   id: edit-draft-issue-title
+      #   with:
+      #     item: ${{ steps.get-draft-issue.outputs.id }}
+      #     owner: ${{ steps.copy-project.outputs.owner }}
+      #     project-number: ${{ steps.copy-project.outputs.number }}
+      #     token: ${{ steps.get-auth-token.outputs.token }}
+      #     title: New Draft Issue Title
 
       - name: Edit Draft Issue Assignees
         uses: ./edit-item/
