@@ -108,10 +108,19 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Edit Draft Issue Title
+        uses: ./edit-item/
+        id: edit-draft-issue-title
+        with:
+          item: ${{ steps.get-draft-issue.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+          title: New Draft Issue Title
+
       - name: Edit Draft Issue Assignees
         uses: ./edit-item/
         id: edit-draft-issue-assignees
-        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
           assignees: dsanders11
           item: ${{ steps.get-draft-issue.outputs.content-id }}
@@ -132,7 +141,6 @@ jobs:
 
       - name: Check Draft Issue Assignees
         uses: ./github-script/
-        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           ASSIGNEES: ${{ steps.get-draft-issue-again.outputs.assignees }}
         with:
@@ -318,7 +326,6 @@ jobs:
 
       - name: Test GitHub Script Action (Assignees)
         uses: ./github-script/
-        if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           ITEM_ID: ${{ steps.get-draft-issue.outputs.id }}
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
