@@ -6,7 +6,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { context } from '@actions/github';
-import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils.js';
+import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
 import { Octokit } from '@octokit/core';
