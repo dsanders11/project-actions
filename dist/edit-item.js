@@ -22945,7 +22945,7 @@ function paginateGraphQL(octokit) {
 
 // src/helpers.ts
 var GH_CLI_RELEASES = "https://github.com/cli/cli/releases/";
-var GH_VERSION = "2.45.0";
+var GH_VERSION = "2.88.1";
 var GH_DEB_FILENAME = `gh_${GH_VERSION}_linux_amd64.tar.gz`;
 async function installGhCli() {
   if (process.platform !== "linux") {
