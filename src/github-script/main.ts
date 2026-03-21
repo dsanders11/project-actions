@@ -20,7 +20,7 @@ import {
   getRetryOptions,
   parseNumberArray
 } from './retry-options.js';
-import { wrapRequire } from './wrap-require.js';
+import { nativeRequire, wrapRequire } from './wrap-require.js';
 
 import {
   addItem,
@@ -41,8 +41,6 @@ import {
   linkProjectToRepository,
   linkProjectToTeam
 } from '../lib.js';
-
-declare const __non_webpack_require__: NodeRequire;
 
 type Options = {
   log?: Console;
@@ -92,7 +90,7 @@ export async function main(): Promise<void> {
   const result = await callAsyncFunction(
     {
       require: wrapRequire,
-      __original_require__: __non_webpack_require__,
+      __original_require__: nativeRequire,
       actions: {
         addItem,
         archiveItem,
