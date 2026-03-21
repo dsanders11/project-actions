@@ -102,7 +102,7 @@ describe('findProjectAction', () => {
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, title });
     vi.mocked(findProject).mockImplementation(() => {
-      throw 42; // eslint-disable-line no-throw-literal
+      throw 42; // oxlint-disable-line no-throw-literal
     });
 
     await index.findProjectAction();

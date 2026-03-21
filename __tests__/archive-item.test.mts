@@ -105,7 +105,7 @@ describe('archiveItemAction', () => {
     mockGetInput({ owner, 'project-number': projectNumber, item });
     vi.mocked(getItem).mockResolvedValue({ id: itemId } as ItemDetails);
     vi.mocked(archiveItem).mockImplementation(() => {
-      throw 42; // eslint-disable-line no-throw-literal
+      throw 42; // oxlint-disable-line no-throw-literal
     });
 
     await index.archiveItemAction();

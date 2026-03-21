@@ -1,7 +1,7 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable no-undef */
+/* oxlint-disable no-undef */
 
 import { createRequire } from 'node:module';
 import * as path from 'node:path';

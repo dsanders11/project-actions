@@ -394,7 +394,7 @@ export async function getItem(
 
               details.field = {
                 id: projectV2.field.id,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                // oxlint-disable-next-line typescript/no-non-null-assertion
                 value: (date ?? number ?? text ?? singleSelectValue)!
               };
             } else {

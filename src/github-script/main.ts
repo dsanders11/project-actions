@@ -1,7 +1,7 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-undef, import/named */
+/* oxlint-disable typescript/no-explicit-any, no-undef */
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
