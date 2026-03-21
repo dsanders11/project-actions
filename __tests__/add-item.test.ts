@@ -105,7 +105,7 @@ describe('addItemAction', () => {
       'content-url': contentUrl
     });
     vi.mocked(addItem).mockImplementation(() => {
-      throw 42; // eslint-disable-line no-throw-literal
+      throw 42; // oxlint-disable-line no-throw-literal
     });
 
     await index.addItemAction();
