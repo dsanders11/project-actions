@@ -52,11 +52,12 @@ type ProjectActions = {
   linkProjectToTeam: typeof linkProjectToTeam;
 };
 
-type AsyncFunctionArguments = {
+export declare type AsyncFunctionArguments = {
   actions: ProjectActions;
   context: Context;
   core: typeof core;
   github: Octokit;
+  octokit: Octokit;
   exec: typeof exec;
   glob: typeof glob;
   io: typeof io;

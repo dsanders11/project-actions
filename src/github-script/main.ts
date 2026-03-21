@@ -45,6 +45,7 @@ import {
 type Options = {
   log?: Console;
   userAgent?: string;
+  baseUrl?: string;
   previews?: string[];
   retry?: RetryOptions;
   request?: RequestRequestOptions;
@@ -65,6 +66,7 @@ export async function main(): Promise<void> {
   const debug = core.getBooleanInput('debug');
   const userAgent = core.getInput('user-agent');
   const previews = core.getInput('previews');
+  const baseUrl = core.getInput('base-url');
   const retries = parseInt(core.getInput('retries'));
   const exemptStatusCodes = parseNumberArray(
     core.getInput('retry-exempt-status-codes')
@@ -82,6 +84,12 @@ export async function main(): Promise<void> {
     retry: retryOpts,
     request: requestOpts
   };
+
+  // Setting `baseUrl` to undefined will prevent the default value from being used
+  // https://github.com/actions/github-script/issues/436
+  if (baseUrl) {
+    opts.baseUrl = baseUrl;
+  }
 
   const github = getOctokit(token, opts, retry, requestLog);
   const script = core.getInput('script', { required: true });
@@ -111,6 +119,7 @@ export async function main(): Promise<void> {
         linkProjectToTeam
       },
       github,
+      octokit: github,
       context,
       core,
       exec,
