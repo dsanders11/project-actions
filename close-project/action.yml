@@ -27,5 +27,5 @@ outputs:
     description: The global ID for the edited project
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/close-project.js

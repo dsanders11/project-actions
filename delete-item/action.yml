@@ -23,5 +23,5 @@ inputs:
     default: true
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/delete-item.js

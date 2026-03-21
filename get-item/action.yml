@@ -44,5 +44,5 @@ outputs:
     description: The project field value for the item if the field input was set
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/get-item.js
