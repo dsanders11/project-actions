@@ -8,9 +8,9 @@ Copy a GitHub project
 
 ### Template Interpolation
 
-The title and body for draft issues can include
-[mustache.js](https://github.com/janl/mustache.js) templates which will be
-interpolated after the project is copied if the `template-view` input is
+The project README, description, and the title and body for draft issues can
+include [mustache.js](https://github.com/janl/mustache.js) templates which will
+be interpolated after the project is copied if the `template-view` input is
 provided.
 
 ### Field Values

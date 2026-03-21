@@ -88,6 +88,21 @@ jobs:
           title: Integration Test Project
           token: ${{ steps.get-auth-token.outputs.token }}
 
+      - name: Check Copied Project
+        uses: ./github-script/
+        env:
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          OWNER: ${{ steps.copy-project.outputs.owner }}
+          GH_TOKEN: ${{ steps.get-auth-token.outputs.token }}
+          README: ${{ steps.copy-project.outputs.readme }}
+          DESCRIPTION: ${{ steps.copy-project.outputs.description }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.strictEqual(process.env.README, 'README for bar');
+            assert.strictEqual(process.env.DESCRIPTION, 'Short description of bar');
+
       - name: Get Draft Issue ID
         id: get-draft-issue-id
         run: |

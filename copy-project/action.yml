@@ -30,7 +30,7 @@ inputs:
     description: Team to link the project to, in the format `org/team`
     required: false
   template-view:
-    description: A `mustache` template view to be used for template interpolation on draft issues
+    description: A `mustache` template view to be used for template interpolation on project README, description, and draft issues
     required: false
   public:
     description: Set the project to public or private
