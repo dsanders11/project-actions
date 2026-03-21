@@ -6,26 +6,26 @@ Edit a GitHub project
 
 ## Known Issues
 
-There is a GitHub bug which results in a permissions error if a GitHub app auth token
-is used to change the visibility on a project
+There is a GitHub bug which results in a permissions error if a GitHub app auth
+token is used to change the visibility on a project
 
 ## Inputs
 
-| Name           | Description                                                | Required | Default             |
-| -------------- | ---------------------------------------------------------- | -------- | ------------------- |
-| `token`       | A GitHub access token - either a classic PAT or a GitHub app installation token. | Yes      |                                              |
-| `owner`       | The owner of the project - either an organization or a user. If not provided, it defaults to the repository owner. | No       | `${{ github.repository_owner }}`           |
-| `project-number` | The project number from the project's URL.         | Yes      |                                              |
-| `title`       | Set the title of the project.                      | No       |                                              |
-| `description` | Set the short description of the project.          | No       |                                              |
-| `readme`      | Set the readme description of the project.         | No       |                                              |
-| `public`      | Set the project to public or private.              | No       |                                              |
+| Name             | Description                                                                                                        | Required | Default                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------- |
+| `token`          | A GitHub access token - either a classic PAT or a GitHub app installation token.                                   | Yes      |                                  |
+| `owner`          | The owner of the project - either an organization or a user. If not provided, it defaults to the repository owner. | No       | `${{ github.repository_owner }}` |
+| `project-number` | The project number from the project's URL.                                                                         | Yes      |                                  |
+| `title`          | Set the title of the project.                                                                                      | No       |                                  |
+| `description`    | Set the short description of the project.                                                                          | No       |                                  |
+| `readme`         | Set the readme description of the project.                                                                         | No       |                                  |
+| `public`         | Set the project to public or private.                                                                              | No       |                                  |
 
 ## Outputs
 
-| Output Name   | Description                                        |
-|---------------|----------------------------------------------------|
-| `id`          | The global ID for the edited project.              |
+| Output Name | Description                           |
+| ----------- | ------------------------------------- |
+| `id`        | The global ID for the edited project. |
 
 ## License
 

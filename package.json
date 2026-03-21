@@ -19,8 +19,8 @@
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "ci-test": "vitest run --coverage --reporter=verbose",
-    "format:write": "prettier --write \"**/*.{mts,ts}\"",
-    "format:check": "prettier --check \"**/*.{mts,ts}\"",
+    "format:write": "oxfmt",
+    "format:check": "oxfmt --check",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
     "package:add-item": "esbuild add-item/index.ts --bundle --format=esm --outfile=dist/add-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
     "package:archive-item": "esbuild archive-item/index.ts --bundle --format=esm --outfile=dist/archive-item.js --platform=node --target=node20.2 --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
@@ -70,12 +70,10 @@
     "eslint-plugin-github": "^4.10.1",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsonc": "^2.19.1",
-    "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-vitest": "^0.5.4",
     "husky": "^9.1.7",
     "npm-run-all2": "^7.0.2",
-    "prettier": "^3.5.3",
-    "prettier-eslint": "^16.3.0",
+    "oxfmt": "^0.41.0",
     "typescript": "^5.2.2",
     "vitest": "^4.0.15"
   }
