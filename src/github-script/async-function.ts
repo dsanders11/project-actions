@@ -6,7 +6,7 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
 import * as exec from '@actions/exec';
-import { Context } from '@actions/github/lib/context.js';
+import { context } from '@actions/github';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
 
@@ -54,7 +54,7 @@ type ProjectActions = {
 
 export declare type AsyncFunctionArguments = {
   actions: ProjectActions;
-  context: Context;
+  context: typeof context;
   core: typeof core;
   github: Octokit;
   octokit: Octokit;
