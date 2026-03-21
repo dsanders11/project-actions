@@ -46,5 +46,5 @@ outputs:
     description: Comma-separated list of assignee logins for the item
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/get-item.js

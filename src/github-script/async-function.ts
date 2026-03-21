@@ -1,7 +1,7 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable no-undef */
+/* oxlint-disable no-undef */
 
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
@@ -52,11 +52,12 @@ type ProjectActions = {
   linkProjectToTeam: typeof linkProjectToTeam;
 };
 
-type AsyncFunctionArguments = {
+export declare type AsyncFunctionArguments = {
   actions: ProjectActions;
   context: Context;
   core: typeof core;
   github: Octokit;
+  octokit: Octokit;
   exec: typeof exec;
   glob: typeof glob;
   io: typeof io;

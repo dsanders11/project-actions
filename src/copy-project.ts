@@ -13,7 +13,7 @@ import {
   linkProjectToTeam
 } from './lib.js';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, import/no-commonjs
+// oxlint-disable-next-line typescript/no-require-imports, typescript/no-var-requires
 const Mustache = require('mustache'); // ESM confusion necessitates this
 
 export async function copyProjectAction(): Promise<void> {

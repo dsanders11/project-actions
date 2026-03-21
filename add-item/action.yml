@@ -32,5 +32,5 @@ outputs:
     description: The global ID for the added item
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/add-item.js

@@ -37,9 +37,9 @@ function mockGetOctokit(): MockOctokitType {
     graphql: vi.fn()
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   (mockOctokit.graphql as any).paginate = vi.fn();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   (mockOctokit.graphql as any).paginate.iterator = vi.fn();
   (getOctokit as Mock).mockReturnValue(mockOctokit);
 
@@ -878,7 +878,7 @@ describe('lib', () => {
           project: {
             field: {
               id: fieldId,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
               dataType: 'ITERATION' as any
             }
           }

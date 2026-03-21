@@ -33,5 +33,5 @@ outputs:
     description: The global ID for the team if one was provided
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/link-project.js

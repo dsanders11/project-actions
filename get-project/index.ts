@@ -1,4 +1,4 @@
 import { getProjectAction } from '../src/get-project.js';
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
+// oxlint-disable-next-line @typescript-eslint/no-floating-promises
 getProjectAction();

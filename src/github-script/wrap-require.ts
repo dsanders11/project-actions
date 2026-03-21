@@ -1,13 +1,14 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable no-undef */
+/* oxlint-disable no-undef */
 
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
-declare const __non_webpack_require__: NodeRequire;
+export const nativeRequire = createRequire(import.meta.url);
 
-export const wrapRequire = new Proxy(__non_webpack_require__, {
+export const wrapRequire = new Proxy(nativeRequire, {
   apply: (target, thisArg, [moduleID]) => {
     if (moduleID.startsWith('.')) {
       moduleID = path.resolve(moduleID);
@@ -17,8 +18,7 @@ export const wrapRequire = new Proxy(__non_webpack_require__, {
     const modulePath = target.resolve.apply(thisArg, [
       moduleID,
       {
-        // Webpack does not have an escape hatch for getting the actual
-        // module, other than `eval`.
+        // Resolve from the caller's working directory
         paths: [process.cwd()]
       }
     ]);

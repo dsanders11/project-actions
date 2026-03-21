@@ -134,7 +134,7 @@ describe('copyProjectAction', () => {
   it('stringifies non-errors', async () => {
     mockGetInput({ owner, 'project-number': projectNumber, title });
     vi.mocked(copyProject).mockImplementation(() => {
-      throw 42; // eslint-disable-line no-throw-literal
+      throw 42; // oxlint-disable-line no-throw-literal
     });
 
     await index.copyProjectAction();

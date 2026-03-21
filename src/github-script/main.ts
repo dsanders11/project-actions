@@ -1,12 +1,12 @@
 // Modified from: https://github.com/actions/github-script/
 // Copyright GitHub, Inc. and contributors
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-undef, import/named */
+/* oxlint-disable typescript/no-explicit-any, no-undef */
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { context } from '@actions/github';
-import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils.js';
+import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
 import { Octokit } from '@octokit/core';
@@ -20,7 +20,7 @@ import {
   getRetryOptions,
   parseNumberArray
 } from './retry-options.js';
-import { wrapRequire } from './wrap-require.js';
+import { nativeRequire, wrapRequire } from './wrap-require.js';
 
 import {
   addItem,
@@ -42,11 +42,10 @@ import {
   linkProjectToTeam
 } from '../lib.js';
 
-declare const __non_webpack_require__: NodeRequire;
-
 type Options = {
   log?: Console;
   userAgent?: string;
+  baseUrl?: string;
   previews?: string[];
   retry?: RetryOptions;
   request?: RequestRequestOptions;
@@ -67,6 +66,7 @@ export async function main(): Promise<void> {
   const debug = core.getBooleanInput('debug');
   const userAgent = core.getInput('user-agent');
   const previews = core.getInput('previews');
+  const baseUrl = core.getInput('base-url');
   const retries = parseInt(core.getInput('retries'));
   const exemptStatusCodes = parseNumberArray(
     core.getInput('retry-exempt-status-codes')
@@ -85,6 +85,12 @@ export async function main(): Promise<void> {
     request: requestOpts
   };
 
+  // Setting `baseUrl` to undefined will prevent the default value from being used
+  // https://github.com/actions/github-script/issues/436
+  if (baseUrl) {
+    opts.baseUrl = baseUrl;
+  }
+
   const github = getOctokit(token, opts, retry, requestLog);
   const script = core.getInput('script', { required: true });
 
@@ -92,7 +98,7 @@ export async function main(): Promise<void> {
   const result = await callAsyncFunction(
     {
       require: wrapRequire,
-      __original_require__: __non_webpack_require__,
+      __original_require__: nativeRequire,
       actions: {
         addItem,
         archiveItem,
@@ -113,6 +119,7 @@ export async function main(): Promise<void> {
         linkProjectToTeam
       },
       github,
+      octokit: github,
       context,
       core,
       exec,
