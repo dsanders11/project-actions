@@ -61,5 +61,5 @@ outputs:
     description: The URL of the new project
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/copy-project.js

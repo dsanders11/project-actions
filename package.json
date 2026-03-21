@@ -14,7 +14,7 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",

@@ -39,5 +39,5 @@ outputs:
     description: The global ID for the edited item
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/edit-item.js

@@ -35,5 +35,5 @@ outputs:
     description: The URL of the project
 
 runs:
-  using: node20
+  using: node24
   main: ../dist/get-project.js
