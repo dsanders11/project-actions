@@ -139,7 +139,8 @@ describe('completedByAction', () => {
         content: {
           id: 'content-id',
           body: 'This is the item body',
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -170,7 +171,8 @@ describe('completedByAction', () => {
         content: {
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -206,7 +208,8 @@ describe('completedByAction', () => {
         content: {
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -243,7 +246,8 @@ describe('completedByAction', () => {
             Completed by ${itemUrl1}
             Completed by ${itemUrl2}
           `,
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -280,7 +284,8 @@ describe('completedByAction', () => {
         content: {
           id: 'content-id',
           body: `Completed by ${itemUrl}`,
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }

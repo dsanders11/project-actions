@@ -145,7 +145,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-one',
             body: 'Body One',
-            title: 'Title One'
+            title: 'Title One',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         },
@@ -155,7 +156,8 @@ describe('lib', () => {
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
-            url: 'foobar'
+            url: 'foobar',
+            assignees: { nodes: [] }
           },
           type: 'PULL_REQUEST'
         },
@@ -165,7 +167,8 @@ describe('lib', () => {
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
-            url: 'foobar-two'
+            url: 'foobar-two',
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         },
@@ -260,7 +263,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-one',
             body: 'Body One',
-            title: 'Title One'
+            title: 'Title One',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         },
@@ -269,7 +273,8 @@ describe('lib', () => {
           content: {
             id: 'content-id-two',
             body: 'Body Two',
-            title: 'Title Two'
+            title: 'Title Two',
+            assignees: { nodes: [] }
           },
           type: 'DRAFT_ISSUE'
         }
@@ -282,7 +287,8 @@ describe('lib', () => {
             id: 'content-id-two',
             body: 'Body Two',
             title: 'Title Two',
-            url: 'foobar'
+            url: 'foobar',
+            assignees: { nodes: [] }
           },
           type: 'PULL_REQUEST'
         },
@@ -298,7 +304,8 @@ describe('lib', () => {
             id: 'content-id-three',
             body: 'Body three',
             title: 'Title three',
-            url: 'foobar-two'
+            url: 'foobar-two',
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         }
@@ -471,10 +478,14 @@ describe('lib', () => {
 
   describe('editItem', () => {
     it('handles project not found', async () => {
+      const itemId = 'DI_item-id';
       mockProjectNotFoundError();
-      await expect(lib.editItem(projectId, 'item-id', {})).rejects.toThrow(
-        lib.ProjectNotFoundError
-      );
+      await expect(
+        lib.editItem(projectId, itemId, {
+          title: 'New Title',
+          body: 'New Body'
+        })
+      ).rejects.toThrow(lib.ProjectNotFoundError);
     });
 
     it('requires fieldValue if field supplied', async () => {
@@ -895,14 +906,75 @@ describe('lib', () => {
       ).rejects.toThrow('Cannot edit field at same time as title or body');
     });
 
-    it('returns item ID', async () => {
+    it('sets assignees on non-draft issues using replaceActorsForAssignable', async () => {
       const itemId = 'item-id';
+      const contentId = 'content-node-id';
+      const assignees = ['octocat', 'dsanders11'];
+      const mockOctokit = mockGetOctokit();
       vi.mocked(execCliCommand).mockResolvedValue(
         JSON.stringify({ id: itemId })
       );
-      await expect(lib.editItem(projectId, itemId, {})).resolves.toEqual(
-        itemId
+      vi.mocked(mockOctokit.graphql)
+        // content ID lookup
+        .mockResolvedValueOnce({ node: { content: { id: contentId } } })
+        // replaceActorsForAssignable
+        .mockResolvedValueOnce({
+          replaceActorsForAssignable: { clientMutationId: null }
+        });
+
+      await lib.editItem(projectId, itemId, { assignees });
+
+      expect(mockOctokit.graphql).toHaveBeenCalledTimes(2);
+      expect(mockOctokit.graphql).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('content'),
+        { id: itemId }
       );
+      expect(mockOctokit.graphql).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('replaceActorsForAssignable'),
+        { assignableId: contentId, actorLogins: assignees }
+      );
+    });
+
+    it('sets assignees on draft issues using updateProjectV2DraftIssue', async () => {
+      const itemId = 'DI_draft-issue-id';
+      const assignees = ['octocat', 'dsanders11'];
+      const userIds = ['user-id-1', 'user-id-2'];
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
+      vi.mocked(mockOctokit.graphql)
+        // user lookup for 'octocat'
+        .mockResolvedValueOnce({ user: { id: userIds[0] } })
+        // user lookup for 'dsanders11'
+        .mockResolvedValueOnce({ user: { id: userIds[1] } })
+        // updateProjectV2DraftIssue
+        .mockResolvedValueOnce({
+          updateProjectV2DraftIssue: { clientMutationId: null }
+        });
+
+      await lib.editItem(projectId, itemId, { assignees });
+
+      expect(mockOctokit.graphql).toHaveBeenCalledTimes(3);
+      expect(mockOctokit.graphql).toHaveBeenLastCalledWith(
+        expect.stringContaining('updateProjectV2DraftIssue'),
+        { draftIssueId: itemId, assigneeIds: userIds }
+      );
+    });
+
+    it('throws UserNotFoundError for draft issues when user not found', async () => {
+      const itemId = 'DI_draft-issue-id';
+      const mockOctokit = mockGetOctokit();
+      vi.mocked(execCliCommand).mockResolvedValue(
+        JSON.stringify({ id: itemId })
+      );
+      vi.mocked(mockOctokit.graphql).mockResolvedValueOnce({ user: null });
+
+      await expect(
+        lib.editItem(projectId, itemId, { assignees: ['nonexistent-user'] })
+      ).rejects.toThrow(lib.UserNotFoundError);
     });
   });
 
@@ -1009,7 +1081,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           type: 'ISSUE'
         }
@@ -1065,7 +1138,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: {
             singleSelectValue: fieldValue
@@ -1157,7 +1231,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: null,
           type: 'ISSUE'
@@ -1235,7 +1310,8 @@ describe('lib', () => {
             id: 'content-id-one',
             body: 'Body One',
             title: 'Title One',
-            url: itemUrl
+            url: itemUrl,
+            assignees: { nodes: [] }
           },
           fieldValueByName: null,
           type: 'ISSUE'

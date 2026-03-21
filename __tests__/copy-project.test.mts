@@ -244,7 +244,8 @@ describe('copyProjectAction', () => {
         content: {
           id: 'content-id',
           body: 'This is the item body',
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -282,7 +283,8 @@ describe('copyProjectAction', () => {
         content: {
           id: contentId,
           body: 'This is the item {{ foo }}',
-          title: 'Item {{ foo }}'
+          title: 'Item {{ foo }}',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -329,7 +331,8 @@ describe('copyProjectAction', () => {
             "${field}": "${fieldValue}"
           }
           -->`,
-          title: 'Item Title'
+          title: 'Item Title',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }
@@ -367,7 +370,8 @@ describe('copyProjectAction', () => {
         content: {
           id: contentId,
           body: 'This is the item {{ foo }}',
-          title: 'Item {{ foo }}'
+          title: 'Item {{ foo }}',
+          assignees: { nodes: [] }
         },
         type: 'DRAFT_ISSUE'
       }

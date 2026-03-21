@@ -29,18 +29,36 @@ ${e.format(t)}
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -82,7 +100,7 @@ ${e.format(t)}
         }
       }
     }
-  }`;var Ac=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},jc=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},Mc=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},Nc=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},Pc=class extends Error{constructor(e){super(`Option not found`,{cause:e})}},Fc=class extends Error{constructor(e){super(`Team not found`,{cause:e})}};function Ic(e){return e.type===`DRAFT_ISSUE`}function Lc(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new Mc(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new Nc(e):e}async function Rc(e,t,n,r){let i=Tc(),a,o=await Qc(e,t);a=r===void 0?i.graphql.paginate.iterator(Dc,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
+  }`;var Ac=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},jc=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},Mc=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},Nc=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},Pc=class extends Error{constructor(e){super(`Option not found`,{cause:e})}},Fc=class extends Error{constructor(e){super(`Team not found`,{cause:e})}},Ic=class extends Error{constructor(e){super(`User not found`,{cause:e})}};function Lc(e){return e.type===`DRAFT_ISSUE`}function Rc(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new Mc(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new Nc(e):e}async function zc(e,t,n,r){let i=Tc(),a,o=await $c(e,t);a=r===void 0?i.graphql.paginate.iterator(Dc,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
           projectV2: node(id: $projectId) {
             ... on ProjectV2 {
               id
@@ -116,7 +134,7 @@ ${e.format(t)}
               }
             }
           }
-        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new Ac;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}return null}async function zc(e){let t=Tc().graphql.paginate.iterator(Dc,{projectId:e}),n=[];try{for await(let{projectV2:e}of t)for(let t of e.items.nodes)(t.type===`REDACTED`||Object.keys(t.content).length)&&n.push(t)}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return n}async function Bc(e){return(await zc(e)).filter(Ic)}async function Vc(e,t,n){let r=Tc(),{id:i}=await Qc(e,t);try{let{projectV2:e}=await r.graphql(`query ($projectId: ID!, $number: Int!) {
+        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new Ac;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}return null}async function Bc(e){let t=Tc().graphql.paginate.iterator(Dc,{projectId:e}),n=[];try{for await(let{projectV2:e}of t)for(let t of e.items.nodes)(t.type===`REDACTED`||Object.keys(t.content).length)&&n.push(t)}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return n}async function Vc(e){return(await Bc(e)).filter(Lc)}async function Hc(e,t,n){let r=Tc(),{id:i}=await $c(e,t);try{let{projectV2:e}=await r.graphql(`query ($projectId: ID!, $number: Int!) {
             projectV2: node(id: $projectId) {
               ... on ProjectV2 {
                 workflow(number: $number) {
@@ -124,7 +142,7 @@ ${e.format(t)}
                 }
               }
             }
-          }`,{projectId:i,number:n});if(e.workflow)return{id:e.workflow.id,name:e.workflow.name,number:e.workflow.number,enabled:e.workflow.enabled,projectId:i}}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return null}async function Hc(e,t,n){let r;try{r=await wc([`project`,`item-add`,t,`--owner`,e,`--url`,n,`--format`,`json`])}catch(e){Lc(e)}return JSON.parse(r).id}async function Uc(e,t,n,r=!0){let i=[`project`,`item-archive`,t,`--owner`,e,`--id`,n];r||i.push(`--undo`);try{await wc(i)}catch(e){Lc(e)}}async function Wc(e,t,n=!0){let r=[`project`,`close`,t,`--owner`,e,`--format`,`json`];n||r.push(`--undo`);let i;try{i=await wc(r)}catch(e){Lc(e)}return JSON.parse(i)}async function Gc(e,t,n,r,i=!1){let a;try{let o=[`project`,`copy`,t,`--source-owner`,e,`--target-owner`,n,`--title`,r,`--format`,`json`];i&&o.push(`--drafts`),a=await wc(o)}catch(e){Lc(e)}return JSON.parse(a)}async function Kc(e,t,n){try{await wc([`project`,`item-delete`,t,`--owner`,e,`--id`,n])}catch(e){Lc(e)}}async function qc(e,t){try{await wc([`project`,`delete`,t,`--owner`,e])}catch(e){Lc(e)}}async function Jc(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`];if(n.title!==void 0&&r.push(`--title`,n.title),n.body!==void 0&&r.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let i=Tc(),a;try{a=(await i.graphql(`query ($id: ID!, $field: String!) {
+          }`,{projectId:i,number:n});if(e.workflow)return{id:e.workflow.id,name:e.workflow.name,number:e.workflow.number,enabled:e.workflow.enabled,projectId:i}}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return null}async function Uc(e,t,n){let r;try{r=await wc([`project`,`item-add`,t,`--owner`,e,`--url`,n,`--format`,`json`])}catch(e){Rc(e)}return JSON.parse(r).id}async function Wc(e,t,n,r=!0){let i=[`project`,`item-archive`,t,`--owner`,e,`--id`,n];r||i.push(`--undo`);try{await wc(i)}catch(e){Rc(e)}}async function Gc(e,t,n=!0){let r=[`project`,`close`,t,`--owner`,e,`--format`,`json`];n||r.push(`--undo`);let i;try{i=await wc(r)}catch(e){Rc(e)}return JSON.parse(i)}async function Kc(e,t,n,r,i=!1){let a;try{let o=[`project`,`copy`,t,`--source-owner`,e,`--target-owner`,n,`--title`,r,`--format`,`json`];i&&o.push(`--drafts`),a=await wc(o)}catch(e){Rc(e)}return JSON.parse(a)}async function qc(e,t,n){try{await wc([`project`,`item-delete`,t,`--owner`,e,`--id`,n])}catch(e){Rc(e)}}async function Jc(e,t){try{await wc([`project`,`delete`,t,`--owner`,e])}catch(e){Rc(e)}}async function Yc(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`],i=[];if(n.title!==void 0&&i.push(`--title`,n.title),n.body!==void 0&&i.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let r=Tc(),a;try{a=(await r.graphql(`query ($id: ID!, $field: String!) {
           projectV2Item: node(id: $id) {
             ... on ProjectV2Item {
               project {
@@ -137,7 +155,7 @@ ${e.format(t)}
               }
             }
           }
-        }`,{id:t,field:n.field})).projectV2Item}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}if(!a.project)throw new jc;if(a.project.field===null)throw new Ac;switch(r.push(`--field-id`,a.project.field.id),a.project.field.dataType){case`DATE`:r.push(`--date`,new Date(n.fieldValue).toISOString().split(`T`)[0]);break;case`NUMBER`:r.push(`--number`,n.fieldValue);break;case`TEXT`:r.push(`--text`,n.fieldValue);break;case`SINGLE_SELECT`:try{let{projectV2:t}=await i.graphql(`query ($projectId: ID!, $field: String!, $name: String!) {
+        }`,{id:t,field:n.field})).projectV2Item}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}if(!a.project)throw new jc;if(a.project.field===null)throw new Ac;switch(i.push(`--field-id`,a.project.field.id),a.project.field.dataType){case`DATE`:i.push(`--date`,new Date(n.fieldValue).toISOString().split(`T`)[0]);break;case`NUMBER`:i.push(`--number`,n.fieldValue);break;case`TEXT`:i.push(`--text`,n.fieldValue);break;case`SINGLE_SELECT`:try{let{projectV2:t}=await r.graphql(`query ($projectId: ID!, $field: String!, $name: String!) {
                   projectV2: node(id: $projectId) {
                     ... on ProjectV2 {
                       field(name: $field) {
@@ -149,14 +167,31 @@ ${e.format(t)}
                       }
                     }
                   }
-                }`,{projectId:e,field:n.field,name:n.fieldValue});if(t.field.options.length===0)throw new Pc;r.push(`--single-select-option-id`,t.field.options[0].id)}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}break;default:throw Error(`Unsupported field type`)}}let i;try{i=await wc(r)}catch(e){Lc(e)}return JSON.parse(i).id}async function Yc(e,t,n){let r=[`project`,`edit`,t,`--owner`,e,`--format`,`json`];n.description!==void 0&&r.push(`--description`,n.description),n.public!==void 0&&r.push(`--visibility`,n.public?`PUBLIC`:`PRIVATE`),n.readme!==void 0&&r.push(`--readme`,n.readme),n.title!==void 0&&r.push(`--title`,n.title);let i;try{i=await wc(r)}catch(e){Lc(e)}return JSON.parse(i).id}async function Xc(e,t,n=!1,r){let i=[`project`,`list`,`--owner`,e,`--format`,`json`];n&&i.push(`--closed`),r&&i.push(`--limit`,r);let{projects:a}=JSON.parse(await wc(i));for(let e of a)if(e.title===t)return e;return null}async function Zc(e,t,n){let r=Tc(),i=await Qc(e,t),a=r.graphql.paginate.iterator(kc,{projectId:i.id});try{for await(let{projectV2:e}of a)for(let t of e.workflows.nodes)if(t.name===n)return{id:t.id,name:t.name,number:t.number,enabled:t.enabled,projectId:i.id}}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return null}async function Qc(e,t){let n;try{n=await wc([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){Lc(e)}return JSON.parse(n)}async function $c(e,t,n=!0){let r=Tc(),[i,a]=t.split(`/`),o;try{o=(await r.graphql(`query ($owner: String!, $name: String!) {
+                }`,{projectId:e,field:n.field,name:n.fieldValue});if(t.field.options.length===0)throw new Pc;i.push(`--single-select-option-id`,t.field.options[0].id)}catch(e){if(e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new Mc(e);if(t.length===2&&t.at(1)===`field`)throw new Ac(e)}throw e}break;default:throw Error(`Unsupported field type`)}}if(i.length>0)try{await wc([...r,...i])}catch(e){Rc(e)}if(n.assignees){let e=Tc();if(t.startsWith(`DI_`)){let r=[];for(let t of n.assignees){let{user:n}=await e.graphql(`query($login: String!) { user(login: $login) { id } }`,{login:t});if(!n)throw new Ic;r.push(n.id)}await e.graphql(`mutation ($draftIssueId: ID!, $assigneeIds: [ID!]!) {
+          updateProjectV2DraftIssue(input: {draftIssueId: $draftIssueId, assigneeIds: $assigneeIds}) {
+            clientMutationId
+          }
+        }`,{draftIssueId:t,assigneeIds:r})}else{let{node:r}=await e.graphql(`query ($id: ID!) {
+          node(id: $id) {
+            ... on ProjectV2Item {
+              content {
+                ... on Issue { id }
+                ... on PullRequest { id }
+              }
+            }
+          }
+        }`,{id:t});await e.graphql(`mutation ($assignableId: ID!, $actorLogins: [String!]!) {
+          replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+            clientMutationId
+          }
+        }`,{assignableId:r.content.id,actorLogins:n.assignees})}}}async function Xc(e,t,n){let r=[`project`,`edit`,t,`--owner`,e,`--format`,`json`];n.description!==void 0&&r.push(`--description`,n.description),n.public!==void 0&&r.push(`--visibility`,n.public?`PUBLIC`:`PRIVATE`),n.readme!==void 0&&r.push(`--readme`,n.readme),n.title!==void 0&&r.push(`--title`,n.title);let i;try{i=await wc(r)}catch(e){Rc(e)}return JSON.parse(i).id}async function Zc(e,t,n=!1,r){let i=[`project`,`list`,`--owner`,e,`--format`,`json`];n&&i.push(`--closed`),r&&i.push(`--limit`,r);let{projects:a}=JSON.parse(await wc(i));for(let e of a)if(e.title===t)return e;return null}async function Qc(e,t,n){let r=Tc(),i=await $c(e,t),a=r.graphql.paginate.iterator(kc,{projectId:i.id});try{for await(let{projectV2:e}of a)for(let t of e.workflows.nodes)if(t.name===n)return{id:t.id,name:t.name,number:t.number,enabled:t.enabled,projectId:i.id}}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Mc(e):e}return null}async function $c(e,t){let n;try{n=await wc([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){Rc(e)}return JSON.parse(n)}async function el(e,t,n=!0){let r=Tc(),[i,a]=t.split(`/`),o;try{o=(await r.graphql(`query ($owner: String!, $name: String!) {
         repository(owner: $owner, name: $name) {
           id
         }
-      }`,{owner:i,name:a})).repository.id}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Nc(e):e}try{await wc([`project`,n?`link`:`unlink`,e,`--owner`,i,`--repo`,a])}catch(e){Lc(e)}return o}async function el(e,t,n=!0){let r=Tc(),[i,a]=t.split(`/`),o;try{let{organization:e}=await r.graphql(`query ($owner: String!, $name: String!) {
+      }`,{owner:i,name:a})).repository.id}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Nc(e):e}try{await wc([`project`,n?`link`:`unlink`,e,`--owner`,i,`--repo`,a])}catch(e){Rc(e)}return o}async function tl(e,t,n=!0){let r=Tc(),[i,a]=t.split(`/`),o;try{let{organization:e}=await r.graphql(`query ($owner: String!, $name: String!) {
         organization(login: $owner) {
           team(slug: $name) {
             id
           }
         }
-      }`,{owner:i,name:a});if(!e.team?.id)throw new Fc;o=e.team.id}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Fc(e):e}try{await wc([`project`,n?`link`:`unlink`,e,`--owner`,i,`--team`,a])}catch(e){Lc(e)}return o}function tl(e,t,...n){return new(ya.plugin(...n))({...t,auth:e})}async function nl(){let e=gr(`token`,{required:!0}),t=vr(`debug`),n=gr(`user-agent`),r=gr(`previews`),i=gr(`base-url`),[a,o]=Ao(parseInt(gr(`retries`)),jo(gr(`retry-exempt-status-codes`)),Fa),s={log:t?console:void 0,userAgent:n||void 0,previews:r?r.split(`,`):void 0,retry:a,request:o};i&&(s.baseUrl=i);let c=tl(e,s,Do,bo),l=gr(`script`,{required:!0}),u=await ko({require:No,__original_require__:Mo,actions:{addItem:Hc,archiveItem:Uc,closeProject:Wc,copyProject:Gc,deleteItem:Kc,deleteProject:qc,editItem:Jc,editProject:Yc,findProject:Xc,findWorkflow:Zc,getAllItems:zc,getDraftIssues:Bc,getItem:Rc,getProject:Qc,getWorkflow:Vc,linkProjectToRepository:$c,linkProjectToTeam:el},github:c,octokit:c,context:Ia,core:ur,exec:Yn,glob:go,io:Nn},l),d=gr(`result-encoding`);d||=`json`;let f;switch(d){case`json`:f=JSON.stringify(u);break;case`string`:f=String(u);break;default:throw Error(`"result-encoding" must be either "string" or "json"`)}yr(`result`,f)}process.on(`unhandledRejection`,rl),nl().catch(rl);function rl(e){console.error(e),xr(`Unhandled error: ${e}`)}export{};
+      }`,{owner:i,name:a});if(!e.team?.id)throw new Fc;o=e.team.id}catch(e){throw e instanceof Qi&&e.errors?.[0].type===`NOT_FOUND`?new Fc(e):e}try{await wc([`project`,n?`link`:`unlink`,e,`--owner`,i,`--team`,a])}catch(e){Rc(e)}return o}function nl(e,t,...n){return new(ya.plugin(...n))({...t,auth:e})}async function rl(){let e=gr(`token`,{required:!0}),t=vr(`debug`),n=gr(`user-agent`),r=gr(`previews`),i=gr(`base-url`),[a,o]=Ao(parseInt(gr(`retries`)),jo(gr(`retry-exempt-status-codes`)),Fa),s={log:t?console:void 0,userAgent:n||void 0,previews:r?r.split(`,`):void 0,retry:a,request:o};i&&(s.baseUrl=i);let c=nl(e,s,Do,bo),l=gr(`script`,{required:!0}),u=await ko({require:No,__original_require__:Mo,actions:{addItem:Uc,archiveItem:Wc,closeProject:Gc,copyProject:Kc,deleteItem:qc,deleteProject:Jc,editItem:Yc,editProject:Xc,findProject:Zc,findWorkflow:Qc,getAllItems:Bc,getDraftIssues:Vc,getItem:zc,getProject:$c,getWorkflow:Hc,linkProjectToRepository:el,linkProjectToTeam:tl},github:c,octokit:c,context:Ia,core:ur,exec:Yn,glob:go,io:Nn},l),d=gr(`result-encoding`);d||=`json`;let f;switch(d){case`json`:f=JSON.stringify(u);break;case`string`:f=String(u);break;default:throw Error(`"result-encoding" must be either "string" or "json"`)}yr(`result`,f)}process.on(`unhandledRejection`,il),rl().catch(il);function il(e){console.error(e),xr(`Unhandled error: ${e}`)}export{};

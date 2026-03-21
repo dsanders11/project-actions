@@ -21,7 +21,7 @@
     "ci-test": "vitest run --coverage --reporter=verbose",
     "format:write": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint --type-aware",
+    "lint": "oxlint --type-aware && npm run typecheck",
     "package:add-item": "rolldown add-item/index.ts --minify --file dist/add-item.js --platform node",
     "package:archive-item": "rolldown archive-item/index.ts --minify --file dist/archive-item.js --platform node",
     "package:close-project": "rolldown close-project/index.ts --minify --file dist/close-project.js --platform node",
@@ -41,6 +41,7 @@
     "package": "npm-run-all \"package:!(watch)\"",
     "package:watch": "npm run package -- --watch",
     "test": "vitest run --coverage --reporter=verbose",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p __tests__/tsconfig.json",
     "all": "npm run format:write && npm run lint && npm run test && npm run package",
     "prepare": "husky"
   },

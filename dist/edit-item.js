@@ -21,18 +21,36 @@ ${e.format(t)}
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -52,7 +70,7 @@ ${e.format(t)}
         }
       }
     }
-  }`;var ro=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},io=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},ao=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},oo=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},so=class extends Error{constructor(e){super(`Option not found`,{cause:e})}};function co(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new ao(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new oo(e):e}async function lo(e,t,n,r){let i=eo(),a,o=await fo(e,t);a=r===void 0?i.graphql.paginate.iterator(no,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
+  }`;var ro=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},io=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},ao=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},oo=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},so=class extends Error{constructor(e){super(`Option not found`,{cause:e})}},co=class extends Error{constructor(e){super(`User not found`,{cause:e})}};function lo(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new ao(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new oo(e):e}async function uo(e,t,n,r){let i=eo(),a,o=await po(e,t);a=r===void 0?i.graphql.paginate.iterator(no,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
           projectV2: node(id: $projectId) {
             ... on ProjectV2 {
               id
@@ -86,7 +104,7 @@ ${e.format(t)}
               }
             }
           }
-        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new ro;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}return null}async function uo(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`];if(n.title!==void 0&&r.push(`--title`,n.title),n.body!==void 0&&r.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let i=eo(),a;try{a=(await i.graphql(`query ($id: ID!, $field: String!) {
+        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new ro;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}return null}async function fo(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`],i=[];if(n.title!==void 0&&i.push(`--title`,n.title),n.body!==void 0&&i.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let r=eo(),a;try{a=(await r.graphql(`query ($id: ID!, $field: String!) {
           projectV2Item: node(id: $id) {
             ... on ProjectV2Item {
               project {
@@ -99,7 +117,7 @@ ${e.format(t)}
               }
             }
           }
-        }`,{id:t,field:n.field})).projectV2Item}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}if(!a.project)throw new io;if(a.project.field===null)throw new ro;switch(r.push(`--field-id`,a.project.field.id),a.project.field.dataType){case`DATE`:r.push(`--date`,new Date(n.fieldValue).toISOString().split(`T`)[0]);break;case`NUMBER`:r.push(`--number`,n.fieldValue);break;case`TEXT`:r.push(`--text`,n.fieldValue);break;case`SINGLE_SELECT`:try{let{projectV2:t}=await i.graphql(`query ($projectId: ID!, $field: String!, $name: String!) {
+        }`,{id:t,field:n.field})).projectV2Item}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}if(!a.project)throw new io;if(a.project.field===null)throw new ro;switch(i.push(`--field-id`,a.project.field.id),a.project.field.dataType){case`DATE`:i.push(`--date`,new Date(n.fieldValue).toISOString().split(`T`)[0]);break;case`NUMBER`:i.push(`--number`,n.fieldValue);break;case`TEXT`:i.push(`--text`,n.fieldValue);break;case`SINGLE_SELECT`:try{let{projectV2:t}=await r.graphql(`query ($projectId: ID!, $field: String!, $name: String!) {
                   projectV2: node(id: $projectId) {
                     ... on ProjectV2 {
                       field(name: $field) {
@@ -111,4 +129,21 @@ ${e.format(t)}
                       }
                     }
                   }
-                }`,{projectId:e,field:n.field,name:n.fieldValue});if(t.field.options.length===0)throw new so;r.push(`--single-select-option-id`,t.field.options[0].id)}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}break;default:throw Error(`Unsupported field type`)}}let i;try{i=await $a(r)}catch(e){co(e)}return JSON.parse(i).id}async function fo(e,t){let n;try{n=await $a([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){co(e)}return JSON.parse(n)}async function po(){try{let e=wn(`owner`,{required:!0}),t=wn(`project-number`,{required:!0}),n=wn(`item`,{required:!0}),r=wn(`title`),i=wn(`body`),a=wn(`field`),o=wn(`field-value`,{required:!!a}),s=Tn(`fail-if-item-not-found`);if(o&&!a){Dn(`Input required and not supplied: field`);return}let c=await lo(e,t,n);if(!c){s&&Dn(`Item not found: ${n}`);return}if(c.type===`REDACTED`){Dn(`Cannot edit redacted items`);return}if(c.type!==`DRAFT_ISSUE`&&(r||i)){Dn(`Can only set title or body for draft issues`);return}let l={};r&&(l.title=r),i&&(l.body=i),a&&(l.field=a,l.fieldValue=o),await uo(c.projectId,c.id,l),En(`id`,c.id),En(`project-id`,c.projectId)}catch(e){e instanceof Error&&e.stack&&Q(e.stack),Dn(e instanceof Error?e.message:JSON.stringify(e))}}po();export{};
+                }`,{projectId:e,field:n.field,name:n.fieldValue});if(t.field.options.length===0)throw new so;i.push(`--single-select-option-id`,t.field.options[0].id)}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new ao(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}break;default:throw Error(`Unsupported field type`)}}if(i.length>0)try{await $a([...r,...i])}catch(e){lo(e)}if(n.assignees){let e=eo();if(t.startsWith(`DI_`)){let r=[];for(let t of n.assignees){let{user:n}=await e.graphql(`query($login: String!) { user(login: $login) { id } }`,{login:t});if(!n)throw new co;r.push(n.id)}await e.graphql(`mutation ($draftIssueId: ID!, $assigneeIds: [ID!]!) {
+          updateProjectV2DraftIssue(input: {draftIssueId: $draftIssueId, assigneeIds: $assigneeIds}) {
+            clientMutationId
+          }
+        }`,{draftIssueId:t,assigneeIds:r})}else{let{node:r}=await e.graphql(`query ($id: ID!) {
+          node(id: $id) {
+            ... on ProjectV2Item {
+              content {
+                ... on Issue { id }
+                ... on PullRequest { id }
+              }
+            }
+          }
+        }`,{id:t});await e.graphql(`mutation ($assignableId: ID!, $actorLogins: [String!]!) {
+          replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+            clientMutationId
+          }
+        }`,{assignableId:r.content.id,actorLogins:n.assignees})}}}async function po(e,t){let n;try{n=await $a([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){lo(e)}return JSON.parse(n)}async function mo(){try{let e=wn(`owner`,{required:!0}),t=wn(`project-number`,{required:!0}),n=wn(`item`,{required:!0}),r=wn(`title`),i=wn(`body`),a=wn(`field`),o=wn(`field-value`,{required:!!a}),s=wn(`assignees`),c=Tn(`fail-if-item-not-found`);if(o&&!a){Dn(`Input required and not supplied: field`);return}let l=await uo(e,t,n);if(!l){c&&Dn(`Item not found: ${n}`);return}if(l.type===`REDACTED`){Dn(`Cannot edit redacted items`);return}if(l.type!==`DRAFT_ISSUE`&&(r||i)){Dn(`Can only set title or body for draft issues`);return}let u={};r&&(u.title=r),i&&(u.body=i),a&&(u.field=a,u.fieldValue=o),s&&(u.assignees=s.split(`,`).map(e=>e.trim()).filter(Boolean)),l.type===`DRAFT_ISSUE`?await fo(l.projectId,l.content.id,u):await fo(l.projectId,l.id,u),En(`id`,l.id),En(`project-id`,l.projectId)}catch(e){e instanceof Error&&e.stack&&Q(e.stack),Dn(e instanceof Error?e.message:JSON.stringify(e))}}mo();export{};

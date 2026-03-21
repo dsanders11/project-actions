@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { ItemEdit, editItem, getItem } from './lib.js';
+import { type ItemEdit, editItem, getItem } from './lib.js';
 
 export async function editItemAction(): Promise<void> {
   try {
@@ -14,6 +14,7 @@ export async function editItemAction(): Promise<void> {
     const body = core.getInput('body');
     const field = core.getInput('field');
     const fieldValue = core.getInput('field-value', { required: !!field });
+    const assignees = core.getInput('assignees');
     const failIfItemNotFound = core.getBooleanInput('fail-if-item-not-found');
 
     if (!!fieldValue && !field) {
@@ -47,8 +48,18 @@ export async function editItemAction(): Promise<void> {
       edit.field = field;
       edit.fieldValue = fieldValue;
     }
+    if (assignees) {
+      edit.assignees = assignees
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
 
-    await editItem(fullItem.projectId, fullItem.id, edit);
+    if (fullItem.type === 'DRAFT_ISSUE') {
+      await editItem(fullItem.projectId, fullItem.content.id, edit);
+    } else {
+      await editItem(fullItem.projectId, fullItem.id, edit);
+    }
 
     core.setOutput('id', fullItem.id);
     core.setOutput('project-id', fullItem.projectId);

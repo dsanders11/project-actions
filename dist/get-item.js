@@ -21,18 +21,36 @@ ${e.format(t)}
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -86,4 +104,4 @@ ${e.format(t)}
               }
             }
           }
-        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new ro;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new io(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}return null}async function co(e,t){let n;try{n=await $a([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){oo(e)}return JSON.parse(n)}async function lo(){try{let e=wn(`owner`,{required:!0}),t=wn(`project-number`,{required:!0}),n=wn(`item`,{required:!0}),r=wn(`field`)||void 0,i=Tn(`fail-if-item-not-found`),a=await so(e,t,n,r);if(!a){i&&Dn(`Item not found: ${n}`);return}En(`id`,a.id),En(`body`,a.content?.body??null),En(`content-id`,a.content?.id??null),En(`project-id`,a.projectId),En(`title`,a.content?.title??null),(a.type===`ISSUE`||a.type===`PULL_REQUEST`)&&En(`url`,a.content.url),a.type!==`REDACTED`&&a.field&&(En(`field-id`,a.field.id),a.field.value!==null&&En(`field-value`,a.field.value))}catch(e){e instanceof Error&&e.stack&&Q(e.stack),Dn(e instanceof Error?e.message:JSON.stringify(e))}}lo();export{};
+        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new ro;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof Nr&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new io(e);if(t.length===2&&t.at(1)===`field`)throw new ro(e)}throw e}return null}async function co(e,t){let n;try{n=await $a([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){oo(e)}return JSON.parse(n)}async function lo(){try{let e=wn(`owner`,{required:!0}),t=wn(`project-number`,{required:!0}),n=wn(`item`,{required:!0}),r=wn(`field`)||void 0,i=Tn(`fail-if-item-not-found`),a=await so(e,t,n,r);if(!a){i&&Dn(`Item not found: ${n}`);return}En(`id`,a.id),En(`body`,a.content?.body??null),En(`content-id`,a.content?.id??null),En(`project-id`,a.projectId),En(`title`,a.content?.title??null),(a.type===`ISSUE`||a.type===`PULL_REQUEST`)&&En(`url`,a.content.url),a.type!==`REDACTED`&&En(`assignees`,a.content?.assignees.nodes.map(e=>e.login).join(`,`)),a.type!==`REDACTED`&&a.field&&(En(`field-id`,a.field.id),a.field.value!==null&&En(`field-value`,a.field.value))}catch(e){e instanceof Error&&e.stack&&Q(e.stack),Dn(e instanceof Error?e.message:JSON.stringify(e))}}lo();export{};

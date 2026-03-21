@@ -21,18 +21,36 @@ ${e.format(t)}
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id

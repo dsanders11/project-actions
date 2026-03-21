@@ -31,6 +31,13 @@ export async function getItemAction(): Promise<void> {
       core.setOutput('url', fullItem.content.url);
     }
 
+    if (fullItem.type !== 'REDACTED') {
+      core.setOutput(
+        'assignees',
+        fullItem.content?.assignees.nodes.map(a => a.login).join(',')
+      );
+    }
+
     if (fullItem.type !== 'REDACTED' && fullItem.field) {
       core.setOutput('field-id', fullItem.field.id);
 

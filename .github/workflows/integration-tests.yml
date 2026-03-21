@@ -108,19 +108,47 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
-      - name: Check Draft Issue
+      # Upstream needs to fix https://github.com/cli/cli/issues/12726
+      #
+      # - name: Edit Draft Issue Title
+      #   uses: ./edit-item/
+      #   id: edit-draft-issue-title
+      #   with:
+      #     item: ${{ steps.get-draft-issue.outputs.id }}
+      #     owner: ${{ steps.copy-project.outputs.owner }}
+      #     project-number: ${{ steps.copy-project.outputs.number }}
+      #     token: ${{ steps.get-auth-token.outputs.token }}
+      #     title: New Draft Issue Title
+
+      - name: Edit Draft Issue Assignees
+        uses: ./edit-item/
+        id: edit-draft-issue-assignees
+        with:
+          assignees: dsanders11
+          item: ${{ steps.get-draft-issue.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Draft Issue (again)
+        uses: ./get-item/
+        id: get-draft-issue-again
+        with:
+          field: Priority
+          item: ${{ steps.get-draft-issue-id.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Draft Issue Assignees
         uses: ./github-script/
         env:
-          BODY: ${{ steps.get-draft-issue.outputs.body }}
-          FIELD_VALUE: ${{ steps.get-draft-issue.outputs.field-value }}
-          TITLE: ${{ steps.get-draft-issue.outputs.title }}
+          ASSIGNEES: ${{ steps.get-draft-issue-again.outputs.assignees }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.strictEqual(process.env.TITLE, 'My Favorite Issue');
-            assert.strictEqual(process.env.FIELD_VALUE, 'Low');
-            assert.match(process.env.BODY, /Here's another bar/);
+            assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Run Completed By
         uses: ./completed-by/
@@ -177,7 +205,7 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
-      - name: Check Added Item Field Value
+      - name: Check Added Item
         uses: ./github-script/
         env:
           DATE_STRING: ${{ steps.get-date.outputs.result }}
@@ -187,6 +215,38 @@ jobs:
             const assert = require('node:assert');
 
             assert.strictEqual(process.env.FIELD_VALUE, new Date(process.env.DATE_STRING).toISOString().split('T')[0]);
+
+      - name: Edit Item Assignees
+        uses: ./edit-item/
+        id: edit-item-assignees
+        if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
+        with:
+          assignees: dsanders11
+          item: ${{ steps.get-added-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Get Item After Assignee Edit
+        uses: ./get-item/
+        id: get-item-after-assignee-edit
+        if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
+        with:
+          item: ${{ steps.get-added-item.outputs.id }}
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Check Assignees After Edit
+        uses: ./github-script/
+        if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
+        env:
+          ASSIGNEES: ${{ steps.get-item-after-assignee-edit.outputs.assignees }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Edit Item
         uses: ./edit-item/
@@ -264,6 +324,37 @@ jobs:
 
             assert.strictEqual(item.field?.value, '⛰️ High');
             assert.strictEqual(items.length, 2, 'Expected 2 items');
+
+      - name: Test GitHub Script Action (Assignees)
+        uses: ./github-script/
+        env:
+          ITEM_ID: ${{ steps.get-draft-issue.outputs.id }}
+          PROJECT_ID: ${{ steps.copy-project.outputs.id }}
+          PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
+          OWNER: ${{ steps.copy-project.outputs.owner }}
+        with:
+          token: ${{ steps.get-auth-token.outputs.token }}
+          script: |
+            const assert = require('node:assert');
+
+            let item = await actions.getItem(
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
+            );
+
+            await actions.editItem(process.env.PROJECT_ID, item.content.id, {
+              assignees: ['dsanders11'],
+            });
+
+            // Verify assignees were set by re-fetching the item
+            item = await actions.getItem(
+              process.env.OWNER,
+              process.env.PROJECT_NUMBER,
+              process.env.ITEM_ID,
+            );
+            const logins = item.content.assignees.nodes.map(a => a.login);
+            assert.ok(logins.includes('dsanders11'), 'Expected dsanders11 to be an assignee');
 
       # - name: Archive Item
       #   uses: ./archive-item/

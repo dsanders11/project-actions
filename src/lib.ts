@@ -9,18 +9,36 @@ const PROJECT_ITEM_CONTENT_FRAGMENT = `
       id
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on Issue {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
     ... on PullRequest {
       id
       url
       body
       title
+      assignees(first: 100) {
+        nodes {
+          id
+          login
+        }
+      }
     }
   }
   id
@@ -122,6 +140,7 @@ export interface ItemEdit {
   body?: string;
   field?: string;
   fieldValue?: string;
+  assignees?: string[];
 }
 
 export interface ProjectEdit {
@@ -161,12 +180,20 @@ export class TeamNotFoundError extends Error {
     super('Team not found', { cause });
   }
 }
+export class UserNotFoundError extends Error {
+  constructor(cause?: Error) {
+    super('User not found', { cause });
+  }
+}
 
 export type ProjectItemContent = {
   id: string;
   url: string;
   body: string;
   title: string;
+  assignees: {
+    nodes: { id: string; login: string }[];
+  };
 };
 
 type DraftIssueItemContent = Omit<ProjectItemContent, 'url'>;
@@ -694,7 +721,7 @@ export async function editItem(
   projectId: string,
   id: string,
   edit: ItemEdit
-): Promise<string> {
+): Promise<void> {
   if ((edit.field && !edit.fieldValue) || (!edit.field && edit.fieldValue)) {
     throw new Error(
       'Must supply both field and fieldValue if either is provided'
@@ -711,13 +738,14 @@ export async function editItem(
     '--format',
     'json'
   ];
+  const additionalArgs: string[] = [];
 
   if (edit.title !== undefined) {
-    args.push('--title', edit.title);
+    additionalArgs.push('--title', edit.title);
   }
 
   if (edit.body !== undefined) {
-    args.push('--body', edit.body);
+    additionalArgs.push('--body', edit.body);
   }
 
   if (edit.title !== undefined || edit.body !== undefined) {
@@ -776,12 +804,12 @@ export async function editItem(
       throw new FieldNotFoundError();
     }
 
-    args.push('--field-id', projectV2Item.project.field.id);
+    additionalArgs.push('--field-id', projectV2Item.project.field.id);
 
     switch (projectV2Item.project.field.dataType) {
       case 'DATE':
         // Convert potential datetimes to just the date
-        args.push(
+        additionalArgs.push(
           '--date',
           new Date(edit.fieldValue).toISOString().split('T')[0]
         );
@@ -790,11 +818,11 @@ export async function editItem(
       // TODO - Support 'ITERATION'
 
       case 'NUMBER':
-        args.push('--number', edit.fieldValue);
+        additionalArgs.push('--number', edit.fieldValue);
         break;
 
       case 'TEXT':
-        args.push('--text', edit.fieldValue);
+        additionalArgs.push('--text', edit.fieldValue);
         break;
 
       case 'SINGLE_SELECT':
@@ -821,7 +849,10 @@ export async function editItem(
             throw new SingleSelectOptionNotFoundError();
           }
 
-          args.push('--single-select-option-id', project.field.options[0].id);
+          additionalArgs.push(
+            '--single-select-option-id',
+            project.field.options[0].id
+          );
         } catch (error) {
           if (error instanceof GraphqlResponseError) {
             if (error.errors?.[0].type === 'NOT_FOUND') {
@@ -843,15 +874,67 @@ export async function editItem(
     }
   }
 
-  let output: string;
-
-  try {
-    output = await execCliCommand(args);
-  } catch (error) {
-    handleCliError(error);
+  if (additionalArgs.length > 0) {
+    try {
+      await execCliCommand([...args, ...additionalArgs]);
+    } catch (error) {
+      handleCliError(error);
+    }
   }
 
-  return JSON.parse(output).id;
+  if (edit.assignees) {
+    const octokit = getOctokit();
+
+    if (id.startsWith('DI_')) {
+      // Map user logins to user IDs for draft issues
+      const assigneeIds: string[] = [];
+      for (const login of edit.assignees) {
+        const { user } = await octokit.graphql<{
+          user: { id: string } | null;
+        }>(`query($login: String!) { user(login: $login) { id } }`, {
+          login
+        });
+        if (!user) {
+          throw new UserNotFoundError();
+        }
+        assigneeIds.push(user.id);
+      }
+
+      await octokit.graphql(
+        `mutation ($draftIssueId: ID!, $assigneeIds: [ID!]!) {
+          updateProjectV2DraftIssue(input: {draftIssueId: $draftIssueId, assigneeIds: $assigneeIds}) {
+            clientMutationId
+          }
+        }`,
+        { draftIssueId: id, assigneeIds }
+      );
+    } else {
+      const { node } = await octokit.graphql<{
+        node: { content: { id: string } };
+      }>(
+        `query ($id: ID!) {
+          node(id: $id) {
+            ... on ProjectV2Item {
+              content {
+                ... on Issue { id }
+                ... on PullRequest { id }
+              }
+            }
+          }
+        }`,
+        { id }
+      );
+
+      await octokit.graphql(
+        `mutation ($assignableId: ID!, $actorLogins: [String!]!) {
+          replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
+            clientMutationId
+          }
+        }`,
+        { assignableId: node.content.id, actorLogins: edit.assignees }
+      );
+    }
+  }
 }
 
 /**

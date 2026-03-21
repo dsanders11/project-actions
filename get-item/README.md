@@ -32,6 +32,7 @@ Can not get archived items due to a bug in the GitHub GraphQL API, see
 | `url`         | The URL of the issue or pull request - not applicable for draft issues. |
 | `field-id`    | The global ID of the field if the field input was set.                  |
 | `field-value` | The project field value for the item if the field input was set.        |
+| `assignees`   | Comma-separated list of assignee logins for the item.                   |
 
 ## License
 

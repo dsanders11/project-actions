@@ -4,6 +4,10 @@
 
 Add an issue or pull request to a GitHub project
 
+## Permissions
+
+Setting `assignees` requires a GitHub app auth token.
+
 ## Inputs
 
 | Name             | Description                                                                                                                                   | Required | Default                                                                      |

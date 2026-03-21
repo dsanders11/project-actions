@@ -120,6 +120,7 @@ describe('getItemAction', () => {
     const body = 'Pull Request Description';
     const fieldId = 'field-id';
     const fieldValue = 'field-value';
+    const assigneeLogins = ['octocat', 'dsanders11'];
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -128,7 +129,15 @@ describe('getItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { id: contentId, url, title, body },
+      content: {
+        id: contentId,
+        url,
+        title,
+        body,
+        assignees: {
+          nodes: assigneeLogins.map(login => ({ id: `id-${login}`, login }))
+        }
+      },
       field: { id: fieldId, value: fieldValue },
       projectId,
       type: 'PULL_REQUEST'
@@ -137,11 +146,15 @@ describe('getItemAction', () => {
     await index.getItemAction();
     expect(getItemActionSpy).toHaveReturned();
 
-    expect(core.setOutput).toHaveBeenCalledTimes(8);
+    expect(core.setOutput).toHaveBeenCalledTimes(9);
     expect(core.setOutput).toHaveBeenCalledWith('id', itemId);
     expect(core.setOutput).toHaveBeenCalledWith('body', body);
     expect(core.setOutput).toHaveBeenCalledWith('title', title);
     expect(core.setOutput).toHaveBeenCalledWith('url', url);
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'assignees',
+      assigneeLogins.join(',')
+    );
     expect(core.setOutput).toHaveBeenCalledWith('content-id', contentId);
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
     expect(core.setOutput).toHaveBeenCalledWith('field-id', fieldId);
@@ -162,7 +175,13 @@ describe('getItemAction', () => {
     });
     vi.mocked(getItem).mockResolvedValue({
       id: itemId,
-      content: { id: contentId, url, title, body },
+      content: {
+        id: contentId,
+        url,
+        title,
+        body,
+        assignees: { nodes: [] }
+      },
       field: { id: fieldId, value: null },
       projectId,
       type: 'PULL_REQUEST'
@@ -171,11 +190,12 @@ describe('getItemAction', () => {
     await index.getItemAction();
     expect(getItemActionSpy).toHaveReturned();
 
-    expect(core.setOutput).toHaveBeenCalledTimes(7);
+    expect(core.setOutput).toHaveBeenCalledTimes(8);
     expect(core.setOutput).toHaveBeenCalledWith('id', itemId);
     expect(core.setOutput).toHaveBeenCalledWith('body', body);
     expect(core.setOutput).toHaveBeenCalledWith('title', title);
     expect(core.setOutput).toHaveBeenCalledWith('url', url);
+    expect(core.setOutput).toHaveBeenCalledWith('assignees', '');
     expect(core.setOutput).toHaveBeenCalledWith('content-id', contentId);
     expect(core.setOutput).toHaveBeenCalledWith('project-id', projectId);
     expect(core.setOutput).toHaveBeenCalledWith('field-id', fieldId);
