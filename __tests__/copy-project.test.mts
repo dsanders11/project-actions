@@ -29,8 +29,8 @@ const projectNumber = '94';
 const title = 'New Title';
 const fieldCount = 4;
 const itemCount = 50;
-const shortDescription = 'Description';
-const readme = 'README';
+const shortDescription = 'Description for {{ foo }}';
+const readme = 'README for {{ foo }}';
 const url = 'url';
 const templateView = JSON.stringify({
   foo: 'bar'
@@ -85,23 +85,6 @@ describe('copyProjectAction', () => {
     expect(core.setFailed).toHaveBeenCalledTimes(1);
     expect(core.setFailed).toHaveBeenLastCalledWith(
       'Input required and not supplied: title'
-    );
-  });
-
-  it('requires drafts if the template-view input is set', async () => {
-    mockGetInput({
-      owner,
-      'project-number': projectNumber,
-      title,
-      'template-view': templateView
-    });
-
-    await index.copyProjectAction();
-    expect(copyProjectActionSpy).toHaveReturned();
-
-    expect(core.setFailed).toHaveBeenCalledTimes(1);
-    expect(core.setFailed).toHaveBeenLastCalledWith(
-      'Can only use template-view input if drafts are being copied'
     );
   });
 
@@ -207,6 +190,67 @@ describe('copyProjectAction', () => {
       newProjectNumber.toString(),
       team
     );
+  });
+
+  it('updates description if template changes', async () => {
+    const newProjectId = 'project-id-2';
+    const newProjectNumber = parseInt(projectNumber) + 1;
+    mockCopyProject(newProjectId, newProjectNumber);
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      title,
+      'template-view': templateView
+    });
+
+    await index.copyProjectAction();
+    expect(copyProjectActionSpy).toHaveReturned();
+    expect(editProject).toHaveBeenCalledWith(
+      owner,
+      newProjectNumber.toString(),
+      {
+        description: 'Description for bar',
+        readme: expect.anything()
+      }
+    );
+  });
+
+  it('updates readme if template changes', async () => {
+    const newProjectId = 'project-id-2';
+    const newProjectNumber = parseInt(projectNumber) + 1;
+    mockCopyProject(newProjectId, newProjectNumber);
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      title,
+      'template-view': templateView
+    });
+
+    await index.copyProjectAction();
+    expect(copyProjectActionSpy).toHaveReturned();
+    expect(editProject).toHaveBeenCalledWith(
+      owner,
+      newProjectNumber.toString(),
+      {
+        description: expect.anything(),
+        readme: 'README for bar'
+      }
+    );
+  });
+
+  it('does not update readme or description if no template view', async () => {
+    const newProjectId = 'project-id-2';
+    const newProjectNumber = parseInt(projectNumber) + 1;
+    mockCopyProject(newProjectId, newProjectNumber);
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      title
+    });
+
+    await index.copyProjectAction();
+    expect(copyProjectActionSpy).toHaveReturned();
+    expect(editProject).not.toHaveBeenCalled();
   });
 
   it('does not get draft issues if no template view', async () => {

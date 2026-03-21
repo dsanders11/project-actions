@@ -10,7 +10,8 @@ import {
   getDraftIssues,
   getProject,
   linkProjectToRepository,
-  linkProjectToTeam
+  linkProjectToTeam,
+  type ProjectEdit
 } from './lib.js';
 
 // oxlint-disable-next-line typescript/no-require-imports, typescript/no-var-requires
@@ -30,13 +31,6 @@ export async function copyProjectAction(): Promise<void> {
     const linkToTeam = core.getInput('link-to-team');
     const templateViewString = core.getInput('template-view');
 
-    if (!!templateViewString && !drafts) {
-      core.setFailed(
-        'Can only use template-view input if drafts are being copied'
-      );
-      return;
-    }
-
     let templateView: Record<string, string> | null = null;
 
     if (templateViewString) {
@@ -51,13 +45,34 @@ export async function copyProjectAction(): Promise<void> {
       drafts
     );
 
+    const edit: ProjectEdit = {};
+
     // This is a special case because core.getBooleanInput
     // will always return false even if not set, but we
     // need to know if the input has been set at all
     if (core.getInput('public')) {
-      await editProject(project.owner.login, project.number.toString(), {
-        public: core.getBooleanInput('public')
-      });
+      edit.public = core.getBooleanInput('public');
+    }
+
+    // Do template interpolation on the project readme and description if a template view was provided
+    if (templateView) {
+      const newReadme = Mustache.render(project.readme, templateView);
+      const newDescription = Mustache.render(
+        project.shortDescription,
+        templateView
+      );
+
+      if (newReadme !== project.readme) {
+        edit.readme = newReadme;
+      }
+
+      if (newDescription !== project.shortDescription) {
+        edit.description = newDescription;
+      }
+    }
+
+    if (Object.keys(edit).length > 0) {
+      await editProject(project.owner.login, project.number.toString(), edit);
     }
 
     if (linkToRepository) {
