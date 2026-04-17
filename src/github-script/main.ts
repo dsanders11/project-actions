@@ -5,12 +5,10 @@
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { context } from '@actions/github';
+import { context, getOctokit } from '@actions/github';
 import { defaults as defaultGitHubOptions } from '@actions/github/lib/utils';
 import * as glob from '@actions/glob';
 import * as io from '@actions/io';
-import { Octokit } from '@octokit/core';
-import type { OctokitOptions, OctokitPlugin } from '@octokit/core/types';
 import { requestLog } from '@octokit/plugin-request-log';
 import { retry } from '@octokit/plugin-retry';
 import type { RequestRequestOptions } from '@octokit/types';
@@ -50,16 +48,6 @@ type Options = {
   retry?: RetryOptions;
   request?: RequestRequestOptions;
 };
-
-export function getOctokit(
-  token: string,
-  options?: OctokitOptions,
-  ...additionalPlugins: OctokitPlugin[]
-): Octokit {
-  const MyOctokit = Octokit.plugin(...additionalPlugins);
-
-  return new MyOctokit({ ...options, auth: token });
-}
 
 export async function main(): Promise<void> {
   const token = core.getInput('token', { required: true });

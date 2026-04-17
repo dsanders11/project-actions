@@ -653,3 +653,17 @@ jobs:
           owner: ${{ steps.copy-project.outputs.owner }}
           project-number: 99999
           token: ${{ steps.get-auth-token.outputs.token }}
+
+      - name: Test github-script
+        uses: ./github-script/
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            const { data: repo } = await github.rest.repos.get({
+              owner: 'dsanders11',
+              repo: 'project-actions',
+            });
+
+            assert.strictEqual(repo.full_name, 'dsanders11/project-actions');
+            assert.strictEqual(repo.private, false);
