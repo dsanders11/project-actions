@@ -15,6 +15,9 @@ jobs:
   integration-tests:
     name: Integration Test
     runs-on: ubuntu-latest
+    environment:
+      name: integration-tests
+      deployment: false
 
     strategy:
       fail-fast: false
