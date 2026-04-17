@@ -9,7 +9,8 @@ usage (`getItem`, `deleteProject`, etc). See that repository for more
 information about the action - the only major difference is the `github-token`
 input has been renamed to `token` for consistency.
 
-> [!WARNING] This action is largely untested and considered experimental. The
+> [!WARNING]
+> This action is largely untested and considered experimental. The
 > functions in `src/lib.ts` were not originally intended as a public API, are
 > not well-documented, and are subject to change outside of normal semver.
 
