@@ -15,5 +15,11 @@
   "htmlWhitespaceSensitivity": "css",
   "endOfLine": "lf",
   "sortPackageJson": false,
-  "ignorePatterns": ["dist/", "node_modules/", "coverage/", "**/*.yml"]
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "coverage/",
+    "github-script/README.md",
+    "**/*.yml"
+  ]
 }
