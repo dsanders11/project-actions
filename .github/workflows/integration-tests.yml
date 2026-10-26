@@ -669,3 +669,15 @@ jobs:
 
             assert.strictEqual(repo.full_name, 'dsanders11/project-actions');
             assert.strictEqual(repo.private, false);
+
+      # Make sure the copied project is deleted even if an earlier step
+      # failed or the job was cancelled, so nothing is left behind
+      - name: Delete Project (Cleanup)
+        uses: $/delete-project/
+        id: delete-project-cleanup
+        if: ${{ always() && steps.copy-project.outputs.number != '' && steps.delete-project.outcome != 'success' }}
+        with:
+          fail-if-project-not-found: false
+          owner: ${{ steps.copy-project.outputs.owner }}
+          project-number: ${{ steps.copy-project.outputs.number }}
+          token: ${{ steps.get-auth-token.outputs.token }}
