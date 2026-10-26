@@ -41,7 +41,7 @@ jobs:
           persist-credentials: false
 
       - name: Get Date
-        uses: ./github-script/
+        uses: $/github-script/
         id: get-date
         with:
           result-encoding: string
@@ -69,7 +69,7 @@ jobs:
           fi
 
       - name: Create Template View
-        uses: ./github-script/
+        uses: $/github-script/
         id: template-view
         with:
           script: |
@@ -79,7 +79,7 @@ jobs:
             }
 
       - name: Copy Project
-        uses: ./copy-project/
+        uses: $/copy-project/
         id: copy-project
         with:
           drafts: true
@@ -102,7 +102,7 @@ jobs:
           GH_TOKEN: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Draft Issue
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-draft-issue
         with:
           field: Priority
@@ -124,7 +124,7 @@ jobs:
       #     title: New Draft Issue Title
 
       - name: Edit Draft Issue Assignees
-        uses: ./edit-item/
+        uses: $/edit-item/
         id: edit-draft-issue-assignees
         with:
           assignees: dsanders11
@@ -134,7 +134,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Draft Issue (again)
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-draft-issue-again
         with:
           field: Priority
@@ -144,7 +144,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Draft Issue Assignees
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ASSIGNEES: ${{ steps.get-draft-issue-again.outputs.assignees }}
         with:
@@ -154,7 +154,7 @@ jobs:
             assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Run Completed By
-        uses: ./completed-by/
+        uses: $/completed-by/
         id: completed-by
         with:
           field-value: Done
@@ -163,7 +163,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Draft Issue Is Completed
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ITEM_ID: ${{ steps.get-draft-issue-id.outputs.id }}
           OWNER: ${{ steps.copy-project.outputs.owner }}
@@ -183,7 +183,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Add Item
-        uses: ./add-item/
+        uses: $/add-item/
         id: add-item
         with:
           content-url: https://github.com/dsanders11/project-actions/pull/2
@@ -199,7 +199,7 @@ jobs:
         run: sleep 5
 
       - name: Get Added Item
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-added-item
         with:
           field: Added
@@ -209,7 +209,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Added Item
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           DATE_STRING: ${{ steps.get-date.outputs.result }}
           FIELD_VALUE: ${{ steps.get-added-item.outputs.field-value }}
@@ -220,7 +220,7 @@ jobs:
             assert.strictEqual(process.env.FIELD_VALUE, new Date(process.env.DATE_STRING).toISOString().split('T')[0]);
 
       - name: Edit Item Assignees
-        uses: ./edit-item/
+        uses: $/edit-item/
         id: edit-item-assignees
         if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
         with:
@@ -231,7 +231,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Item After Assignee Edit
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-item-after-assignee-edit
         if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
         with:
@@ -241,7 +241,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Assignees After Edit
-        uses: ./github-script/
+        uses: $/github-script/
         if: ${{ matrix.owner == 'dsanders11-playground-org' && matrix.auth != 'GHA' }}
         env:
           ASSIGNEES: ${{ steps.get-item-after-assignee-edit.outputs.assignees }}
@@ -252,7 +252,7 @@ jobs:
             assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
 
       - name: Edit Item
-        uses: ./edit-item/
+        uses: $/edit-item/
         id: edit-item
         with:
           field: Priority
@@ -263,7 +263,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Edit Item (Not Found)
-        uses: ./edit-item/
+        uses: $/edit-item/
         id: edit-item-not-found
         with:
           fail-if-item-not-found: false
@@ -275,7 +275,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Item
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-edited-item
         with:
           field: Priority
@@ -285,7 +285,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Item (Not Found)
-        uses: ./get-item/
+        uses: $/get-item/
         id: get-item-not-found
         with:
           fail-if-item-not-found: false
@@ -296,7 +296,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Edited Item Field Value
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           FIELD_VALUE: ${{ steps.get-edited-item.outputs.field-value }}
         with:
@@ -306,7 +306,7 @@ jobs:
             assert.strictEqual(process.env.FIELD_VALUE, '⛰️ High');
 
       - name: Test GitHub Script Action
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ITEM_ID: ${{ steps.edit-item.outputs.id }}
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
@@ -329,7 +329,7 @@ jobs:
             assert.strictEqual(items.length, 2, 'Expected 2 items');
 
       - name: Test GitHub Script Action (Assignees)
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ITEM_ID: ${{ steps.get-draft-issue.outputs.id }}
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
@@ -379,7 +379,7 @@ jobs:
       #     token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Delete Item
-        uses: ./delete-item/
+        uses: $/delete-item/
         id: delete-item
         with:
           item: ${{ steps.edit-item.outputs.id }}
@@ -388,7 +388,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Delete Item (Not Found)
-        uses: ./delete-item/
+        uses: $/delete-item/
         id: delete-item-not-found
         with:
           item: foobar
@@ -398,7 +398,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Link Project to Repository
-        uses: ./link-project/
+        uses: $/link-project/
         id: link-project-to-repo
         if: ${{ matrix.owner == 'dsanders11' }}
         with:
@@ -408,7 +408,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Project is Linked to Repository
-        uses: ./github-script/
+        uses: $/github-script/
         if: ${{ matrix.owner == 'dsanders11' }}
         env:
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
@@ -440,7 +440,7 @@ jobs:
             assert.strictEqual(projectV2.repositories.nodes[0].id, process.env.REPOSITORY_ID, `Output 'repository-id' is not as expected`);
 
       - name: Link Project to Team
-        uses: ./link-project/
+        uses: $/link-project/
         id: link-project-to-team
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         with:
@@ -454,7 +454,7 @@ jobs:
         run: sleep 5
 
       - name: Check Project is Linked to Team
-        uses: ./github-script/
+        uses: $/github-script/
         if: ${{ matrix.owner == 'dsanders11-playground-org' }}
         env:
           PROJECT_ID: ${{ steps.copy-project.outputs.id }}
@@ -486,7 +486,7 @@ jobs:
             assert.strictEqual(projectV2.teams.nodes[0].id, process.env.TEAM_ID, `Output 'team-id' is not as expected`);
 
       - name: Edit Project
-        uses: ./edit-project/
+        uses: $/edit-project/
         id: edit-project
         with:
           description: New Description
@@ -497,7 +497,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Find Project
-        uses: ./find-project/
+        uses: $/find-project/
         id: find-project
         with:
           owner: ${{ matrix.owner }}
@@ -505,7 +505,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Find Project (Not Found)
-        uses: ./find-project/
+        uses: $/find-project/
         id: find-project-not-found
         with:
           fail-if-project-not-found: false
@@ -514,7 +514,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
           
       - name: Confirm Project Found
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ACTUAL_PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
           EXPECTED_PROJECT_NUMBER: ${{ steps.find-project.outputs.number }}
@@ -526,7 +526,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Get Project
-        uses: ./get-project/
+        uses: $/get-project/
         id: get-project
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -534,7 +534,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Project Values
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           DESCRIPTION: ${{ steps.get-project.outputs.description }}
           PROJECT_NUMBER: ${{ steps.copy-project.outputs.number }}
@@ -549,7 +549,7 @@ jobs:
             assert.strictEqual(process.env.README, 'This is the readme');
 
       - name: Find Workflow
-        uses: ./find-workflow/
+        uses: $/find-workflow/
         id: find-workflow
         with:
           owner: ${{ matrix.owner }}
@@ -558,7 +558,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Workflow Values
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ACTUAL_PROJECT_ID: ${{ steps.find-workflow.outputs.project-id }}
           EXPECTED_PROJECT_ID: ${{ steps.get-project.outputs.id }}
@@ -573,7 +573,7 @@ jobs:
             assert.strictEqual(process.env.ACTUAL_PROJECT_ID, process.env.EXPECTED_PROJECT_ID);
 
       - name: Get Workflow
-        uses: ./get-workflow/
+        uses: $/get-workflow/
         id: get-workflow
         with:
           owner: ${{ matrix.owner }}
@@ -582,7 +582,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Check Workflow Values
-        uses: ./github-script/
+        uses: $/github-script/
         env:
           ACTUAL_PROJECT_ID: ${{ steps.get-workflow.outputs.project-id }}
           ACTUAL_WORKFLOW_ID: ${{ steps.get-workflow.outputs.id }}
@@ -603,7 +603,7 @@ jobs:
             assert.strictEqual(process.env.ACTUAL_PROJECT_ID, process.env.EXPECTED_PROJECT_ID);
 
       - name: Close Project
-        uses: ./close-project/
+        uses: $/close-project/
         id: close-project
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -611,7 +611,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Close Project (Not Found)
-        uses: ./close-project/
+        uses: $/close-project/
         id: close-project-not-found
         with:
           fail-if-project-not-found: false
@@ -620,7 +620,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Find Closed Project
-        uses: ./find-project/
+        uses: $/find-project/
         id: find-closed-project
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -629,7 +629,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Reopen Project
-        uses: ./close-project/
+        uses: $/close-project/
         id: reopen-project
         with:
           closed: false
@@ -638,7 +638,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Delete Project
-        uses: ./delete-project/
+        uses: $/delete-project/
         id: delete-project
         with:
           owner: ${{ steps.copy-project.outputs.owner }}
@@ -646,7 +646,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Delete Project (Not Found)
-        uses: ./delete-project/
+        uses: $/delete-project/
         id: delete-project-not-found
         with:
           fail-if-project-not-found: false
@@ -655,7 +655,7 @@ jobs:
           token: ${{ steps.get-auth-token.outputs.token }}
 
       - name: Test github-script
-        uses: ./github-script/
+        uses: $/github-script/
         with:
           script: |
             const assert = require('node:assert');

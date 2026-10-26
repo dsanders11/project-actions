@@ -52,7 +52,7 @@ jobs:
   integration-tests:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: test-typescript
-    uses: ./.github/workflows/integration-tests.yml
+    uses: $/.github/workflows/integration-tests.yml
     permissions:
       contents: read
     secrets:
