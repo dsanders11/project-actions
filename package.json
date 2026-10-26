@@ -64,7 +64,7 @@
     "@vitest/coverage-v8": "^4.1.0",
     "husky": "^9.1.7",
     "npm-run-all2": "^8.0.4",
-    "oxfmt": "^0.41.0",
+    "oxfmt": "^0.74.0",
     "oxlint": "^1.56.0",
     "oxlint-tsgolint": "^0.17.1",
     "rolldown": "^1.0.0-rc.10",
