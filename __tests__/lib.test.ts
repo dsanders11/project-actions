@@ -416,20 +416,6 @@ describe('lib', () => {
       ).rejects.toThrow(lib.ProjectNotFoundError);
     });
 
-    it('can copy draft issues', async () => {
-      vi.mocked(execCliCommand).mockResolvedValue(
-        JSON.stringify({ id: projectId })
-      );
-      await expect(
-        lib.copyProject(owner, projectNumber, owner, 'new title', true)
-      ).resolves.toEqual({
-        id: projectId
-      });
-      expect(execCliCommand).toHaveBeenCalledWith(
-        expect.arrayContaining(['--drafts'])
-      );
-    });
-
     it('returns project details', async () => {
       vi.mocked(execCliCommand).mockResolvedValue(
         JSON.stringify({ id: projectId })
@@ -438,6 +424,599 @@ describe('lib', () => {
         lib.copyProject(owner, projectNumber, owner, 'new title')
       ).resolves.toEqual({
         id: projectId
+      });
+      expect(execCliCommand).toHaveBeenCalledWith([
+        'project',
+        'copy',
+        projectNumber,
+        '--source-owner',
+        owner,
+        '--target-owner',
+        owner,
+        '--title',
+        'new title',
+        '--format',
+        'json'
+      ]);
+      expect(getOctokit).not.toHaveBeenCalled();
+    });
+
+    describe('with drafts', () => {
+      const sourceProjectId = 'source-project-id';
+      const draftIssues: lib.DraftIssueItem[] = [
+        {
+          id: 'source-item-one',
+          type: 'DRAFT_ISSUE',
+          content: {
+            id: 'source-draft-one',
+            title: 'Title {{ foo }}',
+            body: 'Body {{ foo }}',
+            assignees: { nodes: [{ id: 'user-id', login: 'alice' }] }
+          }
+        },
+        {
+          id: 'source-item-two',
+          type: 'DRAFT_ISSUE',
+          content: {
+            id: 'source-draft-two',
+            title: 'Second title',
+            body: '',
+            assignees: { nodes: [] }
+          }
+        }
+      ];
+
+      function mockDraftCopy(
+        items: lib.ProjectItem[] = draftIssues,
+        fieldValuePages: unknown[][] = [[]]
+      ): MockOctokitType {
+        vi.mocked(execCliCommand)
+          .mockResolvedValueOnce(
+            JSON.stringify({ id: projectId, items: { totalCount: 0 } })
+          )
+          .mockResolvedValueOnce(JSON.stringify({ id: sourceProjectId }));
+        const octokit = mockGetOctokit();
+        vi.mocked(octokit.graphql).mockResolvedValue({
+          addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+        });
+        octokit.graphql.paginate.iterator.mockImplementation(
+          (_query, variables) => ({
+            async *[Symbol.asyncIterator]() {
+              if (variables.sourceItemId) {
+                for (const [index, nodes] of fieldValuePages.entries()) {
+                  yield {
+                    projectItem: {
+                      fieldValues: {
+                        nodes,
+                        pageInfo: {
+                          endCursor: `cursor-${index}`,
+                          hasNextPage: index < fieldValuePages.length - 1
+                        }
+                      }
+                    }
+                  };
+                }
+              } else {
+                yield {
+                  projectV2: {
+                    items: {
+                      nodes: items,
+                      pageInfo: { endCursor: null, hasNextPage: false }
+                    }
+                  }
+                };
+              }
+            }
+          })
+        );
+        return octokit;
+      }
+
+      it('copies drafts one by one without the --drafts flag', async () => {
+        const octokit = mockDraftCopy([
+          { id: 'redacted-item', type: 'REDACTED', content: null },
+          ...draftIssues
+        ]);
+        await expect(
+          lib.copyProject(
+            owner,
+            projectNumber,
+            'target-owner',
+            'new title',
+            true
+          )
+        ).resolves.toEqual({ id: projectId, items: { totalCount: 2 } });
+
+        expect(execCliCommand).toHaveBeenNthCalledWith(1, [
+          'project',
+          'copy',
+          projectNumber,
+          '--source-owner',
+          owner,
+          '--target-owner',
+          'target-owner',
+          '--title',
+          'new title',
+          '--format',
+          'json'
+        ]);
+        expect(execCliCommand).toHaveBeenNthCalledWith(2, [
+          'project',
+          'view',
+          projectNumber,
+          '--owner',
+          owner,
+          '--format',
+          'json'
+        ]);
+        expect(octokit.graphql.paginate.iterator).toHaveBeenCalledWith(
+          expect.any(String),
+          { projectId: sourceProjectId }
+        );
+        expect(octokit.graphql).toHaveBeenCalledTimes(2);
+        for (const [index, { content }] of draftIssues.entries()) {
+          expect(octokit.graphql).toHaveBeenNthCalledWith(
+            index + 1,
+            expect.stringContaining('addProjectV2DraftIssue'),
+            {
+              projectId,
+              title: content.title,
+              body: content.body,
+              assigneeIds: content.assignees.nodes.map(({ id }) => id)
+            }
+          );
+        }
+      });
+
+      it('awaits each creation before starting the next draft or returning', async () => {
+        const octokit = mockDraftCopy();
+        let finishFirst!: () => void;
+        const creationResponse = {
+          addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+        };
+        const firstCreation = new Promise<typeof creationResponse>(resolve => {
+          finishFirst = () => resolve(creationResponse);
+        });
+        let finishSecond!: () => void;
+        const secondCreation = new Promise<typeof creationResponse>(resolve => {
+          finishSecond = () => resolve(creationResponse);
+        });
+        vi.mocked(octokit.graphql)
+          .mockImplementationOnce(async () => firstCreation)
+          .mockImplementationOnce(async () => secondCreation);
+
+        let copied = false;
+        const copy = lib
+          .copyProject(owner, projectNumber, owner, 'new title', true)
+          .then(() => {
+            copied = true;
+          });
+        await vi.waitFor(() =>
+          expect(octokit.graphql).toHaveBeenCalledTimes(1)
+        );
+        expect(copied).toBe(false);
+        finishFirst();
+        await vi.waitFor(() =>
+          expect(octokit.graphql).toHaveBeenCalledTimes(2)
+        );
+        expect(copied).toBe(false);
+        finishSecond();
+        await copy;
+        expect(copied).toBe(true);
+      });
+
+      it('handles projects with no drafts', async () => {
+        const octokit = mockDraftCopy([]);
+        await expect(
+          lib.copyProject(owner, projectNumber, owner, 'new title', true)
+        ).resolves.toEqual({ id: projectId, items: { totalCount: 0 } });
+        expect(octokit.graphql).not.toHaveBeenCalled();
+      });
+
+      it('propagates creation failures instead of reporting success', async () => {
+        const octokit = mockDraftCopy();
+        const error = new Error('Draft creation failed');
+        vi.mocked(octokit.graphql).mockRejectedValueOnce(error);
+        await expect(
+          lib.copyProject(owner, projectNumber, owner, 'new title', true)
+        ).rejects.toBe(error);
+        expect(octokit.graphql).toHaveBeenCalledTimes(1);
+      });
+
+      const fieldCases = [
+        {
+          type: 'TEXT',
+          source: { __typename: 'ProjectV2ItemFieldTextValue', text: '' },
+          destination: {},
+          value: { text: '' }
+        },
+        {
+          type: 'NUMBER',
+          source: { __typename: 'ProjectV2ItemFieldNumberValue', number: 0 },
+          destination: {},
+          value: { number: 0 }
+        },
+        {
+          type: 'DATE',
+          source: {
+            __typename: 'ProjectV2ItemFieldDateValue',
+            date: '2026-10-26'
+          },
+          destination: {},
+          value: { date: '2026-10-26' }
+        },
+        {
+          type: 'SINGLE_SELECT',
+          source: {
+            __typename: 'ProjectV2ItemFieldSingleSelectValue',
+            name: 'In progress'
+          },
+          destination: {
+            options: [{ id: 'copied-option-id', name: 'In progress' }]
+          },
+          value: { singleSelectOptionId: 'copied-option-id' }
+        },
+        {
+          type: 'MULTI_SELECT',
+          source: {
+            __typename: 'ProjectV2ItemFieldMultiSelectValue',
+            options: [{ name: 'One' }, { name: 'Two' }]
+          },
+          destination: {
+            multiSelectOptions: [
+              { id: 'copied-option-two', name: 'Two' },
+              { id: 'copied-option-one', name: 'One' }
+            ]
+          },
+          value: {
+            multiSelectOptionIds: ['copied-option-one', 'copied-option-two']
+          }
+        },
+        ...['iterations', 'completedIterations'].map(iterationState => ({
+          type: `ITERATION (${iterationState})`,
+          source: {
+            __typename: 'ProjectV2ItemFieldIterationValue',
+            title: 'Sprint',
+            startDate: '2026-10-26',
+            duration: 14
+          },
+          destination: {
+            configuration: {
+              iterations: [],
+              completedIterations: [],
+              [iterationState]: [
+                {
+                  id: 'wrong-iteration-id',
+                  title: 'Sprint',
+                  startDate: '2026-10-12',
+                  duration: 14
+                },
+                {
+                  id: 'copied-iteration-id',
+                  title: 'Sprint',
+                  startDate: '2026-10-26',
+                  duration: 14
+                }
+              ]
+            }
+          },
+          value: { iterationId: 'copied-iteration-id' }
+        }))
+      ];
+
+      it.each(fieldCases)(
+        'copies $type fields using destination IDs',
+        async ({ type, source, destination, value }) => {
+          const dataType = type.split(' ')[0];
+          const octokit = mockDraftCopy(
+            [draftIssues[0]],
+            [
+              [
+                {
+                  ...source,
+                  field: { name: 'Custom field', dataType }
+                }
+              ]
+            ]
+          );
+          vi.mocked(octokit.graphql)
+            .mockResolvedValueOnce({
+              addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+            })
+            .mockResolvedValueOnce({
+              project: {
+                field: {
+                  id: 'copied-field-id',
+                  dataType,
+                  ...destination
+                }
+              }
+            })
+            .mockResolvedValueOnce({
+              updateProjectV2ItemFieldValue: {
+                projectV2Item: { id: 'new-item-id' }
+              }
+            });
+
+          await expect(
+            lib.copyProject(owner, projectNumber, owner, 'new title', true)
+          ).resolves.toEqual({ id: projectId, items: { totalCount: 1 } });
+
+          expect(octokit.graphql.paginate.iterator).toHaveBeenCalledWith(
+            expect.stringContaining('fieldValues(first: 100, after: $cursor)'),
+            { sourceItemId: draftIssues[0].id }
+          );
+          expect(octokit.graphql).toHaveBeenNthCalledWith(
+            2,
+            expect.stringContaining('field(name: $name)'),
+            { projectId, name: 'Custom field' }
+          );
+          expect(octokit.graphql).toHaveBeenNthCalledWith(
+            3,
+            expect.stringContaining('updateProjectV2ItemFieldValue'),
+            {
+              projectId,
+              itemId: 'new-item-id',
+              fieldId: 'copied-field-id',
+              value
+            }
+          );
+        }
+      );
+
+      it('copies every page of field values and skips content-backed fields', async () => {
+        const octokit = mockDraftCopy(
+          [draftIssues[0]],
+          [
+            [
+              { __typename: 'ProjectV2ItemFieldUserValue' },
+              {
+                __typename: 'ProjectV2ItemFieldTextValue',
+                field: { name: 'Title', dataType: 'TITLE' },
+                text: 'Original draft title'
+              },
+              {
+                __typename: 'ProjectV2ItemFieldTextValue',
+                field: { name: 'Notes', dataType: 'TEXT' },
+                text: 'Keep {{ foo }} unchanged until interpolation'
+              }
+            ],
+            [
+              {
+                __typename: 'ProjectV2ItemFieldNumberValue',
+                field: { name: 'Estimate', dataType: 'NUMBER' },
+                number: 2.5
+              }
+            ]
+          ]
+        );
+        vi.mocked(octokit.graphql)
+          .mockResolvedValueOnce({
+            addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+          })
+          .mockResolvedValueOnce({
+            project: { field: { id: 'notes-id', dataType: 'TEXT' } }
+          })
+          .mockResolvedValueOnce({})
+          .mockResolvedValueOnce({
+            project: { field: { id: 'estimate-id', dataType: 'NUMBER' } }
+          })
+          .mockResolvedValueOnce({});
+
+        await lib.copyProject(owner, projectNumber, owner, 'new title', true);
+
+        expect(octokit.graphql).toHaveBeenCalledTimes(5);
+        expect(octokit.graphql).toHaveBeenNthCalledWith(
+          3,
+          expect.stringContaining('updateProjectV2ItemFieldValue'),
+          {
+            projectId,
+            itemId: 'new-item-id',
+            fieldId: 'notes-id',
+            value: { text: 'Keep {{ foo }} unchanged until interpolation' }
+          }
+        );
+        expect(octokit.graphql).toHaveBeenNthCalledWith(
+          5,
+          expect.stringContaining('updateProjectV2ItemFieldValue'),
+          {
+            projectId,
+            itemId: 'new-item-id',
+            fieldId: 'estimate-id',
+            value: { number: 2.5 }
+          }
+        );
+      });
+
+      it('waits for field copying before returning for interpolation', async () => {
+        const octokit = mockDraftCopy(
+          [draftIssues[0]],
+          [
+            [
+              {
+                __typename: 'ProjectV2ItemFieldTextValue',
+                field: { name: 'Notes', dataType: 'TEXT' },
+                text: 'Original notes'
+              }
+            ]
+          ]
+        );
+        let finishUpdate!: () => void;
+        const updating = new Promise<void>(resolve => {
+          finishUpdate = resolve;
+        });
+        vi.mocked(octokit.graphql)
+          .mockResolvedValueOnce({
+            addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+          })
+          .mockResolvedValueOnce({
+            project: { field: { id: 'notes-id', dataType: 'TEXT' } }
+          })
+          .mockImplementationOnce(async () => updating);
+        let copied = false;
+        const copy = lib
+          .copyProject(owner, projectNumber, owner, 'new title', true)
+          .then(() => {
+            copied = true;
+          });
+
+        await vi.waitFor(() =>
+          expect(octokit.graphql).toHaveBeenCalledTimes(3)
+        );
+        expect(copied).toBe(false);
+        finishUpdate();
+        await copy;
+        expect(copied).toBe(true);
+      });
+
+      it.each([
+        {
+          text: null,
+          __typename: 'ProjectV2ItemFieldTextValue',
+          dataType: 'TEXT'
+        },
+        {
+          number: null,
+          __typename: 'ProjectV2ItemFieldNumberValue',
+          dataType: 'NUMBER'
+        },
+        {
+          date: null,
+          __typename: 'ProjectV2ItemFieldDateValue',
+          dataType: 'DATE'
+        },
+        {
+          name: null,
+          __typename: 'ProjectV2ItemFieldSingleSelectValue',
+          dataType: 'SINGLE_SELECT'
+        },
+        {
+          options: null,
+          __typename: 'ProjectV2ItemFieldMultiSelectValue',
+          dataType: 'MULTI_SELECT'
+        }
+      ])('does not write a null $dataType value', async source => {
+        const octokit = mockDraftCopy(
+          [draftIssues[0]],
+          [
+            [
+              {
+                ...source,
+                field: { name: 'Empty field', dataType: source.dataType }
+              }
+            ]
+          ]
+        );
+        vi.mocked(octokit.graphql)
+          .mockResolvedValueOnce({
+            addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+          })
+          .mockResolvedValueOnce({
+            project: {
+              field: { id: 'empty-field-id', dataType: source.dataType }
+            }
+          });
+        await lib.copyProject(owner, projectNumber, owner, 'new title', true);
+        expect(octokit.graphql).toHaveBeenCalledTimes(2);
+      });
+
+      it.each([
+        {
+          source: { __typename: 'ProjectV2ItemFieldTextValue', text: 'Notes' },
+          destination: null,
+          error: 'Field not found'
+        },
+        {
+          source: { __typename: 'ProjectV2ItemFieldTextValue', text: 'Notes' },
+          destination: { id: 'wrong-type-id', dataType: 'NUMBER' },
+          error: 'Field type mismatch'
+        },
+        {
+          source: {
+            __typename: 'ProjectV2ItemFieldSingleSelectValue',
+            name: 'Missing'
+          },
+          destination: { id: 'field-id', dataType: 'TEXT', options: [] },
+          error: 'Option not found'
+        },
+        {
+          source: {
+            __typename: 'ProjectV2ItemFieldMultiSelectValue',
+            options: [{ name: 'Missing' }]
+          },
+          destination: {
+            id: 'field-id',
+            dataType: 'TEXT',
+            multiSelectOptions: []
+          },
+          error: 'Option "Missing" not found'
+        },
+        {
+          source: {
+            __typename: 'ProjectV2ItemFieldIterationValue',
+            title: 'Missing',
+            startDate: '2026-10-26',
+            duration: 14
+          },
+          destination: {
+            id: 'field-id',
+            dataType: 'TEXT',
+            configuration: { iterations: [], completedIterations: [] }
+          },
+          error: 'Iteration "Missing" not found'
+        }
+      ])(
+        'fails explicitly when mapping fails: $error',
+        async ({ source, destination, error }) => {
+          const octokit = mockDraftCopy(
+            [draftIssues[0]],
+            [
+              [
+                {
+                  ...source,
+                  field: { name: 'Custom field', dataType: 'TEXT' }
+                }
+              ]
+            ]
+          );
+          vi.mocked(octokit.graphql)
+            .mockResolvedValueOnce({
+              addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+            })
+            .mockResolvedValueOnce({ project: { field: destination } });
+
+          await expect(
+            lib.copyProject(owner, projectNumber, owner, 'new title', true)
+          ).rejects.toThrow(error);
+          expect(octokit.graphql).toHaveBeenCalledTimes(2);
+        }
+      );
+
+      it('propagates field update failures', async () => {
+        const octokit = mockDraftCopy(
+          [draftIssues[0]],
+          [
+            [
+              {
+                __typename: 'ProjectV2ItemFieldTextValue',
+                field: { name: 'Notes', dataType: 'TEXT' },
+                text: 'Original notes'
+              }
+            ]
+          ]
+        );
+        const error = new Error('Field update failed');
+        vi.mocked(octokit.graphql)
+          .mockResolvedValueOnce({
+            addProjectV2DraftIssue: { projectItem: { id: 'new-item-id' } }
+          })
+          .mockResolvedValueOnce({
+            project: { field: { id: 'notes-id', dataType: 'TEXT' } }
+          })
+          .mockRejectedValueOnce(error);
+        await expect(
+          lib.copyProject(owner, projectNumber, owner, 'new title', true)
+        ).rejects.toBe(error);
       });
     });
   });

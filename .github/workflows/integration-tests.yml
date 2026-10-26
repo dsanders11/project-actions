@@ -143,15 +143,17 @@ jobs:
           project-number: ${{ steps.copy-project.outputs.number }}
           token: ${{ steps.get-auth-token.outputs.token }}
 
-      - name: Check Draft Issue Assignees
+      - name: Check Draft Issue Values
         uses: $/github-script/
         env:
           ASSIGNEES: ${{ steps.get-draft-issue-again.outputs.assignees }}
+          PRIORITY: ${{ steps.get-draft-issue.outputs.field-value }}
         with:
           script: |
             const assert = require('node:assert');
 
             assert.strictEqual(process.env.ASSIGNEES, 'dsanders11');
+            assert.strictEqual(process.env.PRIORITY, 'Low');
 
       - name: Run Completed By
         uses: $/completed-by/

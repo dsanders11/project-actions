@@ -222,6 +222,76 @@ export type DraftIssueItem = {
   type: 'DRAFT_ISSUE';
 };
 
+type CopyableItemFieldValue = {
+  field: { name: string; dataType: string };
+} & (
+  | { __typename: 'ProjectV2ItemFieldTextValue'; text: string | null }
+  | { __typename: 'ProjectV2ItemFieldNumberValue'; number: number | null }
+  | { __typename: 'ProjectV2ItemFieldDateValue'; date: string | null }
+  | { __typename: 'ProjectV2ItemFieldSingleSelectValue'; name: string | null }
+  | {
+      __typename: 'ProjectV2ItemFieldMultiSelectValue';
+      options: { name: string }[] | null;
+    }
+  | {
+      __typename: 'ProjectV2ItemFieldIterationValue';
+      title: string;
+      startDate: string;
+      duration: number;
+    }
+);
+
+type ItemFieldValuesResponse = {
+  projectItem: {
+    fieldValues: {
+      nodes: (
+        | CopyableItemFieldValue
+        | {
+            __typename:
+              | 'ProjectV2ItemFieldUserValue'
+              | 'ProjectV2ItemFieldLabelValue'
+              | 'ProjectV2ItemFieldMilestoneValue'
+              | 'ProjectV2ItemFieldPullRequestValue'
+              | 'ProjectV2ItemFieldRepositoryValue'
+              | 'ProjectV2ItemFieldReviewerValue'
+              | 'ProjectV2ItemIssueFieldValue';
+          }
+      )[];
+      pageInfo: PageInfoForward;
+    };
+  };
+};
+
+type CopyFieldResponse = {
+  project: {
+    field: {
+      id: string;
+      dataType: string;
+      options?: { id: string; name: string }[];
+      multiSelectOptions?: { id: string; name: string }[];
+      configuration?: {
+        iterations: CopyIteration[];
+        completedIterations: CopyIteration[];
+      };
+    } | null;
+  };
+};
+
+type CopyIteration = {
+  id: string;
+  title: string;
+  startDate: string;
+  duration: number;
+};
+
+type CopyFieldInput =
+  | { text: string }
+  | { number: number }
+  | { date: string }
+  | { singleSelectOptionId: string }
+  | { multiSelectOptionIds: string[] }
+  | { iterationId: string };
+
 export type FieldTypeResponse = {
   projectV2Item: {
     project?: {
@@ -631,6 +701,164 @@ export async function closeProject(
   return JSON.parse(details);
 }
 
+async function copyDraftIssueFieldValues(
+  projectId: string,
+  sourceItemId: string,
+  itemId: string
+): Promise<void> {
+  const octokit = getOctokit();
+  const pages = octokit.graphql.paginate.iterator<ItemFieldValuesResponse>(
+    `query paginate($cursor: String, $sourceItemId: ID!) {
+      projectItem: node(id: $sourceItemId) {
+        ... on ProjectV2Item {
+          fieldValues(first: 100, after: $cursor) {
+            nodes {
+              __typename
+              ... on ProjectV2ItemFieldValueCommon {
+                field {
+                  ... on ProjectV2FieldCommon { name dataType }
+                }
+              }
+              ... on ProjectV2ItemFieldTextValue { text }
+              ... on ProjectV2ItemFieldNumberValue { number }
+              ... on ProjectV2ItemFieldDateValue { date }
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+              ... on ProjectV2ItemFieldMultiSelectValue { options { name } }
+              ... on ProjectV2ItemFieldIterationValue { title startDate duration }
+            }
+            pageInfo { hasNextPage endCursor }
+          }
+        }
+      }
+    }`,
+    { sourceItemId }
+  );
+
+  for await (const { projectItem } of pages) {
+    for (const sourceValue of projectItem.fieldValues.nodes) {
+      // Built-in fields such as assignees are copied with the draft content.
+      if (!('field' in sourceValue)) continue;
+      if (
+        ![
+          'TEXT',
+          'NUMBER',
+          'DATE',
+          'SINGLE_SELECT',
+          'MULTI_SELECT',
+          'ITERATION'
+        ].includes(sourceValue.field.dataType)
+      ) {
+        continue;
+      }
+
+      const { project } = await octokit.graphql<CopyFieldResponse>(
+        `query ($projectId: ID!, $name: String!) {
+          project: node(id: $projectId) {
+            ... on ProjectV2 {
+              field(name: $name) {
+                ... on ProjectV2FieldCommon { id dataType }
+                ... on ProjectV2SingleSelectField { options { id name } }
+                ... on ProjectV2MultiSelectField { multiSelectOptions { id name } }
+                ... on ProjectV2IterationField {
+                  configuration {
+                    iterations { id title startDate duration }
+                    completedIterations { id title startDate duration }
+                  }
+                }
+              }
+            }
+          }
+        }`,
+        { projectId, name: sourceValue.field.name }
+      );
+      const { field } = project;
+      if (!field) throw new FieldNotFoundError();
+      if (field.dataType !== sourceValue.field.dataType) {
+        throw new Error(
+          `Field type mismatch while copying field "${sourceValue.field.name}"`
+        );
+      }
+
+      let value: CopyFieldInput;
+      switch (sourceValue.__typename) {
+        case 'ProjectV2ItemFieldTextValue':
+          if (sourceValue.text === null) continue;
+          value = { text: sourceValue.text };
+          break;
+        case 'ProjectV2ItemFieldNumberValue':
+          if (sourceValue.number === null) continue;
+          value = { number: sourceValue.number };
+          break;
+        case 'ProjectV2ItemFieldDateValue':
+          if (sourceValue.date === null) continue;
+          value = { date: sourceValue.date };
+          break;
+        case 'ProjectV2ItemFieldSingleSelectValue': {
+          if (sourceValue.name === null) continue;
+          const option = field.options?.find(
+            option => option.name === sourceValue.name
+          );
+          if (!option) throw new SingleSelectOptionNotFoundError();
+          value = { singleSelectOptionId: option.id };
+          break;
+        }
+        case 'ProjectV2ItemFieldMultiSelectValue': {
+          if (sourceValue.options === null) continue;
+          value = {
+            multiSelectOptionIds: sourceValue.options.map(sourceOption => {
+              const option = field.multiSelectOptions?.find(
+                option => option.name === sourceOption.name
+              );
+              if (!option) {
+                throw new Error(
+                  `Option "${sourceOption.name}" not found while copying field "${sourceValue.field.name}"`
+                );
+              }
+              return option.id;
+            })
+          };
+          break;
+        }
+        case 'ProjectV2ItemFieldIterationValue': {
+          const iterations = field.configuration
+            ? [
+                ...field.configuration.iterations,
+                ...field.configuration.completedIterations
+              ]
+            : [];
+          const iteration = iterations.find(
+            iteration =>
+              iteration.title === sourceValue.title &&
+              iteration.startDate === sourceValue.startDate &&
+              iteration.duration === sourceValue.duration
+          );
+          if (!iteration) {
+            throw new Error(
+              `Iteration "${sourceValue.title}" not found while copying field "${sourceValue.field.name}"`
+            );
+          }
+          value = { iterationId: iteration.id };
+          break;
+        }
+      }
+
+      await octokit.graphql(
+        `mutation ($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
+          updateProjectV2ItemFieldValue(input: {
+            projectId: $projectId,
+            itemId: $itemId,
+            fieldId: $fieldId,
+            value: $value
+          }) {
+            projectV2Item { id }
+          }
+        }`,
+        { projectId, itemId, fieldId: field.id, value }
+      );
+    }
+  }
+}
+
 /**
  * @throws ProjectNotFoundError
  */
@@ -657,13 +885,53 @@ export async function copyProject(
       '--format',
       'json'
     ];
-    if (drafts) args.push('--drafts');
     details = await execCliCommand(args);
   } catch (error) {
     handleCliError(error);
   }
 
-  return JSON.parse(details);
+  const project: ProjectDetails = JSON.parse(details);
+
+  if (drafts) {
+    const sourceProject = await getProject(owner, projectNumber);
+    const draftIssues = await getDraftIssues(sourceProject.id);
+    const octokit = getOctokit();
+
+    for (const { id: sourceItemId, content } of draftIssues) {
+      const { addProjectV2DraftIssue } = await octokit.graphql<{
+        addProjectV2DraftIssue: { projectItem: { id: string } };
+      }>(
+        `mutation ($projectId: ID!, $title: String!, $body: String!, $assigneeIds: [ID!]) {
+          addProjectV2DraftIssue(input: {
+            projectId: $projectId,
+            title: $title,
+            body: $body,
+            assigneeIds: $assigneeIds
+          }) {
+            projectItem {
+              id
+            }
+          }
+        }`,
+        {
+          projectId: project.id,
+          title: content.title,
+          body: content.body,
+          assigneeIds: content.assignees.nodes.map(({ id }) => id)
+        }
+      );
+      await copyDraftIssueFieldValues(
+        project.id,
+        sourceItemId,
+        addProjectV2DraftIssue.projectItem.id
+      );
+      // Manually increment the total item count
+      // now that we've adding a new draft issue
+      project.items.totalCount++;
+    }
+  }
+
+  return project;
 }
 
 /**
