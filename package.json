@@ -47,28 +47,29 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
-    "@actions/glob": "^0.6.1",
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@actions/glob": "^0.7.0",
     "@actions/tool-cache": "^4.0.0",
-    "@octokit/core": "^7.0.6",
+    "@octokit/core": "^7.0.8",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@octokit/plugin-request-log": "^6.0.0",
-    "@octokit/plugin-retry": "^8.1.0",
+    "@octokit/plugin-retry": "^8.1.1",
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@octokit/types": "^16.0.0",
+    "@octokit/types": "^18.0.0",
     "@types/mustache": "^4.2.6",
-    "@types/node": "^20.19.0",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.5",
     "husky": "^9.1.7",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.3",
     "oxfmt": "^0.74.0",
-    "oxlint": "^1.56.0",
-    "oxlint-tsgolint": "^0.17.1",
-    "rolldown": "^1.0.0-rc.10",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "oxlint": "^1.89.0",
+    "oxlint-tsgolint": "^7.0.2004",
+    "rolldown": "~1.2.14",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
   }
 }
