@@ -195,7 +195,7 @@ default:throw Error(`Unexpected operation: ${e.operator}`)}}),o&&(!a||i(a,o))&&(
         }
       }
     }
-  }`;var pu=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},mu=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},hu=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},gu=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},_u=class extends Error{constructor(e){super(`Option not found`,{cause:e})}},vu=class extends Error{constructor(e){super(`Team not found`,{cause:e})}},yu=class extends Error{constructor(e){super(`User not found`,{cause:e})}};function bu(e){return e.type===`DRAFT_ISSUE`}function xu(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new hu(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new gu(e):e}async function Su(e,t,n,r){let i=cu(),a,o=await Iu(e,t);a=r===void 0?i.graphql.paginate.iterator(uu,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
+  }`;var pu=class extends Error{constructor(e){super(`Field not found`,{cause:e})}},mu=class extends Error{constructor(e){super(`Item not found`,{cause:e})}},hu=class extends Error{constructor(e){super(`Project not found`,{cause:e})}},gu=class extends Error{constructor(e){super(`Repository not found`,{cause:e})}},_u=class extends Error{constructor(e){super(`Option not found`,{cause:e})}},vu=class extends Error{constructor(e){super(`Team not found`,{cause:e})}},yu=class extends Error{constructor(e){super(`User not found`,{cause:e})}};function bu(e){return e.type===`DRAFT_ISSUE`}function xu(e){throw e instanceof Error&&e.message.includes(`Could not resolve to a ProjectV2`)?new hu(e):e instanceof Error&&e.message.includes(`Could not resolve to a Repository`)?new gu(e):e}async function Su(e,t,n,r){let i=cu(),a,o=await Lu(e,t);a=r===void 0?i.graphql.paginate.iterator(uu,{projectId:o.id}):i.graphql.paginate.iterator(`query paginate($cursor: String, $projectId: ID!, $field: String!) {
           projectV2: node(id: $projectId) {
             ... on ProjectV2 {
               id
@@ -229,7 +229,7 @@ default:throw Error(`Unexpected operation: ${e.operator}`)}}),o&&(!a||i(a,o))&&(
               }
             }
           }
-        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new pu;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof la&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new hu(e);if(t.length===2&&t.at(1)===`field`)throw new pu(e)}throw e}return null}async function Cu(e){let t=cu().graphql.paginate.iterator(uu,{projectId:e}),n=[];try{for await(let{projectV2:e}of t)for(let t of e.items.nodes)(t.type===`REDACTED`||Object.keys(t.content).length)&&n.push(t)}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return n}async function wu(e){return(await Cu(e)).filter(bu)}async function Tu(e,t,n){let r=cu(),{id:i}=await Iu(e,t);try{let{projectV2:e}=await r.graphql(`query ($projectId: ID!, $number: Int!) {
+        }`,{projectId:o.id,field:r});try{for await(let{projectV2:e}of a)for(let t of e.items.nodes)if(t.id===n||t.content?.id===n||t.type!==`DRAFT_ISSUE`&&t.type!==`REDACTED`&&t.content.url===n){let n={id:t.id,projectId:o.id,content:t.content,type:t.type};if(n.type!==`REDACTED`&&`field`in e&&`fieldValueByName`in t){if(e.field===null)throw new pu;if(t.fieldValueByName!==null){let{date:r,number:i,text:a,singleSelectValue:o}=t.fieldValueByName;n.field={id:e.field.id,value:r??i??a??o}}else n.field={id:e.field.id,value:null}}return n}}catch(e){if(e instanceof la&&e.errors?.[0].type===`NOT_FOUND`){let{path:t}=e.errors[0];if(t.length===1)throw new hu(e);if(t.length===2&&t.at(1)===`field`)throw new pu(e)}throw e}return null}async function Cu(e){let t=cu().graphql.paginate.iterator(uu,{projectId:e}),n=[];try{for await(let{projectV2:e}of t)for(let t of e.items.nodes)(t.type===`REDACTED`||Object.keys(t.content).length)&&n.push(t)}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return n}async function wu(e){return(await Cu(e)).filter(bu)}async function Tu(e,t,n){let r=cu(),{id:i}=await Lu(e,t);try{let{projectV2:e}=await r.graphql(`query ($projectId: ID!, $number: Int!) {
             projectV2: node(id: $projectId) {
               ... on ProjectV2 {
                 workflow(number: $number) {
@@ -237,7 +237,65 @@ default:throw Error(`Unexpected operation: ${e.operator}`)}}),o&&(!a||i(a,o))&&(
                 }
               }
             }
-          }`,{projectId:i,number:n});if(e.workflow)return{id:e.workflow.id,name:e.workflow.name,number:e.workflow.number,enabled:e.workflow.enabled,projectId:i}}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return null}async function Eu(e,t,n){let r;try{r=await su([`project`,`item-add`,t,`--owner`,e,`--url`,n,`--format`,`json`])}catch(e){xu(e)}return JSON.parse(r).id}async function Du(e,t,n,r=!0){let i=[`project`,`item-archive`,t,`--owner`,e,`--id`,n];r||i.push(`--undo`);try{await su(i)}catch(e){xu(e)}}async function Ou(e,t,n=!0){let r=[`project`,`close`,t,`--owner`,e,`--format`,`json`];n||r.push(`--undo`);let i;try{i=await su(r)}catch(e){xu(e)}return JSON.parse(i)}async function ku(e,t,n,r,i=!1){let a;try{let o=[`project`,`copy`,t,`--source-owner`,e,`--target-owner`,n,`--title`,r,`--format`,`json`];i&&o.push(`--drafts`),a=await su(o)}catch(e){xu(e)}return JSON.parse(a)}async function Au(e,t,n){try{await su([`project`,`item-delete`,t,`--owner`,e,`--id`,n])}catch(e){xu(e)}}async function ju(e,t){try{await su([`project`,`delete`,t,`--owner`,e])}catch(e){xu(e)}}async function Mu(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`],i=[];if(n.title!==void 0&&i.push(`--title`,n.title),n.body!==void 0&&i.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let r=cu(),a;try{a=(await r.graphql(`query ($id: ID!, $field: String!) {
+          }`,{projectId:i,number:n});if(e.workflow)return{id:e.workflow.id,name:e.workflow.name,number:e.workflow.number,enabled:e.workflow.enabled,projectId:i}}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return null}async function Eu(e,t,n){let r;try{r=await su([`project`,`item-add`,t,`--owner`,e,`--url`,n,`--format`,`json`])}catch(e){xu(e)}return JSON.parse(r).id}async function Du(e,t,n,r=!0){let i=[`project`,`item-archive`,t,`--owner`,e,`--id`,n];r||i.push(`--undo`);try{await su(i)}catch(e){xu(e)}}async function Ou(e,t,n=!0){let r=[`project`,`close`,t,`--owner`,e,`--format`,`json`];n||r.push(`--undo`);let i;try{i=await su(r)}catch(e){xu(e)}return JSON.parse(i)}async function ku(e,t,n){let r=cu(),i=r.graphql.paginate.iterator(`query paginate($cursor: String, $sourceItemId: ID!) {
+      projectItem: node(id: $sourceItemId) {
+        ... on ProjectV2Item {
+          fieldValues(first: 100, after: $cursor) {
+            nodes {
+              __typename
+              ... on ProjectV2ItemFieldValueCommon {
+                field {
+                  ... on ProjectV2FieldCommon { name dataType }
+                }
+              }
+              ... on ProjectV2ItemFieldTextValue { text }
+              ... on ProjectV2ItemFieldNumberValue { number }
+              ... on ProjectV2ItemFieldDateValue { date }
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+              ... on ProjectV2ItemFieldMultiSelectValue { options { name } }
+              ... on ProjectV2ItemFieldIterationValue { title startDate duration }
+            }
+            pageInfo { hasNextPage endCursor }
+          }
+        }
+      }
+    }`,{sourceItemId:t});for await(let{projectItem:t}of i)for(let i of t.fieldValues.nodes){if(!(`field`in i)||![`TEXT`,`NUMBER`,`DATE`,`SINGLE_SELECT`,`MULTI_SELECT`,`ITERATION`].includes(i.field.dataType))continue;let{project:t}=await r.graphql(`query ($projectId: ID!, $name: String!) {
+          project: node(id: $projectId) {
+            ... on ProjectV2 {
+              field(name: $name) {
+                ... on ProjectV2FieldCommon { id dataType }
+                ... on ProjectV2SingleSelectField { options { id name } }
+                ... on ProjectV2MultiSelectField { multiSelectOptions { id name } }
+                ... on ProjectV2IterationField {
+                  configuration {
+                    iterations { id title startDate duration }
+                    completedIterations { id title startDate duration }
+                  }
+                }
+              }
+            }
+          }
+        }`,{projectId:e,name:i.field.name}),{field:a}=t;if(!a)throw new pu;if(a.dataType!==i.field.dataType)throw Error(`Field type mismatch while copying field "${i.field.name}"`);let o;switch(i.__typename){case`ProjectV2ItemFieldTextValue`:if(i.text===null)continue;o={text:i.text};break;case`ProjectV2ItemFieldNumberValue`:if(i.number===null)continue;o={number:i.number};break;case`ProjectV2ItemFieldDateValue`:if(i.date===null)continue;o={date:i.date};break;case`ProjectV2ItemFieldSingleSelectValue`:{if(i.name===null)continue;let e=a.options?.find(e=>e.name===i.name);if(!e)throw new _u;o={singleSelectOptionId:e.id};break}case`ProjectV2ItemFieldMultiSelectValue`:if(i.options===null)continue;o={multiSelectOptionIds:i.options.map(e=>{let t=a.multiSelectOptions?.find(t=>t.name===e.name);if(!t)throw Error(`Option "${e.name}" not found while copying field "${i.field.name}"`);return t.id})};break;case`ProjectV2ItemFieldIterationValue`:{let e=(a.configuration?[...a.configuration.iterations,...a.configuration.completedIterations]:[]).find(e=>e.title===i.title&&e.startDate===i.startDate&&e.duration===i.duration);if(!e)throw Error(`Iteration "${i.title}" not found while copying field "${i.field.name}"`);o={iterationId:e.id};break}}await r.graphql(`mutation ($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
+          updateProjectV2ItemFieldValue(input: {
+            projectId: $projectId,
+            itemId: $itemId,
+            fieldId: $fieldId,
+            value: $value
+          }) {
+            projectV2Item { id }
+          }
+        }`,{projectId:e,itemId:n,fieldId:a.id,value:o})}}async function Au(e,t,n,r,i=!1){let a;try{a=await su([`project`,`copy`,t,`--source-owner`,e,`--target-owner`,n,`--title`,r,`--format`,`json`])}catch(e){xu(e)}let o=JSON.parse(a);if(i){let n=await wu((await Lu(e,t)).id),r=cu();for(let{id:e,content:t}of n){let{addProjectV2DraftIssue:n}=await r.graphql(`mutation ($projectId: ID!, $title: String!, $body: String!, $assigneeIds: [ID!]) {
+          addProjectV2DraftIssue(input: {
+            projectId: $projectId,
+            title: $title,
+            body: $body,
+            assigneeIds: $assigneeIds
+          }) {
+            projectItem {
+              id
+            }
+          }
+        }`,{projectId:o.id,title:t.title,body:t.body,assigneeIds:t.assignees.nodes.map(({id:e})=>e)});await ku(o.id,e,n.projectItem.id),o.items.totalCount++}}return o}async function ju(e,t,n){try{await su([`project`,`item-delete`,t,`--owner`,e,`--id`,n])}catch(e){xu(e)}}async function Mu(e,t){try{await su([`project`,`delete`,t,`--owner`,e])}catch(e){xu(e)}}async function Nu(e,t,n){if(n.field&&!n.fieldValue||!n.field&&n.fieldValue)throw Error(`Must supply both field and fieldValue if either is provided`);let r=[`project`,`item-edit`,`--id`,t,`--project-id`,e,`--format`,`json`],i=[];if(n.title!==void 0&&i.push(`--title`,n.title),n.body!==void 0&&i.push(`--body`,n.body),n.title!==void 0||n.body!==void 0){if(!t.startsWith(`DI_`))throw Error(`Must use draft issue content id to edit title or body`);if(n.field)throw Error(`Cannot edit field at same time as title or body`)}if(n.field&&n.fieldValue!==void 0){let r=cu(),a;try{a=(await r.graphql(`query ($id: ID!, $field: String!) {
           projectV2Item: node(id: $id) {
             ... on ProjectV2Item {
               project {
@@ -279,14 +337,14 @@ default:throw Error(`Unexpected operation: ${e.operator}`)}}),o&&(!a||i(a,o))&&(
           replaceActorsForAssignable(input: {assignableId: $assignableId, actorLogins: $actorLogins}) {
             clientMutationId
           }
-        }`,{assignableId:r.content.id,actorLogins:n.assignees})}}}async function Nu(e,t,n){let r=[`project`,`edit`,t,`--owner`,e,`--format`,`json`];n.description!==void 0&&r.push(`--description`,n.description),n.public!==void 0&&r.push(`--visibility`,n.public?`PUBLIC`:`PRIVATE`),n.readme!==void 0&&r.push(`--readme`,n.readme),n.title!==void 0&&r.push(`--title`,n.title);let i;try{i=await su(r)}catch(e){xu(e)}return JSON.parse(i).id}async function Pu(e,t,n=!1,r){let i=[`project`,`list`,`--owner`,e,`--format`,`json`];n&&i.push(`--closed`),r&&i.push(`--limit`,r);let{projects:a}=JSON.parse(await su(i));for(let e of a)if(e.title===t)return e;return null}async function Fu(e,t,n){let r=cu(),i=await Iu(e,t),a=r.graphql.paginate.iterator(fu,{projectId:i.id});try{for await(let{projectV2:e}of a)for(let t of e.workflows.nodes)if(t.name===n)return{id:t.id,name:t.name,number:t.number,enabled:t.enabled,projectId:i.id}}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return null}async function Iu(e,t){let n;try{n=await su([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){xu(e)}return JSON.parse(n)}async function Lu(e,t,n=!0){let r=cu(),[i,a]=t.split(`/`),o;try{o=(await r.graphql(`query ($owner: String!, $name: String!) {
+        }`,{assignableId:r.content.id,actorLogins:n.assignees})}}}async function Pu(e,t,n){let r=[`project`,`edit`,t,`--owner`,e,`--format`,`json`];n.description!==void 0&&r.push(`--description`,n.description),n.public!==void 0&&r.push(`--visibility`,n.public?`PUBLIC`:`PRIVATE`),n.readme!==void 0&&r.push(`--readme`,n.readme),n.title!==void 0&&r.push(`--title`,n.title);let i;try{i=await su(r)}catch(e){xu(e)}return JSON.parse(i).id}async function Fu(e,t,n=!1,r){let i=[`project`,`list`,`--owner`,e,`--format`,`json`];n&&i.push(`--closed`),r&&i.push(`--limit`,r);let{projects:a}=JSON.parse(await su(i));for(let e of a)if(e.title===t)return e;return null}async function Iu(e,t,n){let r=cu(),i=await Lu(e,t),a=r.graphql.paginate.iterator(fu,{projectId:i.id});try{for await(let{projectV2:e}of a)for(let t of e.workflows.nodes)if(t.name===n)return{id:t.id,name:t.name,number:t.number,enabled:t.enabled,projectId:i.id}}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new hu(e):e}return null}async function Lu(e,t){let n;try{n=await su([`project`,`view`,t,`--owner`,e,`--format`,`json`])}catch(e){xu(e)}return JSON.parse(n)}async function Ru(e,t,n=!0){let r=cu(),[i,a]=t.split(`/`),o;try{o=(await r.graphql(`query ($owner: String!, $name: String!) {
         repository(owner: $owner, name: $name) {
           id
         }
-      }`,{owner:i,name:a})).repository.id}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new gu(e):e}try{await su([`project`,n?`link`:`unlink`,e,`--owner`,i,`--repo`,a])}catch(e){xu(e)}return o}async function Ru(e,t,n=!0){let r=cu(),[i,a]=t.split(`/`),o;try{let{organization:e}=await r.graphql(`query ($owner: String!, $name: String!) {
+      }`,{owner:i,name:a})).repository.id}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new gu(e):e}try{await su([`project`,n?`link`:`unlink`,e,`--owner`,i,`--repo`,a])}catch(e){xu(e)}return o}async function zu(e,t,n=!0){let r=cu(),[i,a]=t.split(`/`),o;try{let{organization:e}=await r.graphql(`query ($owner: String!, $name: String!) {
         organization(login: $owner) {
           team(slug: $name) {
             id
           }
         }
-      }`,{owner:i,name:a});if(!e.team?.id)throw new vu;o=e.team.id}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new vu(e):e}try{await su([`project`,n?`link`:`unlink`,e,`--owner`,i,`--team`,a])}catch(e){xu(e)}return o}async function zu(){let e=gr(`token`,{required:!0}),t=vr(`debug`),n=gr(`user-agent`),r=gr(`previews`),i=gr(`base-url`),[a,o]=pc(parseInt(gr(`retries`)),mc(gr(`retry-exempt-status-codes`)),Wa),s={log:t?console:void 0,userAgent:n||void 0,previews:r?r.split(`,`):void 0,retry:a,request:o};i&&(s.baseUrl=i);let c=Ja(e,s,uc,rc),l=gr(`script`,{required:!0}),u=await fc({require:gc,__original_require__:hc,actions:{addItem:Eu,archiveItem:Du,closeProject:Ou,copyProject:ku,deleteItem:Au,deleteProject:ju,editItem:Mu,editProject:Nu,findProject:Pu,findWorkflow:Fu,getAllItems:Cu,getDraftIssues:wu,getItem:Su,getProject:Iu,getWorkflow:Tu,linkProjectToRepository:Lu,linkProjectToTeam:Ru},github:c,octokit:c,context:qa,core:ur,exec:Yn,glob:$s,io:Nn},l),d=gr(`result-encoding`);d||=`json`;let f;switch(d){case`json`:f=JSON.stringify(u);break;case`string`:f=String(u);break;default:throw Error(`"result-encoding" must be either "string" or "json"`)}yr(`result`,f)}process.on(`unhandledRejection`,Bu),zu().catch(Bu);function Bu(e){console.error(e),xr(`Unhandled error: ${e}`)}export{};
+      }`,{owner:i,name:a});if(!e.team?.id)throw new vu;o=e.team.id}catch(e){throw e instanceof la&&e.errors?.[0].type===`NOT_FOUND`?new vu(e):e}try{await su([`project`,n?`link`:`unlink`,e,`--owner`,i,`--team`,a])}catch(e){xu(e)}return o}async function Bu(){let e=gr(`token`,{required:!0}),t=vr(`debug`),n=gr(`user-agent`),r=gr(`previews`),i=gr(`base-url`),[a,o]=pc(parseInt(gr(`retries`)),mc(gr(`retry-exempt-status-codes`)),Wa),s={log:t?console:void 0,userAgent:n||void 0,previews:r?r.split(`,`):void 0,retry:a,request:o};i&&(s.baseUrl=i);let c=Ja(e,s,uc,rc),l=gr(`script`,{required:!0}),u=await fc({require:gc,__original_require__:hc,actions:{addItem:Eu,archiveItem:Du,closeProject:Ou,copyProject:Au,deleteItem:ju,deleteProject:Mu,editItem:Nu,editProject:Pu,findProject:Fu,findWorkflow:Iu,getAllItems:Cu,getDraftIssues:wu,getItem:Su,getProject:Lu,getWorkflow:Tu,linkProjectToRepository:Ru,linkProjectToTeam:zu},github:c,octokit:c,context:qa,core:ur,exec:Yn,glob:$s,io:Nn},l),d=gr(`result-encoding`);d||=`json`;let f;switch(d){case`json`:f=JSON.stringify(u);break;case`string`:f=String(u);break;default:throw Error(`"result-encoding" must be either "string" or "json"`)}yr(`result`,f)}process.on(`unhandledRejection`,Vu),Bu().catch(Vu);function Vu(e){console.error(e),xr(`Unhandled error: ${e}`)}export{};

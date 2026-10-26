@@ -8,7 +8,6 @@ import {
   editItem,
   editProject,
   getDraftIssues,
-  getProject,
   linkProjectToRepository,
   linkProjectToTeam
 } from './lib.js';
@@ -73,13 +72,8 @@ export async function copyProjectAction(): Promise<void> {
 
     // Do template interpolation on draft issues
     if (templateView) {
-      // HACK - It seems that GitHub now populates the draft issues
-      // on the new project in an async manner so they may not all
-      // be available yet. Wait until the number of draft issues
-      // matches the number of draft issues in the source project.
-      const {
-        items: { totalCount: draftIssueCount }
-      } = await getProject(owner, projectNumber);
+      // Wait for newly created draft issues to be visible to queries.
+      const draftIssueCount = project.items.totalCount;
 
       let draftIssues: DraftIssueItem[] = [];
 

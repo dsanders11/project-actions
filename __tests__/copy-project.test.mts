@@ -8,10 +8,9 @@ import {
   editItem,
   editProject,
   getDraftIssues,
-  getProject,
   linkProjectToRepository,
   linkProjectToTeam,
-  ProjectDetails
+  type ProjectDetails
 } from '../src/lib.js';
 import { mockGetBooleanInput, mockGetInput } from './utils.js';
 
@@ -36,15 +35,19 @@ const templateView = JSON.stringify({
   foo: 'bar'
 });
 
-function mockCopyProject(newProjectId: string, newProjectNumber: number): void {
-  vi.mocked(copyProject).mockResolvedValue({
+function mockCopyProject(
+  newProjectId: string,
+  newProjectNumber: number,
+  totalCount = itemCount
+): ProjectDetails {
+  const project: ProjectDetails = {
     id: newProjectId,
     number: newProjectNumber,
     fields: {
       totalCount: fieldCount
     },
     items: {
-      totalCount: itemCount
+      totalCount
     },
     url,
     title,
@@ -56,12 +59,15 @@ function mockCopyProject(newProjectId: string, newProjectNumber: number): void {
       type: 'Organization',
       login: owner
     }
-  });
+  };
+  vi.mocked(copyProject).mockResolvedValue(project);
+  return project;
 }
 
 describe('copyProjectAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetBooleanInput({});
   });
 
   it('requires the project-number input', async () => {
@@ -225,7 +231,7 @@ describe('copyProjectAction', () => {
   it('does not edit draft issue if no template changes', async () => {
     const newProjectId = 'project-id-2';
     const newProjectNumber = parseInt(projectNumber) + 1;
-    mockCopyProject(newProjectId, newProjectNumber);
+    mockCopyProject(newProjectId, newProjectNumber, 1);
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -233,11 +239,6 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    vi.mocked(getProject).mockResolvedValue({
-      items: {
-        totalCount: 1
-      }
-    } as ProjectDetails);
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: 'item-id',
@@ -259,12 +260,18 @@ describe('copyProjectAction', () => {
     expect(editItem).not.toHaveBeenCalled();
   });
 
-  it('updates draft issue if template changes', async () => {
+  it('waits for draft copying before querying drafts or interpolating', async () => {
     const newProjectId = 'project-id-2';
     const newProjectNumber = parseInt(projectNumber) + 1;
-    const itemId = 'item-id';
-    const contentId = 'content-id';
-    mockCopyProject(newProjectId, newProjectNumber);
+    const project = mockCopyProject(newProjectId, newProjectNumber, 1);
+    let finishCopy!: () => void;
+    const copying = new Promise<void>(resolve => {
+      finishCopy = resolve;
+    });
+    vi.mocked(copyProject).mockImplementationOnce(async () => {
+      await copying;
+      return project;
+    });
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -272,11 +279,62 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    vi.mocked(getProject).mockResolvedValue({
-      items: {
-        totalCount: 1
+    vi.mocked(getDraftIssues).mockResolvedValue([
+      {
+        id: 'new-item-id',
+        type: 'DRAFT_ISSUE',
+        content: {
+          id: 'new-content-id',
+          title: 'Item {{ foo }}',
+          body: '<!-- fields {"Status": "{{ foo }}"} -->',
+          assignees: { nodes: [] }
+        }
       }
-    } as ProjectDetails);
+    ]);
+
+    const action = index.copyProjectAction();
+    expect(copyProject).toHaveBeenCalledWith(
+      owner,
+      projectNumber,
+      owner,
+      title,
+      true
+    );
+    expect(getDraftIssues).not.toHaveBeenCalled();
+    expect(editItem).not.toHaveBeenCalled();
+    expect(core.setOutput).not.toHaveBeenCalled();
+    finishCopy();
+    await action;
+
+    expect(editItem).toHaveBeenNthCalledWith(
+      1,
+      newProjectId,
+      'new-content-id',
+      {
+        title: 'Item bar',
+        body: '<!-- fields {"Status": "bar"} -->'
+      }
+    );
+    expect(editItem).toHaveBeenNthCalledWith(2, newProjectId, 'new-item-id', {
+      field: 'Status',
+      fieldValue: 'bar'
+    });
+    expect(core.setFailed).not.toHaveBeenCalled();
+  });
+
+  it('updates draft issue if template changes', async () => {
+    const newProjectId = 'project-id-2';
+    const newProjectNumber = parseInt(projectNumber) + 1;
+    const itemId = 'item-id';
+    const contentId = 'content-id';
+    mockCopyProject(newProjectId, newProjectNumber, 1);
+    mockGetInput({
+      owner,
+      'project-number': projectNumber,
+      title,
+      'template-view': templateView
+    });
+    mockGetBooleanInput({ drafts: true });
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
@@ -308,7 +366,7 @@ describe('copyProjectAction', () => {
     const itemId = 'item-id';
     const field = 'Opened';
     const fieldValue = '2023-01-01';
-    mockCopyProject(newProjectId, newProjectNumber);
+    mockCopyProject(newProjectId, newProjectNumber, 1);
     mockGetInput({
       owner,
       'project-number': projectNumber,
@@ -316,11 +374,6 @@ describe('copyProjectAction', () => {
       'template-view': templateView
     });
     mockGetBooleanInput({ drafts: true });
-    vi.mocked(getProject).mockResolvedValue({
-      items: {
-        totalCount: 1
-      }
-    } as ProjectDetails);
     vi.mocked(getDraftIssues).mockResolvedValue([
       {
         id: itemId,
@@ -356,7 +409,7 @@ describe('copyProjectAction', () => {
     const itemId = 'item-id';
     const contentId = 'content-id';
     const errorMessage = 'Generic error';
-    mockCopyProject(newProjectId, newProjectNumber);
+    mockCopyProject(newProjectId, newProjectNumber, 1);
     mockGetInput({
       owner,
       'project-number': projectNumber,

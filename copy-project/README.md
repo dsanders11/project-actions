@@ -38,6 +38,13 @@ Example:
 There is a GitHub bug which results in a permissions error if a GitHub app auth
 token is used to change the visibility on a project
 
+### Copying Draft Issues
+
+When `drafts` is enabled, the project is copied without drafts first, then draft
+issues are created one by one with their titles, bodies, and assignees. This
+avoids a GitHub 502 error when copying projects with drafts. Draft creation
+finishes before template interpolation and field-comment processing begin.
+
 ## Inputs
 
 | Name                 | Description                                                                                                        | Required | Default                          |
